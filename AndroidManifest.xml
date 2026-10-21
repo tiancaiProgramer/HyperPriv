@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="1" android:versionName="0.1.0">
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
+    <queries>
+        <package android:name="com.miui.packageinstaller"/><package android:name="com.miui.securitycenter"/>
+        <package android:name="com.miui.guardprovider"/><package android:name="com.miui.analytics"/>
+    </queries>
+    <application android:name=".ModuleApp" android:label="HyperPriv" android:icon="@drawable/ic_launcher" android:description="@string/module_description" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <provider android:name="io.github.libxposed.service.XposedProvider" android:authorities="io.github.hyperpriv.XposedService" android:exported="true"/>
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/><category android:name="io.github.libxposed.manager.category.MODULE_SETTINGS"/></intent-filter>
+        </activity>
+    </application>
+</manifest>

@@ -1,0 +1,21 @@
+HyperCeiler — Copyright (C) 2023–2026 HyperCeiler Contributions
+https://github.com/ReChronoRain/HyperCeiler
+参考版本：861be0473847d5c020102191f2c2891acda5d628
+许可证：GNU Affero General Public License version 3（LICENSE）。
+参考文件：
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/packageinstaller/DisableAppInfoUpload.kt
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/packageinstaller/DisableAd.java
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/packageinstaller/InstallRiskDisable.kt
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/packageinstaller/DisableCountChecking.kt
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/guardprovider/DisableUploadAppListNew.java
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/SkipCountDownLimit.java
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/FuckRiskPkg.kt
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/analytics/FuckMiuiUpload.java
+
+本模块使用现代 API 102 独立实现，根据用户设备 APK 核对实际方法签名；USB 三步读秒单独适配，未自动勾选授权确认框。
+
+libxposed API / service / interface — libxposed contributors
+https://github.com/libxposed/api
+https://github.com/libxposed/service
+Apache License 2.0：https://www.apache.org/licenses/LICENSE-2.0
+API 仅编译依赖，不打包进 APK；service/interface 为框架通信运行时。

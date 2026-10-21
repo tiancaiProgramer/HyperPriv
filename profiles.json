@@ -1,0 +1,425 @@
+{
+  "versions": {
+    "com.miui.packageinstaller": 53601,
+    "com.miui.securitycenter": 40001268,
+    "com.miui.guardprovider": 256,
+    "com.miui.analytics": 2026082100
+  },
+  "rules": [
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "A0.c",
+      "method": "o",
+      "params": [],
+      "returns": "Z",
+      "group": "ads",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "A0.c",
+      "method": "p",
+      "params": [],
+      "returns": "Z",
+      "group": "ads",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "i2.n",
+      "method": "u",
+      "params": [],
+      "returns": "Z",
+      "group": "ads",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "i2.n",
+      "method": "p",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Z",
+      "group": "scan",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "i2.n",
+      "method": "v",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "i2.n",
+      "method": "q",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "i2.n",
+      "method": "w",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "A0.c",
+      "method": "q",
+      "params": [],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "A0.c",
+      "method": "r",
+      "params": [],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.CloudParams",
+      "method": "isProhibitInstalling",
+      "params": [],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.CloudParams",
+      "method": "isUnrecorded",
+      "params": [],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.CloudParams",
+      "method": "isNewUnregistered",
+      "params": [],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.CloudParams",
+      "method": "isFromGov",
+      "params": [],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.CloudParams",
+      "method": "isBundleDetected",
+      "params": [],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.RiskControlRules",
+      "method": "getCurrentLevel",
+      "params": [],
+      "returns": "I",
+      "group": "rate",
+      "action": "zero"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "C2.l",
+      "method": "g",
+      "params": [
+        "Lcom/miui/packageInstaller/g;",
+        "Lcom/miui/packageInstaller/model/ApkInfo;",
+        "Z",
+        "Lo2/h;"
+      ],
+      "returns": "V",
+      "group": "upload",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.e",
+      "method": "c",
+      "params": [
+        "Landroid/content/Context;",
+        "Lcom/miui/packageInstaller/g;",
+        "I",
+        "Lcom/miui/packageInstaller/model/ApkInfo;",
+        "Ljava/util/HashMap;",
+        "Lz3/d;"
+      ],
+      "returns": "Ljava/lang/Object;",
+      "group": "cloud",
+      "action": "cloud"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.b0",
+      "method": "b",
+      "params": [
+        "Ljava/lang/String;",
+        "Lcom/miui/packageInstaller/model/ApkInfo;",
+        "Lz3/d;"
+      ],
+      "returns": "Ljava/lang/Object;",
+      "group": "scan",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.android.packageinstaller.utils.t",
+      "method": "b",
+      "params": [
+        "Lcom/miui/packageInstaller/model/Virus;",
+        "Lcom/miui/packageInstaller/model/ApkInfo;"
+      ],
+      "returns": "Z",
+      "group": "guards",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.ApkInfo",
+      "method": "getCloudParams",
+      "params": [],
+      "returns": "Lcom/miui/packageInstaller/model/CloudParams;",
+      "group": "master",
+      "action": "sanitize_return"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.ApkInfo",
+      "method": "setCloudParams",
+      "params": [
+        "Lcom/miui/packageInstaller/model/CloudParams;"
+      ],
+      "returns": "V",
+      "group": "master",
+      "action": "sanitize_arg"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.model.CloudParams",
+      "method": "<init>",
+      "params": [],
+      "returns": "V",
+      "group": "master",
+      "action": "sanitize_this"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001268,
+      "cls": "com.miui.permcenter.privacymanager.model.InterceptBaseActivity",
+      "method": "onCreate",
+      "params": [
+        "Landroid/os/Bundle;"
+      ],
+      "returns": "V",
+      "group": "permission_timer",
+      "action": "permission_state"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001268,
+      "cls": "com.miui.permcenter.privacymanager.InterceptBaseFragment",
+      "method": "i0",
+      "params": [],
+      "returns": "I",
+      "group": "permission_timer",
+      "action": "zero"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001268,
+      "cls": "com.miui.permcenter.privacymanager.InterceptBaseFragment",
+      "method": "j0",
+      "params": [],
+      "returns": "I",
+      "group": "permission_timer",
+      "action": "zero"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001268,
+      "cls": "com.miui.permcenter.install.AdbInputApplyActivity",
+      "method": "onCreate",
+      "params": [
+        "Landroid/os/Bundle;"
+      ],
+      "returns": "V",
+      "group": "usb_timer",
+      "action": "usb_after"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001268,
+      "cls": "com.miui.permcenter.install.AdbInputApplyActivity",
+      "method": "onClick",
+      "params": [
+        "Landroid/view/View;"
+      ],
+      "returns": "V",
+      "group": "usb_timer",
+      "action": "usb_after"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001268,
+      "cls": "com.miui.securityscan.scanner.n",
+      "method": "s",
+      "params": [
+        "Landroid/content/Context;",
+        "Ljava/util/ArrayList;"
+      ],
+      "returns": "V",
+      "group": "risk_notice",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.guardprovider",
+      "version": 256,
+      "cls": "y1.c",
+      "method": "b",
+      "params": [
+        "Ljava/util/List;"
+      ],
+      "returns": "Ljava/lang/String;",
+      "group": "app_list",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.guardprovider",
+      "version": 256,
+      "cls": "y1.c",
+      "method": "h",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Ljava/util/List;",
+      "group": "app_list",
+      "action": "empty_list"
+    },
+    {
+      "pkg": "com.miui.analytics",
+      "version": 2026082100,
+      "cls": "a.b.a.e.h0.y",
+      "method": "g",
+      "params": [
+        "J",
+        "J",
+        "Z"
+      ],
+      "returns": "Lorg/json/JSONObject;",
+      "group": "analytics",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.analytics",
+      "version": 2026082100,
+      "cls": "a.b.a.f.f.m",
+      "method": "f",
+      "params": [
+        "J",
+        "J"
+      ],
+      "returns": "Lorg/json/JSONObject;",
+      "group": "analytics",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.analytics",
+      "version": 2026082100,
+      "cls": "a.b.a.a.a.c.a",
+      "method": "V",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Ljava/lang/String;",
+      "group": "analytics",
+      "action": "none"
+    },
+    {
+      "pkg": "com.miui.analytics",
+      "version": 2026082100,
+      "cls": "a.b.a.a.a.c.a",
+      "method": "l0",
+      "params": [],
+      "returns": "Z",
+      "group": "analytics",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.analytics",
+      "version": 2026082100,
+      "cls": "com.miui.analytics.Analytics",
+      "method": "trackEvent",
+      "params": [
+        "Ljava/lang/String;"
+      ],
+      "returns": "V",
+      "group": "analytics",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.analytics",
+      "version": 2026082100,
+      "cls": "com.miui.analytics.Analytics",
+      "method": "trackEvents",
+      "params": [
+        "[Ljava/lang/String;"
+      ],
+      "returns": "V",
+      "group": "analytics",
+      "action": "null"
+    }
+  ]
+}
