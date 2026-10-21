@@ -2,7 +2,7 @@
 
 HyperOS 3 / Android 16 的 LSPosed 模块，针对下列组件版本调整安装器广告、部分资料上传入口、风险拦截及权限授权读秒。当前版本为 **0.1.0，实验性设备适配版**。
 
-[下载安装包](https://github.com/tiancaiProgramer/HyperPriv/releases/latest) · [验证记录](VALIDATION.txt) · [参考项目与许可证](THIRD_PARTY_NOTICES.txt)
+[下载安装包](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.1.0) · [验证记录](VALIDATION.txt) · [参考项目与许可证](THIRD_PARTY_NOTICES.txt)
 
 ## 功能
 
