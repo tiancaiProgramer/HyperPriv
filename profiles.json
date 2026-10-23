@@ -1,9 +1,19 @@
 {
   "versions": {
     "com.miui.packageinstaller": 53601,
-    "com.miui.securitycenter": 40001268,
-    "com.miui.guardprovider": 256,
-    "com.miui.analytics": 2026082100
+    "com.miui.securitycenter": [
+      40001268,
+      40001275
+    ],
+    "com.miui.guardprovider": [
+      256,
+      307
+    ],
+    "com.miui.analytics": 2026082100,
+    "com.miui.powerkeeper": 40200,
+    "com.xiaomi.joyose": 492,
+    "com.miui.systemAdSolution": 2025071906,
+    "com.android.settings": 36
   },
   "rules": [
     {
@@ -420,6 +430,435 @@
       "returns": "V",
       "group": "analytics",
       "action": "null"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.permcenter.privacymanager.model.InterceptBaseActivity",
+      "method": "onCreate",
+      "params": [
+        "Landroid/os/Bundle;"
+      ],
+      "returns": "V",
+      "group": "permission_timer",
+      "action": "permission_state"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.permcenter.privacymanager.InterceptBaseFragment",
+      "method": "i0",
+      "params": [],
+      "returns": "I",
+      "group": "permission_timer",
+      "action": "zero"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.permcenter.privacymanager.InterceptBaseFragment",
+      "method": "j0",
+      "params": [],
+      "returns": "I",
+      "group": "permission_timer",
+      "action": "zero"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.permcenter.install.AdbInputApplyActivity",
+      "method": "onCreate",
+      "params": [
+        "Landroid/os/Bundle;"
+      ],
+      "returns": "V",
+      "group": "usb_timer",
+      "action": "usb_after"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.permcenter.install.AdbInputApplyActivity",
+      "method": "onClick",
+      "params": [
+        "Landroid/view/View;"
+      ],
+      "returns": "V",
+      "group": "usb_timer",
+      "action": "usb_after"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.securityscan.scanner.n",
+      "method": "s",
+      "params": [
+        "Landroid/content/Context;",
+        "Ljava/util/ArrayList;"
+      ],
+      "returns": "V",
+      "group": "risk_notice",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.guardprovider",
+      "version": 307,
+      "cls": "z1.c",
+      "method": "b",
+      "params": [
+        "Ljava/util/List;"
+      ],
+      "returns": "Ljava/lang/String;",
+      "group": "app_list",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.guardprovider",
+      "version": 307,
+      "cls": "z1.c",
+      "method": "h",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Ljava/util/List;",
+      "group": "app_list",
+      "action": "empty_list"
+    },
+    {
+      "pkg": "com.android.settings",
+      "version": 36,
+      "cls": "com.android.settings.development.AdbInstallPreferenceController",
+      "method": "updateAdbInstallPreference",
+      "params": [],
+      "returns": "V",
+      "group": "usb_local",
+      "action": "usb_install"
+    },
+    {
+      "pkg": "com.android.settings",
+      "version": 36,
+      "cls": "com.android.settings.KeyguardTimeoutListPreference",
+      "method": "<init>",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/util/AttributeSet;"
+      ],
+      "returns": "V",
+      "group": "never_sleep",
+      "action": "never_sleep"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001268,
+      "cls": "com.miui.permcenter.install.AdbInstallVerifyActivity",
+      "method": "M0",
+      "params": [],
+      "returns": "V",
+      "group": "usb_local",
+      "action": "usb_verify"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.permcenter.install.AdbInstallVerifyActivity",
+      "method": "M0",
+      "params": [],
+      "returns": "V",
+      "group": "usb_local",
+      "action": "usb_verify"
+    },
+    {
+      "pkg": "com.miui.securitycenter",
+      "version": 40001275,
+      "cls": "com.miui.powercenter.h",
+      "method": "a0",
+      "params": [],
+      "returns": "Z",
+      "group": "battery_report",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
+      "cls": "com.miui.packageInstaller.ui.normalmode.InstallProgressActivity",
+      "method": "o2",
+      "params": [],
+      "returns": "Ljava/util/List;",
+      "group": "completed_tip",
+      "action": "empty_list"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "b.a",
+      "method": "m",
+      "params": [
+        "I"
+      ],
+      "returns": "Lorg/json/JSONObject;",
+      "group": "power_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "b.a",
+      "method": "p",
+      "params": [
+        "I"
+      ],
+      "returns": "Landroid/provider/MiuiSettings$SettingsCloudData$CloudData;",
+      "group": "power_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "b.a",
+      "method": "t",
+      "params": [
+        "I"
+      ],
+      "returns": "Z",
+      "group": "power_cloud",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "b.a",
+      "method": "n",
+      "params": [
+        "I"
+      ],
+      "returns": "Ljava/util/List;",
+      "group": "power_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.cloudcontrol.LocalUpdateUtils",
+      "method": "startCloudSyncData",
+      "params": [
+        "Landroid/content/Context;",
+        "Z"
+      ],
+      "returns": "V",
+      "group": "power_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.perfshielder.PerfshielderCloudUpdate",
+      "method": "startCloudUpdate",
+      "params": [
+        "Landroid/content/Context;",
+        "Z"
+      ],
+      "returns": "V",
+      "group": "power_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.feedbackcontrol.ThermalPerfLimitsUpdate",
+      "method": "updatePerfLimits",
+      "params": [
+        "Landroid/content/Context;",
+        "Z"
+      ],
+      "returns": "V",
+      "group": "power_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.statemachine.DisplayFrameSetting",
+      "method": "setScreenEffect",
+      "params": [
+        "I",
+        "I"
+      ],
+      "returns": "V",
+      "group": "thermal_fps",
+      "action": "thermal_fps"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.tracker.TrackerManager",
+      "method": "track",
+      "params": [
+        "I",
+        "Ljava/lang/String;",
+        "Ljava/util/Map;"
+      ],
+      "returns": "V",
+      "group": "battery_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.tracker.TrackerManager",
+      "method": "track",
+      "params": [
+        "I",
+        "Ljava/lang/String;",
+        "Lorg/json/JSONObject;"
+      ],
+      "returns": "V",
+      "group": "battery_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.tracker.TrackerManager",
+      "method": "track",
+      "params": [
+        "I",
+        "Ljava/lang/String;",
+        "Ljava/lang/String;"
+      ],
+      "returns": "V",
+      "group": "battery_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.tracker.TrackerManager",
+      "method": "track",
+      "params": [
+        "I",
+        "Ljava/lang/String;",
+        "Ljava/lang/String;",
+        "Ljava/util/List;"
+      ],
+      "returns": "V",
+      "group": "battery_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.feedbackcontrol.ThermalLogUploader",
+      "method": "uploadFiles",
+      "params": [],
+      "returns": "V",
+      "group": "battery_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.powerkeeper",
+      "version": 40200,
+      "cls": "com.miui.powerkeeper.batterylife.BatteryLifeChecker",
+      "method": "uploadData",
+      "params": [
+        "Z"
+      ],
+      "returns": "V",
+      "group": "battery_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.xiaomi.joyose",
+      "version": 492,
+      "cls": "f.h$a",
+      "method": "run",
+      "params": [],
+      "returns": "V",
+      "group": "joyose_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.xiaomi.joyose",
+      "version": 492,
+      "cls": "f.h",
+      "method": "a",
+      "params": [
+        "Z"
+      ],
+      "returns": "V",
+      "group": "joyose_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.xiaomi.joyose",
+      "version": 492,
+      "cls": "com.xiaomi.teg.config.CloudConfig",
+      "method": "updateData",
+      "params": [],
+      "returns": "V",
+      "group": "joyose_cloud",
+      "action": "null"
+    },
+    {
+      "pkg": "com.miui.systemAdSolution",
+      "version": 2025071906,
+      "cls": "com.miui.zeus.utils.network.a",
+      "method": "e",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "Z",
+      "group": "msa",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.systemAdSolution",
+      "version": 2025071906,
+      "cls": "com.miui.zeus.utils.network.a",
+      "method": "a",
+      "params": [
+        "Landroid/content/Context;",
+        "I"
+      ],
+      "returns": "Z",
+      "group": "msa",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.systemAdSolution",
+      "version": 2025071906,
+      "cls": "com.xiaomi.onetrack.g.c",
+      "method": "a",
+      "params": [],
+      "returns": "Z",
+      "group": "msa",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.systemAdSolution",
+      "version": 2025071906,
+      "cls": "com.xiaomi.onetrack.g.c",
+      "method": "b",
+      "params": [],
+      "returns": "Z",
+      "group": "msa",
+      "action": "false"
+    },
+    {
+      "pkg": "com.miui.systemAdSolution",
+      "version": 2025071906,
+      "cls": "com.miui.app.a.b",
+      "method": "b",
+      "params": [
+        "Ljava/util/Map;",
+        "I",
+        "Ljava/util/Set;"
+      ],
+      "returns": "Lcom/miui/app/a/b$a;",
+      "group": "msa",
+      "action": "null"
     }
-  ]
+  ],
+  "apkHashes": {
+    "com.android.settings@36": "ad232849df7307a47a3a64e7fec59518ed146a4db4f2d4ebaece1d490a75f62e"
+  }
 }

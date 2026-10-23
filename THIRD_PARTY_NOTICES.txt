@@ -12,6 +12,12 @@ library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycen
 library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/FuckRiskPkg.kt
 library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/analytics/FuckMiuiUpload.java
 
+新增参考文件：
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/BypassAdbInstallVerify.java
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemsettings/UnlockNeverSleepScreen.java
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/joyose/DisableCloudControl.java
+library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/powerkeeper/LockMaxFps.kt
+
 本模块使用现代 API 102 独立实现，根据用户设备 APK 核对实际方法签名；USB 三步读秒单独适配，未自动勾选授权确认框。
 
 libxposed API / service / interface — libxposed contributors

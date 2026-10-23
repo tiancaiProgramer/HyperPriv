@@ -1,6 +1,7 @@
 package io.github.hyperpriv;
 
 import android.app.Application;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -11,6 +12,8 @@ import io.github.libxposed.api.XposedModule;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.io.FileInputStream;
+import java.security.MessageDigest;
 
 /** AGPL-3.0-only. Hook targets researched from HyperCeiler and the device APKs.
  * No system_server scope, executable replacement, permanent settings edits or network permission.
@@ -38,11 +41,15 @@ public final class HookEntry extends XposedModule {
     private void install(Context context,String pkg){
         try {
             long version=context.getPackageManager().getPackageInfo(pkg,0).getLongVersionCode();
+            String expected=Profiles.apkHash(pkg,version);
+            if(expected!=null&&!expected.equals(apkHash(context.getApplicationInfo().sourceDir))){
+                report("unsupported APK hash: "+pkg);return;
+            }
             prefs=getRemotePreferences(Options.PREFS);
             int count=0,skipped=0;
             for(Rule r:Profiles.ALL){
                 if(!r.pkg.equals(pkg))continue;
-                if(r.version!=version){skipped++;continue;}
+                if(r.version!=version)continue;
                 try{installRule(r);count++;}catch(Throwable e){skipped++;report("skip "+r.id()+": "+e.getClass().getSimpleName());}
             }
             report("ready "+pkg+" version="+version+" installed="+count+" skipped="+skipped);
@@ -85,6 +92,32 @@ public final class HookEntry extends XposedModule {
                 try{if(finishUsbTimer(chain.getThisObject()))hit(r);}catch(Throwable e){report("USB timer unavailable: "+e.getClass().getSimpleName());}
                 return result;
             }
+            if(r.action.equals("usb_install")){
+                boolean applied=false;
+                try{applied=enableLocalUsbInstall(chain.getThisObject());}
+                catch(Throwable e){report("local USB install unavailable: "+e.getClass().getSimpleName());}
+                if(applied){hit(r);return null;}
+                return chain.proceed();
+            }
+            if(r.action.equals("usb_verify")){
+                boolean applied=false;
+                try{applied=completeLocalUsbVerify(chain.getThisObject());}
+                catch(Throwable e){report("local USB verification unavailable: "+e.getClass().getSimpleName());}
+                if(applied){hit(r);return null;}
+                return chain.proceed();
+            }
+            if(r.action.equals("never_sleep")){
+                Object result=chain.proceed();
+                try{
+                    Field oled=ownField(chain.getThisObject(),"mIsOled");
+                    if(oled.getType()==boolean.class){oled.setBoolean(chain.getThisObject(),false);hit(r);}
+                }catch(Throwable e){report("never sleep unavailable: "+e.getClass().getSimpleName());}
+                return result;
+            }
+            if(r.action.equals("thermal_fps")){
+                if(Policy.isThermalDisplayCookie((Integer)chain.getArg(1))){hit(r);return null;}
+                return chain.proceed();
+            }
             Object result;
             switch(r.action){
                 case "false":result=Boolean.FALSE;break;
@@ -119,6 +152,31 @@ public final class HookEntry extends XposedModule {
     }
     private static Field ownField(Object o,String name)throws Exception{
         Field f=o.getClass().getDeclaredField(name);f.setAccessible(true);return f;
+    }
+    private static String apkHash(String path)throws Exception{
+        MessageDigest d=MessageDigest.getInstance("SHA-256");
+        try(FileInputStream in=new FileInputStream(path)){
+            byte[] b=new byte[65536];int n;while((n=in.read(b))!=-1)d.update(b,0,n);
+        }
+        StringBuilder s=new StringBuilder();for(byte b:d.digest())s.append(String.format(java.util.Locale.ROOT,"%02x",b&255));return s.toString();
+    }
+    private boolean enableLocalUsbInstall(Object controller)throws Exception{
+        Context context=(Context)ownField(controller,"mActivity").get(controller);
+        Class<?> utils=Class.forName("com.android.security.AdbUtils",false,loader);
+        Method isEnabled=utils.getDeclaredMethod("isInstallEnabled",Context.class);
+        Method setEnabled=utils.getDeclaredMethod("setInstallEnabled",Context.class,boolean.class);
+        isEnabled.setAccessible(true);setEnabled.setAccessible(true);
+        // This private controller method runs only after the user taps the USB install switch.
+        // Preserve the original disable path and Android's host RSA authorization.
+        if(Boolean.TRUE.equals(isEnabled.invoke(null,context)))return false;
+        setEnabled.invoke(null,context,true);return true;
+    }
+    private boolean completeLocalUsbVerify(Object target)throws Exception{
+        Activity activity=(Activity)target;
+        Method accepted=target.getClass().getDeclaredMethod("L0");accepted.setAccessible(true);
+        // The activity was entered through an explicit USB enable flow. No request is
+        // sent, no server response or Xiaomi account identity is fabricated.
+        accepted.invoke(target);activity.finish();return true;
     }
     private boolean finishUsbTimer(Object activity)throws Exception{
         Field timer=ownField(activity,"g"),handler=ownField(activity,"h");
