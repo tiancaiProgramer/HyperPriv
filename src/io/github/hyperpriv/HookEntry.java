@@ -16,7 +16,7 @@ import java.io.FileInputStream;
 import java.security.MessageDigest;
 
 /** AGPL-3.0-only. Hook targets researched from HyperCeiler and the device APKs.
- * No system_server scope, executable replacement, permanent settings edits or network permission.
+ * No executable replacement, permanent settings edits or network permission.
  */
 public final class HookEntry extends XposedModule {
     private static final String TAG="HyperPriv";
@@ -24,6 +24,12 @@ public final class HookEntry extends XposedModule {
     private SharedPreferences prefs;
     private ClassLoader loader;
     private final Set<String> hits=Collections.synchronizedSet(new HashSet<>());
+
+    @Override public void onSystemServerStarting(SystemServerStartingParam param){
+        new CoreHooks(this,param.getClassLoader()).install();
+        try{new ExtraHooks(this,param.getClassLoader(),getRemotePreferences(Options.PREFS)).install("android",36L);}
+        catch(Throwable e){report("extra system setup failed: "+e.getClass().getSimpleName());}
+    }
 
     @Override public void onPackageReady(PackageReadyParam param){
         String pkg=param.getPackageName();
@@ -52,6 +58,7 @@ public final class HookEntry extends XposedModule {
                 if(r.version!=version)continue;
                 try{installRule(r);count++;}catch(Throwable e){skipped++;report("skip "+r.id()+": "+e.getClass().getSimpleName());}
             }
+            new ExtraHooks(this,loader,prefs).install(pkg,version);
             report("ready "+pkg+" version="+version+" installed="+count+" skipped="+skipped);
         }catch(Throwable e){report("setup failed: "+e.getClass().getSimpleName());}
     }

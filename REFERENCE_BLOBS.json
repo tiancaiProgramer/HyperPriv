@@ -1,0 +1,183 @@
+{
+  "repository": "https://github.com/ReChronoRain/HyperCeiler",
+  "retrieved_on": "2026-10-23",
+  "ref": "main",
+  "note": "sha values identify Git blobs, not commits; license AGPL-3.0-only. Existing references are recorded in THIRD_PARTY_NOTICES.txt.",
+  "files": [
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/guardprovider/DisableRootedCheck.java",
+      "sha": "b4e188b63d569a43713b8abed28231a6a48b2048",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/guardprovider/DisableRootedCheck.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/lbe/AutoStart.java",
+      "sha": "f0ae58bc10d8128619e9eb1d17eb3c04d47b7aff",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/lbe/AutoStart.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/lbe/PasteToast.java",
+      "sha": "00a8142bd0bad0e33679ed98526cd77d4777d800",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/lbe/PasteToast.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/packageinstaller/AllAsSystemApp.kt",
+      "sha": "1357364693fe471e0a1680229a3c2041af701060",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/packageinstaller/AllAsSystemApp.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/AppLockPinScramble.java",
+      "sha": "56bb6d5a4bbc17804c6cd9017bbe2de366b0a693",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/AppLockPinScramble.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableAutoTurnAccessibilityOff.java",
+      "sha": "e39d8c1af7d55db8a71c7a37c03e61f88c50658a",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableAutoTurnAccessibilityOff.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableNetworkAssistantOfflineInfoManager.java",
+      "sha": "c40b039e208cc540d2b615dfcb3fc3421143d45e",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableNetworkAssistantOfflineInfoManager.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableRootedCheck.java",
+      "sha": "3b1774e6fc9b0b15375cbdeeaddda1f21658ea07",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableRootedCheck.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableSafepayAutoScan.java",
+      "sha": "87b2534f87561efac8aa6bb690e17a658d9ce904",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/DisableSafepayAutoScan.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/HideXOptModeTip.java",
+      "sha": "e28cb8bd03ba44cb0d57bad5f21f586febc18af3",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/HideXOptModeTip.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/InstallIntercept.java",
+      "sha": "5a9349a6b5f39c2bb870f4ff271f6474d4716dab",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/InstallIntercept.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/RemoveOpenAppConfirmationPopup.kt",
+      "sha": "6149989772461721e93a878efa174b62f46b3c7e",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/RemoveOpenAppConfirmationPopup.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/app/AppDisable.java",
+      "sha": "5a6e66da0084c7c4aa2ca9a40c2d77faba311aaf",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/app/AppDisable.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/BypassSimLockMiAccountAuth.kt",
+      "sha": "8138cf68e936a6c6fa2be9ad6a45f67ce0e9af97",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/BypassSimLockMiAccountAuth.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/DisableRootCheck.kt",
+      "sha": "ec1f19517948bb8c70504bd42df5ebce73269ec7",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/DisableRootCheck.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/RemoveSIMLockSuccessDialog.kt",
+      "sha": "cbb148148748a1fde51dda207b1b5bf5f1c9d077",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/RemoveSIMLockSuccessDialog.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/SkipCountDownLimit.java",
+      "sha": "caceb4ecc0cf2433dc3a68fa8276c69b9a2ea142",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/securitycenter/other/SkipCountDownLimit.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/AllowUpdateSystemApp.java",
+      "sha": "c39e2f07dc0a9bd2839a00a1c431779d7d955385",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/AllowUpdateSystemApp.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/AuthCreakPatch.java",
+      "sha": "32d14a44b0778f4f373e359004566e0a95e376cb",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/AuthCreakPatch.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/BypassIsolationViolation.java",
+      "sha": "6a6616b80b4920606dc29a930a223786b2bd2414",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/BypassIsolationViolation.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/DigestCreakPatch.java",
+      "sha": "ad22e51b6ea6635216b7f1d70c7e6733d540a2f7",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/DigestCreakPatch.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/DisableLowApiCheckForB.java",
+      "sha": "57d17f251eee4487e9fd7504da8d92c085f8a88b",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/DisableLowApiCheckForB.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/DisablePersistent.java",
+      "sha": "a61b678e1dfb9e68e2c48fecc45d7b5cd0d30b4b",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/DisablePersistent.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/SharedUserPatch.java",
+      "sha": "768d802e9b1529e90eb829b0fc9fc3cb7f835afc",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/corepatch/SharedUserPatch.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/AllowDisableProtectedPackage.java",
+      "sha": "c42eb7f70c46b8170ef3c995144878d0e74afa2c",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/AllowDisableProtectedPackage.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/BypassUnknownSourcesRestrictions.java",
+      "sha": "3e93c29482720be73eec16e715b80332325c5d21",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/BypassUnknownSourcesRestrictions.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/BypassWakePathChecker.java",
+      "sha": "c8fa2608d2d46d11d9e6bd2ba8f24c062a2bbec1",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/BypassWakePathChecker.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/ClipboardWhitelist.java",
+      "sha": "795d1a7f4b41e1ada5b3b7c26cac0b00f4618c15",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/ClipboardWhitelist.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/DisablePinVerifyPer72h.java",
+      "sha": "2e67e2e1037283f75ee8b0719fef622d0913f36b",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/DisablePinVerifyPer72h.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/DisableRemoveFingerprintSensorConfig.kt",
+      "sha": "d18ac615e7fa593ce27654adf8bf08841bcc3d87",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/DisableRemoveFingerprintSensorConfig.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/DisableVerifyCanBeDisabled.java",
+      "sha": "1516a61d453ccd24c9732fb1d73bcd8939aeace0",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/DisableVerifyCanBeDisabled.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/FlagSecure.java",
+      "sha": "838908134ea1d53b415fbb6f3de5b557f02f762f",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/FlagSecure.java"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/NoAccessDeviceLogsRequest.kt",
+      "sha": "3258c668f9dc36396520c5f85d04c8df74d7ae73",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemframework/others/NoAccessDeviceLogsRequest.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemsettings/QuickManageOverlayPermission.kt",
+      "sha": "e844c81e30e03b26e887a12ff3279f64ea393826",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemsettings/QuickManageOverlayPermission.kt"
+    },
+    {
+      "path": "library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemsettings/QuickManagerAccessibilityPermission.java",
+      "sha": "4b3c8493b27a2c312d4a9a41a1e401c33cf122ab",
+      "url": "https://github.com/ReChronoRain/HyperCeiler/blob/main/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/systemsettings/QuickManagerAccessibilityPermission.java"
+    }
+  ]
+}

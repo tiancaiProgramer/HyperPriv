@@ -1,15 +1,18 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="2" android:versionName="0.2.0">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="7" android:versionName="0.4.0-preview2">
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
     <queries>
         <package android:name="com.miui.packageinstaller"/><package android:name="com.miui.securitycenter"/>
         <package android:name="com.miui.guardprovider"/><package android:name="com.miui.analytics"/>
-        <package android:name="com.android.settings"/><package android:name="com.miui.powerkeeper"/>
+        <package android:name="com.android.settings"/><package android:name="com.miui.powerkeeper"/><package android:name="com.lbe.security.miui"/>
         <package android:name="com.xiaomi.joyose"/><package android:name="com.miui.systemAdSolution"/>
     </queries>
     <application android:name=".ModuleApp" android:label="HyperPriv" android:icon="@drawable/ic_launcher" android:description="@string/module_description" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <provider android:name="io.github.libxposed.service.XposedProvider" android:authorities="io.github.hyperpriv.XposedService" android:exported="true"/>
         <activity android:name=".MainActivity" android:exported="true">
-            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/><category android:name="io.github.libxposed.manager.category.MODULE_SETTINGS"/></intent-filter>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.DEFAULT"/><category android:name="io.github.libxposed.manager.category.MODULE_SETTINGS"/></intent-filter>
         </activity>
+        <activity-alias android:name=".LauncherAlias" android:targetActivity=".MainActivity" android:enabled="true" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
     </application>
 </manifest>

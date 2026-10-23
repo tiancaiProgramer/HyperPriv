@@ -25,3 +25,57 @@ https://github.com/libxposed/api
 https://github.com/libxposed/service
 Apache License 2.0：https://www.apache.org/licenses/LICENSE-2.0
 API 仅编译依赖，不打包进 APK；service/interface 为框架通信运行时。
+
+核心破解参考：
+HyperCeiler 同一 AGPL-3.0 提交下的 systemframework/corepatch：
+DowngradeCheckPatch.java、AuthCreakPatch.java、DigestCreakPatch.java、ExactSignCheckPatch.java、VerificationAgentPatch.java。
+本模块重写为 API 102，增加精确构建匹配、安装上下文与能力标记限制；未复制完整实现。
+
+LSPosed/CorePatch（设计研究，未包含其源码或二进制）
+https://github.com/LSPosed/CorePatch
+研究提交：ddf87bb5fb2bb2eb962992103abf0b225952d738；上游许可证 GPL-2.0。
+
+0.4.0-preview 增补参考（2026-10-23，只读获取上游 main）：
+本次参考文件的 Git blob SHA 和完整来源 URL 记录在 REFERENCE_BLOBS.json。
+相关实现遵守 HyperCeiler 的 AGPL-3.0-only 许可，并保留
+Copyright (C) 2023–2026 HyperCeiler Contributions。
+ExtraHooks.java 使用 API 102 重写，并针对本机 Android 16 与组件 DEX 适配；
+调整默认值、操作号、调用路径和失败恢复边界。guardprovider 环境检测参考项
+在本机未找到业务入口，保留为不可用，不套用界面库的 Root 判断。
+
+增补参考文件（相对 library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules）：
+guardprovider/DisableRootedCheck.java
+lbe/AutoStart.java
+lbe/PasteToast.java
+packageinstaller/AllAsSystemApp.kt
+securitycenter/AppLockPinScramble.java
+securitycenter/DisableAutoTurnAccessibilityOff.java
+securitycenter/DisableNetworkAssistantOfflineInfoManager.java
+securitycenter/DisableRootedCheck.java
+securitycenter/DisableSafepayAutoScan.java
+securitycenter/HideXOptModeTip.java
+securitycenter/InstallIntercept.java
+securitycenter/RemoveOpenAppConfirmationPopup.kt
+securitycenter/app/AppDisable.java
+securitycenter/other/BypassSimLockMiAccountAuth.kt
+securitycenter/other/DisableRootCheck.kt
+securitycenter/other/RemoveSIMLockSuccessDialog.kt
+securitycenter/other/SkipCountDownLimit.java
+systemframework/corepatch/AllowUpdateSystemApp.java
+systemframework/corepatch/AuthCreakPatch.java
+systemframework/corepatch/BypassIsolationViolation.java
+systemframework/corepatch/DigestCreakPatch.java
+systemframework/corepatch/DisableLowApiCheckForB.java
+systemframework/corepatch/DisablePersistent.java
+systemframework/corepatch/SharedUserPatch.java
+systemframework/others/AllowDisableProtectedPackage.java
+systemframework/others/BypassUnknownSourcesRestrictions.java
+systemframework/others/BypassWakePathChecker.java
+systemframework/others/ClipboardWhitelist.java
+systemframework/others/DisablePinVerifyPer72h.java
+systemframework/others/DisableRemoveFingerprintSensorConfig.kt
+systemframework/others/DisableVerifyCanBeDisabled.java
+systemframework/others/FlagSecure.java
+systemframework/others/NoAccessDeviceLogsRequest.kt
+systemsettings/QuickManageOverlayPermission.kt
+systemsettings/QuickManagerAccessibilityPermission.java

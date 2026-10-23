@@ -1,0 +1,771 @@
+[
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.antivirus.service.VirusScanJobService",
+    "method": "h",
+    "returns": "V",
+    "group": "accessibility_keep",
+    "action": "null",
+    "params": [
+      "[Ljava/lang/String;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "u6.c",
+    "method": "t",
+    "returns": "Z",
+    "group": "usb_intercept",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "u1.k",
+    "method": "r",
+    "returns": "Z",
+    "group": "safepay_scan",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.antivirus.service.GuardService",
+    "method": "Q",
+    "returns": "V",
+    "group": "safepay_scan",
+    "action": "null",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "u1.k",
+    "method": "t",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.antivirus.activity.P",
+    "method": "f",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.firstaidkit.model.other.SystemRootModel",
+    "method": "checkSystemRoot",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "u1.j",
+    "method": "f",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.securityscan.model.manualitem.PermissionRootModel",
+    "method": "checkSystemRoot",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.xiaomi.security.xsof.MiSafetyDetectService",
+    "method": "n",
+    "returns": "V",
+    "group": "environment_checks",
+    "action": "environment",
+    "params": [
+      "Ljava/lang/Object;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.permcenter.w",
+    "method": "D",
+    "returns": "Z",
+    "group": "permission_tips",
+    "action": "privacy_tip",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.permcenter.privacymanager.InterceptBaseFragment",
+    "method": "onInflateView",
+    "returns": "Landroid/view/View;",
+    "group": "permission_direct",
+    "action": "permission_direct",
+    "params": [
+      "Landroid/view/LayoutInflater;",
+      "Landroid/view/ViewGroup;",
+      "Landroid/os/Bundle;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.simlock.SimLockUtils",
+    "method": "m",
+    "returns": "Z",
+    "group": "sim_account",
+    "action": "true",
+    "params": [
+      "Landroid/content/Context;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.simlock.activity.SuccessDialogActivity",
+    "method": "onCreate",
+    "returns": "V",
+    "group": "sim_success",
+    "action": "finish",
+    "params": [
+      "Landroid/os/Bundle;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.wakepath.ui.ConfirmStartActivity",
+    "method": "onDialogCreated",
+    "returns": "V",
+    "group": "wake_popup",
+    "action": "wake_popup",
+    "params": [
+      "Lmiuix/appcompat/app/AlertDialog;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.networkassistant.ui.bean.OffLineData$BaseData",
+    "method": "isOffline",
+    "returns": "Z",
+    "group": "network_offline",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.networkassistant.ui.bean.OffLineData$BaseData",
+    "method": "<init>",
+    "returns": "V",
+    "group": "network_offline",
+    "action": "offline_ctor",
+    "params": [
+      "Ljava/lang/String;",
+      "Z",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Lcom/miui/networkassistant/ui/bean/ClickActionData;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$NetworkAssistantHomeModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$CardSlotModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$SettingModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$VoiceModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$ReminderModule;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.applicationlock.widget.MiuiNumericInputView",
+    "method": "<init>",
+    "returns": "V",
+    "group": "pin_shuffle",
+    "action": "pin_shuffle",
+    "params": [
+      "Landroid/content/Context;",
+      "Landroid/util/AttributeSet;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.appmanager.ApplicationsDetailsActivity",
+    "method": "onCreateOptionsMenu",
+    "returns": "Z",
+    "group": "app_disable",
+    "action": "app_menu",
+    "params": [
+      "Landroid/view/Menu;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.appmanager.ApplicationsDetailsActivity",
+    "method": "onPrepareOptionsMenu",
+    "returns": "Z",
+    "group": "app_disable",
+    "action": "app_menu",
+    "params": [
+      "Landroid/view/Menu;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001275,
+    "cls": "com.miui.appmanager.ApplicationsDetailsActivity",
+    "method": "onOptionsItemSelected",
+    "returns": "Z",
+    "group": "app_disable",
+    "action": "app_menu",
+    "params": [
+      "Landroid/view/MenuItem;"
+    ]
+  },
+  {
+    "pkg": "com.lbe.security.miui",
+    "version": 192,
+    "cls": "com.miui.privacy.autostart.AutoRevokePermissionManager",
+    "method": "lambda$startScheduleASCheck$1",
+    "returns": "V",
+    "group": "autostart_keep",
+    "action": "null",
+    "params": [
+      "Landroid/content/Context;",
+      "Z"
+    ]
+  },
+  {
+    "pkg": "com.lbe.security.miui",
+    "version": 192,
+    "cls": "com.lbe.security.utility.ToastUtil",
+    "method": "initToastView",
+    "returns": "Landroid/view/View;",
+    "group": "clipboard_toast",
+    "action": "paste_toast",
+    "params": [
+      "Ljava/lang/String;",
+      "I"
+    ]
+  },
+  {
+    "pkg": "com.android.settings",
+    "version": 36,
+    "cls": "com.android.settings.SettingsActivity",
+    "method": "redirectTabletActivity",
+    "returns": "V",
+    "group": "overlay_direct",
+    "action": "overlay_direct",
+    "params": [
+      "Landroid/os/Bundle;"
+    ]
+  },
+  {
+    "pkg": "com.android.settings",
+    "version": 36,
+    "cls": "com.android.settings.SettingsActivity",
+    "method": "onCreate",
+    "returns": "V",
+    "group": "accessibility_direct",
+    "action": "accessibility_direct",
+    "params": [
+      "Landroid/os/Bundle;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.ProtectedPackages",
+    "method": "isPackageStateProtected",
+    "returns": "Z",
+    "group": "framework_freeze",
+    "action": "protected",
+    "params": [
+      "I",
+      "Ljava/lang/String;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.PackageManagerServiceImpl",
+    "method": "shouldRestrictEnabledSettingsChange",
+    "returns": "V",
+    "group": "framework_disable_checks",
+    "action": "null",
+    "params": [
+      "Ljava/lang/String;",
+      "I",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.locksettings.LockSettingsStrongAuth",
+    "method": "rescheduleStrongAuthTimeoutAlarm",
+    "returns": "V",
+    "group": "framework_password_timeout",
+    "action": "null",
+    "params": [
+      "J",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.logcat.LogcatManagerService",
+    "method": "processNewLogAccessRequest",
+    "returns": "V",
+    "group": "framework_log_access",
+    "action": "log_access",
+    "params": [
+      "Lcom/android/server/logcat/LogcatManagerService$LogAccessClient;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.IPackageManagerBase",
+    "method": "canRequestPackageInstalls",
+    "returns": "Z",
+    "group": "framework_unknown_sources",
+    "action": "true",
+    "params": [
+      "Ljava/lang/String;",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.appop.AppOpsService",
+    "method": "noteOperation",
+    "returns": "Landroid/app/SyncNotedAppOp;",
+    "group": "framework_unknown_sources",
+    "action": "unknown_op",
+    "params": [
+      "I",
+      "I",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Z",
+      "Ljava/lang/String;",
+      "Z"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.clipboard.ClipboardService",
+    "method": "clipboardAccessAllowed",
+    "returns": "Z",
+    "group": "framework_clipboard",
+    "action": "clipboard",
+    "params": [
+      "I",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "I",
+      "I",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.clipboard.ClipboardService",
+    "method": "clipboardAccessAllowed",
+    "returns": "Z",
+    "group": "framework_clipboard",
+    "action": "clipboard",
+    "params": [
+      "I",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "I",
+      "I",
+      "I",
+      "Z"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.clipboard.ClipboardService",
+    "method": "clipboardAccessAllowed",
+    "returns": "Z",
+    "group": "framework_clipboard",
+    "action": "clipboard",
+    "params": [
+      "I",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "I",
+      "I",
+      "I",
+      "Z",
+      "Z"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.miui.server.WakePathChecker",
+    "method": "isAllowedByWakePathRule",
+    "returns": "Z",
+    "group": "wake_checker",
+    "action": "true",
+    "params": [
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "I",
+      "I",
+      "I",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.miui.server.WakePathChecker",
+    "method": "checkAllowStartActivity",
+    "returns": "Z",
+    "group": "wake_checker",
+    "action": "true",
+    "params": [
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "I",
+      "I",
+      "Landroid/content/Intent;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.PackageManagerServiceImpl",
+    "method": "verifyIsolationViolation",
+    "returns": "V",
+    "group": "core_isolation",
+    "action": "null",
+    "params": [
+      "Lcom/android/internal/pm/parsing/pkg/ParsedPackage;",
+      "Lcom/android/server/pm/InstallSource;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.PackageManagerServiceImpl",
+    "method": "canBeUpdate",
+    "returns": "V",
+    "group": "core_system_update",
+    "action": "null",
+    "params": [
+      "Ljava/lang/String;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.biometrics.sensors.fingerprint.aidl.FingerprintProvider",
+    "method": "copyFingerprintXml",
+    "returns": "V",
+    "group": "core_keep_fingerprint",
+    "action": "null",
+    "params": [
+      "Landroid/content/Context;",
+      "I",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.InstallPackageHelper",
+    "method": "preparePackage",
+    "returns": "V",
+    "group": "core_low_sdk",
+    "action": "low_sdk",
+    "params": [
+      "Lcom/android/server/pm/InstallRequest;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.PackageSetting",
+    "method": "isPersistent",
+    "returns": "Z",
+    "group": "core_persistent",
+    "action": "persistent",
+    "params": []
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.internal.pm.pkg.parsing.ParsingPackageUtils",
+    "method": "getSigningDetails",
+    "returns": "Landroid/content/pm/parsing/result/ParseResult;",
+    "group": "core_previous_signature",
+    "action": "previous_signature",
+    "params": [
+      "Landroid/content/pm/parsing/result/ParseInput;",
+      "Lcom/android/internal/pm/parsing/pkg/ParsedPackage;",
+      "Z"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "android.content.pm.SigningDetails",
+    "method": "checkCapability",
+    "returns": "Z",
+    "group": "core_shared_uid",
+    "action": "shared_capability",
+    "params": [
+      "Landroid/content/pm/SigningDetails;",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "android.content.pm.SigningDetails",
+    "method": "checkCapabilityRecover",
+    "returns": "Z",
+    "group": "core_shared_uid",
+    "action": "shared_capability",
+    "params": [
+      "Landroid/content/pm/SigningDetails;",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "android.content.pm.SigningDetails",
+    "method": "hasCommonAncestor",
+    "returns": "Z",
+    "group": "core_shared_uid",
+    "action": "shared_ancestor",
+    "params": [
+      "Landroid/content/pm/SigningDetails;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.PackageManagerServiceUtils",
+    "method": "canJoinSharedUserId",
+    "returns": "Z",
+    "group": "core_shared_uid",
+    "action": "true",
+    "params": [
+      "Ljava/lang/String;",
+      "Landroid/content/pm/SigningDetails;",
+      "Lcom/android/server/pm/SharedUserSetting;",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.ReconcilePackageUtils",
+    "method": "reconcilePackages",
+    "returns": "Ljava/util/List;",
+    "group": "core_shared_uid",
+    "action": "shared_reconcile",
+    "params": [
+      "Ljava/util/List;",
+      "Ljava/util/Map;",
+      "Ljava/util/Map;",
+      "Lcom/android/server/pm/SharedLibrariesImpl;",
+      "Lcom/android/server/pm/KeySetManagerService;",
+      "Lcom/android/server/pm/Settings;",
+      "Lcom/android/server/SystemConfig;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.SharedUserSetting",
+    "method": "addPackage",
+    "returns": "V",
+    "group": "core_shared_uid",
+    "action": "shared_lineage",
+    "params": [
+      "Lcom/android/server/pm/PackageSetting;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.pm.SharedUserSetting",
+    "method": "removePackage",
+    "returns": "Z",
+    "group": "core_shared_uid",
+    "action": "shared_lineage",
+    "params": [
+      "Lcom/android/server/pm/PackageSetting;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "android.content.pm.Signature",
+    "method": "areExactMatch",
+    "returns": "Z",
+    "group": "core_split_signature",
+    "action": "split_digest",
+    "params": [
+      "Landroid/content/pm/SigningDetails;",
+      "Landroid/content/pm/SigningDetails;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.wm.WindowState",
+    "method": "isSecureLocked",
+    "returns": "Z",
+    "group": "framework_capture",
+    "action": "capture_secure",
+    "params": []
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "android.window.ScreenCapture",
+    "method": "nativeCaptureDisplay",
+    "returns": "I",
+    "group": "framework_capture",
+    "action": "capture_args",
+    "params": [
+      "Landroid/window/ScreenCapture$DisplayCaptureArgs;",
+      "J"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "android.window.ScreenCapture",
+    "method": "nativeCaptureLayers",
+    "returns": "I",
+    "group": "framework_capture",
+    "action": "capture_args",
+    "params": [
+      "Landroid/window/ScreenCapture$LayerCaptureArgs;",
+      "J",
+      "Z"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.display.DisplayControl",
+    "method": "createVirtualDisplay",
+    "returns": "Landroid/os/IBinder;",
+    "group": "framework_capture",
+    "action": "capture_display",
+    "params": [
+      "Ljava/lang/String;",
+      "Z"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.display.VirtualDisplayAdapter",
+    "method": "createVirtualDisplayLocked",
+    "returns": "Lcom/android/server/display/DisplayDevice;",
+    "group": "framework_capture",
+    "action": "capture_virtual",
+    "params": [
+      "Landroid/hardware/display/IVirtualDisplayCallback;",
+      "Landroid/media/projection/IMediaProjection;",
+      "I",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Landroid/view/Surface;",
+      "I",
+      "Landroid/hardware/display/VirtualDisplayConfig;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.wm.WindowManagerServiceImpl",
+    "method": "notAllowCaptureDisplay",
+    "returns": "Z",
+    "group": "framework_capture",
+    "action": "false",
+    "params": [
+      "Lcom/android/server/wm/RootWindowContainer;",
+      "I"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.wm.ActivityTaskManagerService",
+    "method": "registerScreenCaptureObserver",
+    "returns": "V",
+    "group": "framework_capture",
+    "action": "null",
+    "params": [
+      "Landroid/os/IBinder;",
+      "Landroid/app/IScreenCaptureObserver;"
+    ]
+  },
+  {
+    "pkg": "android",
+    "version": 36,
+    "cls": "com.android.server.wm.WindowManagerService",
+    "method": "registerScreenRecordingCallback",
+    "returns": "Z",
+    "group": "framework_capture",
+    "action": "false",
+    "params": [
+      "Landroid/window/IScreenRecordingCallback;"
+    ]
+  },
+  {
+    "pkg": "com.miui.packageinstaller",
+    "version": 53601,
+    "cls": "com.android.packageinstaller.d",
+    "method": "u",
+    "returns": "Z",
+    "group": "core_system_update",
+    "action": "installer_system",
+    "params": [
+      "Landroid/content/pm/ApplicationInfo;"
+    ]
+  }
+]
