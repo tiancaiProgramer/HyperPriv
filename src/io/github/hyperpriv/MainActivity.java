@@ -134,13 +134,18 @@ public final class MainActivity extends Activity {
         AppState(boolean supported,String text,long version){this.supported=supported;this.text=text;this.version=version;}
     }
     private AppState appState(String pkg){
-        if(pkg.equals("android")){boolean supported=Build.VERSION.SDK_INT==36&&CoreTargets.FINGERPRINT.equals(Build.FINGERPRINT);return new AppState(supported,supported?"Android 16 · 已匹配本机构建，首次加载需重启":"系统构建未适配",36);}
+        boolean compatibility=selected(Compatibility.KEY);
+        if(pkg.equals("android")){
+            boolean strict=Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+            return new AppState(strict||compatibility,strict?"Android 16 · 已匹配本机构建，首次加载需重启":compatibility?"实验兼容 · 当前系统构建未经验证":"系统构建未适配",Build.VERSION.SDK_INT);
+        }
         try{
             PackageInfo info=getPackageManager().getPackageInfo(pkg,0);long version=info.getLongVersionCode();boolean supported=false;
             for(Rule rule:Profiles.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
             for(Rule rule:ExtraTargets.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
-            String status=!supported?"未适配":Profiles.apkHash(pkg,version)!=null?"启用时核对构建":"版本已适配";
-            return new AppState(supported,"已安装 "+info.versionName+" · "+status,version);
+            boolean trial=compatibility&&(!Compatibility.select(Profiles.ALL,pkg,version,true).isEmpty()||!Compatibility.select(ExtraTargets.ALL,pkg,version,true).isEmpty());
+            String status=!supported?(trial?"实验兼容 · 版本未经验证":"未适配"):Profiles.apkHash(pkg,version)!=null?(compatibility?"实验兼容 · 放宽构建校验":"启用时核对构建"):"版本已适配";
+            return new AppState(supported||trial,"已安装 "+info.versionName+" · "+status,version);
         }catch(Exception e){return new AppState(false,"未安装");}
     }
     private LinearLayout appGroup(String id,String title){
@@ -150,8 +155,9 @@ public final class MainActivity extends Activity {
         fold(header,body,"group_"+id,title);return body;
     }
     private void coreSettings(LinearLayout box){
-        boolean supported=Build.VERSION.SDK_INT==36&&CoreTargets.FINGERPRINT.equals(Build.FINGERPRINT);
-        label(box,supported?"已适配当前系统构建。首次使用需勾选系统框架并重启手机。":"当前系统构建尚未适配，已保留原有设置。",12,ACCENT,false);
+        boolean strict=Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+        boolean supported=strict||selected(Compatibility.KEY);
+        label(box,strict?"已适配当前系统构建。首次使用需勾选系统框架并重启手机。":supported?"实验兼容：当前构建未经验证，逐项尝试现有方法；系统层需重启后检查加载日志。":"当前系统构建尚未适配，可在关于中按需开启实验兼容模式。",12,ACCENT,false);
         label(box,"新选项默认关闭，请按需开启。",12,MUTED,false);
         toggle(box,"启用核心破解","core_enabled","同时受上方模块总开关控制。",supported);
         toggle(box,"允许降级安装","core_downgrade","保留应用数据安装旧版，可能存在数据兼容问题。",supported);
@@ -160,7 +166,7 @@ public final class MainActivity extends Activity {
         toggle(box,"允许不同签名的分包","core_split_signature","允许同一应用的分包使用不同签名。",supported);
         toggle(box,"停用系统安装验证代理","core_verification_agent","跳过系统安装验证代理的检测。",supported);
         toggle(box,"解除 resources.arsc 限制","core_resources","允许压缩或未对齐的 APK 资源表。",supported);
-        for(ExtraFeatures.Feature extra:ExtraFeatures.ALL)if(extra.key.startsWith("core_"))toggle(box,extra.title,extra.key,extra.note,supported&&ExtraTargets.supports(extra.key,"android",36));
+        for(ExtraFeatures.Feature extra:ExtraFeatures.ALL)if(extra.key.startsWith("core_"))toggle(box,extra.title,extra.key,extra.note,supported&&Compatibility.supports(ExtraTargets.ALL,extra.key,"android",Build.VERSION.SDK_INT,selected(Compatibility.KEY)));
     }
     private void launcherIconControl(LinearLayout box){
         LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(0,gap(12),0,gap(12));
@@ -191,7 +197,8 @@ public final class MainActivity extends Activity {
             if(section.detail!=null)label(options,section.detail,12,ACCENT,false);
             for(String key:section.keys){
                 AppState state=appState(UiCatalog.target(key));String note=UiCatalog.note(key);boolean available=state.supported;
-                if(ExtraFeatures.get(key)!=null){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&ExtraTargets.supports(hookKey,UiCatalog.target(key),state.version);}
+                if(ExtraFeatures.get(key)!=null){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&Compatibility.supports(ExtraTargets.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY));}
+                if(available&&state.text.contains("实验兼容"))note=(note==null?"":note+"\n")+"实验兼容：可尝试开启，是否生效以加载与命中日志为准。";
                 if(!available)note=(note==null?"":note+"\n")+"对应入口尚未适配或组件未安装，原有设置已保留。";
                 toggle(options,UiCatalog.label(key),key,note,available);
             }
@@ -213,11 +220,12 @@ public final class MainActivity extends Activity {
         row.setOnClickListener(v->{if(control.isEnabled())control.toggle();});
         control.setOnCheckedChangeListener((button,checked)->{
             if(updating)return;
-            Settings.set(this,key,checked);refresh();
+            Settings.set(this,key,checked);
+            if(key.equals(Compatibility.KEY)){restoredScroll=scroll==null?0:scroll.getScrollY();render();}else refresh();
             long now=SystemClock.elapsedRealtime();
             if(now-lastSaveNotice>=2500){
                 lastSaveNotice=now;
-                Toast.makeText(this,Settings.remote==null?"已保存到本机，连接框架后同步":key.startsWith("core_")?"已保存；系统框架首次加载需重启手机":"已保存，请重新启动对应应用进程",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,Settings.remote==null?"已保存到本机，连接框架后同步":key.equals(Compatibility.KEY)?"已保存，请重启目标应用；系统层兼容模式变化需重启手机":key.startsWith("core_")?"已保存；系统框架首次加载需重启手机":"已保存，请重新启动对应应用进程",Toast.LENGTH_SHORT).show();
             }
         });
         refreshers.add(()->{control.setChecked(selected(key));control.setEnabled(available);name.setTextColor(available?INK:MUTED);});
@@ -250,6 +258,7 @@ public final class MainActivity extends Activity {
     private void aboutCard(){
         LinearLayout box=appGroup("about","关于");
         launcherIconControl(box);
+        toggle(box,"实验兼容模式",Compatibility.KEY,"默认关闭。开启后放宽机型、版本及设置构建校验，尝试现有规则，沿用各功能当前开关。方法匹配不代表行为正确；缺失方法跳过，不会补齐尚未实现的功能。切换后重启目标进程，系统层需重启手机。",true);
         link(box,"检查更新","https://github.com/tiancaiProgramer/HyperPriv/releases");
         label(box,"tiancaiProgramer/HyperPriv · 安装包与更新说明",12,MUTED,false);
         LinearLayout usage=information(box,"usage","使用与恢复");
@@ -261,12 +270,12 @@ public final class MainActivity extends Activity {
         LinearLayout versions=information(box,"versions","组件适配说明");
         for(UiCatalog.Component app:UiCatalog.COMPONENTS){
             label(versions,app.title,14,INK,true);label(versions,appState(app.pkg).text,12,MUTED,false);
-            label(versions,"支持版本 "+UiCatalog.versions(app.pkg),12,MUTED,false);
+            label(versions,"已核对版本 "+UiCatalog.versions(app.pkg),12,MUTED,false);
         }
-        label(versions,"设置组件另核对安装包构建；版本号相同仍可能跳过。这里的适配信息不代表规则已实际命中。",12,MUTED,false);
+        label(versions,"默认模式另核对设置安装包构建；实验兼容模式放宽此校验。这里的版本信息不代表规则已实际命中。",12,MUTED,false);
         LinearLayout limits=information(box,"limits","验证进度与功能边界");
         label(limits,"尚未完成无账号 / 无 SIM / 离线 USB 开启、高温效果、安装完成页和整机抓包验证。上传入口屏蔽不代表关闭全部系统采集。",12,MUTED,false);
-        label(limits,"核心破解已核对本机构建的方法签名，系统进程加载及安装效果尚待重启验证；完整记录见功能说明。",12,MUTED,false);
+        label(limits,"核心破解曾在参考设备核对方法签名；实验兼容不代表当前设备已完成系统注入或安装验证。完整记录见功能说明。",12,MUTED,false);
         label(limits,"新增系统层功能默认关闭。共享 UID、沿用原签名、未知来源安装与权限放宽需按需手动开启；实际效果仍待对应场景验证。",12,MUTED,false);
         label(limits,"本版未提供 AVB 移除与真实电池锁容解除，也不修改充电电压或电池固件。",12,MUTED,false);
         link(limits,"查看逐项功能说明","https://github.com/tiancaiProgramer/HyperPriv/blob/main/FEATURES.md");

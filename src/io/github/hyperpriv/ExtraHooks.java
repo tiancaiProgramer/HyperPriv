@@ -26,13 +26,20 @@ final class ExtraHooks {
     private Field sharedAllow;
     private boolean originalSharedAllow;
     private volatile boolean sharedConfigured;
+    private boolean experimental;
     private static final int MENU_STATE=0x485950;
     ExtraHooks(XposedInterface api,ClassLoader loader,SharedPreferences prefs){this.api=api;this.loader=loader;this.prefs=prefs;}
     void install(String pkg,long version){
-        if(pkg.equals("android")&&(Build.VERSION.SDK_INT!=36||!CoreTargets.FINGERPRINT.equals(Build.FINGERPRINT)))return;
+        install(pkg,version,false);
+    }
+    void install(String pkg,long version,boolean forceExperimental){
+        boolean compatibility=compatibilityEnabled();
+        boolean unknownSystem=pkg.equals("android")&&!Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+        if(unknownSystem&&!compatibility)return;
+        experimental=forceExperimental||unknownSystem||Compatibility.profileVersion(ExtraTargets.ALL,pkg,version,compatibility)!=version;
         int count=0,skipped=0;
         if(pkg.equals("android"))initializeSharedFlag();
-        for(Rule r:ExtraTargets.ALL)if(r.pkg.equals(pkg)&&r.version==version){
+        for(Rule r:Compatibility.select(ExtraTargets.ALL,pkg,version,compatibility)){
             try{install(r);count++;}catch(Throwable e){skipped++;report("extra skip "+r.id()+": "+e.getClass().getSimpleName());}
         }
         if(pkg.equals("android")){
@@ -44,12 +51,14 @@ final class ExtraHooks {
             deopt("com.android.server.wm.WindowManagerService","relayoutWindow");
             deopt("com.android.server.wm.DisplayContent","applySurfaceChangesTransaction");
         }
-        if(pkg.equals("com.miui.securitycenter")&&version==40001275L)
+        if(pkg.equals("com.miui.securitycenter")&&(version==40001275L||experimental)&&count>0)
             deopt("com.miui.antivirus.service.GuardService","J");
+        if(experimental&&count>0)report("experimental extra compatibility "+pkg+" version="+version+"; definitions matched, behavior unverified");
         report("extra ready "+pkg+" version="+version+" installed="+count+" skipped="+skipped);
     }
     private boolean enabled(String key){
         try{
+            if(experimental&&!compatibilityEnabled())return false;
             if(!prefs.getBoolean("master",true)||!prefs.getBoolean(key,false))return false;
             if(key.startsWith("core_")&&!prefs.getBoolean("core_enabled",false))return false;
             if(key.equals("core_previous_signature")&&!prefs.getBoolean("core_update_signature",false))return false;
@@ -57,14 +66,16 @@ final class ExtraHooks {
             return true;
         }catch(Throwable e){return false;}
     }
+    private boolean compatibilityEnabled(){try{return prefs.getBoolean(Compatibility.KEY,false);}catch(Throwable e){return false;}}
     private void install(Rule r)throws Exception{
         Executable e=Reflect.executable(r,loader);
         api.hook(e).intercept(chain->{
-            // Keep installation-thread context even if the low-SDK option is off.
-            if(r.action.equals("low_sdk"))return prepare(chain,r);
             if(r.action.equals("shared_reconcile")){
                 configureSharedFlag(enabled("core_shared_uid"));return chain.proceed();
             }
+            if(experimental&&!compatibilityEnabled())return chain.proceed();
+            // Keep installation-thread context even if the low-SDK option is off.
+            if(r.action.equals("low_sdk"))return prepare(chain,r);
             if(!enabled(r.group)||(r.group.equals("core_shared_uid")&&!sharedConfigured))return chain.proceed();
             Object result;
             switch(r.action){

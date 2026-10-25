@@ -23,11 +23,12 @@ public final class HookEntry extends XposedModule {
     private final AtomicBoolean installed=new AtomicBoolean();
     private SharedPreferences prefs;
     private ClassLoader loader;
+    private boolean experimental;
     private final Set<String> hits=Collections.synchronizedSet(new HashSet<>());
 
     @Override public void onSystemServerStarting(SystemServerStartingParam param){
         new CoreHooks(this,param.getClassLoader()).install();
-        try{new ExtraHooks(this,param.getClassLoader(),getRemotePreferences(Options.PREFS)).install("android",36L);}
+        try{new ExtraHooks(this,param.getClassLoader(),getRemotePreferences(Options.PREFS)).install("android",android.os.Build.VERSION.SDK_INT);}
         catch(Throwable e){report("extra system setup failed: "+e.getClass().getSimpleName());}
     }
 
@@ -47,23 +48,25 @@ public final class HookEntry extends XposedModule {
     private void install(Context context,String pkg){
         try {
             long version=context.getPackageManager().getPackageInfo(pkg,0).getLongVersionCode();
+            prefs=getRemotePreferences(Options.PREFS);
+            boolean compatibility=prefs.getBoolean(Compatibility.KEY,false);
             String expected=Profiles.apkHash(pkg,version);
-            if(expected!=null&&!expected.equals(apkHash(context.getApplicationInfo().sourceDir))){
+            boolean hashMismatch=expected!=null&&!expected.equals(apkHash(context.getApplicationInfo().sourceDir));
+            if(hashMismatch&&!compatibility){
                 report("unsupported APK hash: "+pkg);return;
             }
-            prefs=getRemotePreferences(Options.PREFS);
+            experimental=hashMismatch||Compatibility.profileVersion(Profiles.ALL,pkg,version,compatibility)!=version;
             int count=0,skipped=0;
-            for(Rule r:Profiles.ALL){
-                if(!r.pkg.equals(pkg))continue;
-                if(r.version!=version)continue;
+            for(Rule r:Compatibility.select(Profiles.ALL,pkg,version,compatibility)){
                 try{installRule(r);count++;}catch(Throwable e){skipped++;report("skip "+r.id()+": "+e.getClass().getSimpleName());}
             }
-            new ExtraHooks(this,loader,prefs).install(pkg,version);
+            new ExtraHooks(this,loader,prefs).install(pkg,version,hashMismatch);
+            if(experimental&&count>0)report("experimental compatibility "+pkg+" version="+version+"; definitions matched, behavior unverified");
             report("ready "+pkg+" version="+version+" installed="+count+" skipped="+skipped);
         }catch(Throwable e){report("setup failed: "+e.getClass().getSimpleName());}
     }
     private boolean enabled(String key){
-        try{return prefs!=null&&prefs.getBoolean("master",true)&&prefs.getBoolean(key,true);}
+        try{return prefs!=null&&(!experimental||prefs.getBoolean(Compatibility.KEY,false))&&prefs.getBoolean("master",true)&&prefs.getBoolean(key,true);}
         catch(Throwable e){return false;}
     }
     private void hit(Rule r){if(hits.add(r.id()))report("hit "+r.group+" "+r.id());}

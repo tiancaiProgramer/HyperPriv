@@ -17,12 +17,14 @@ final class CoreHooks {
     private final ThreadLocal<Object> keysetPackage=new ThreadLocal<>();
     private final Set<String> hits=java.util.Collections.synchronizedSet(new HashSet<>());
     private SharedPreferences prefs;
+    private boolean experimental;
     CoreHooks(XposedInterface api,ClassLoader loader){this.api=api;this.loader=loader;}
     void install(){
-        if(Build.VERSION.SDK_INT!=36||!CoreTargets.FINGERPRINT.equals(Build.FINGERPRINT)){
+        try{prefs=api.getRemotePreferences(Options.PREFS);}catch(Throwable e){report("core preferences unavailable");return;}
+        experimental=!Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+        if(experimental&&!compatibilityEnabled()){
             report("core unsupported framework; original methods preserved");return;
         }
-        try{prefs=api.getRemotePreferences(Options.PREFS);}catch(Throwable e){report("core preferences unavailable");return;}
         int installed=0,skipped=0;
         for(CoreTargets.Target t:CoreTargets.ALL){
             try{install(t);installed++;}catch(Throwable e){skipped++;report("core skip "+t.id()+": "+e.getClass().getSimpleName());}
@@ -36,12 +38,13 @@ final class CoreHooks {
         deoptimize("android.util.jar.StrictJarVerifier$VerifierEntry","verify");
         deoptimize("com.android.server.pm.PackageInstallerSession","assertApkConsistentLocked");
         deoptimize("com.android.server.pm.PackageInstallerSession","validateApkInstallLocked");
-        report("core ready installed="+installed+" skipped="+skipped+"; controls default off");
+        report("core ready installed="+installed+" skipped="+skipped+"; controls default off"+(experimental?"; experimental compatibility, behavior unverified":""));
     }
     private boolean enabled(String key){
-        try{return prefs.getBoolean("master",true)&&prefs.getBoolean("core_enabled",false)&&prefs.getBoolean(key,false);}
+        try{return (!experimental||prefs.getBoolean(Compatibility.KEY,false))&&prefs.getBoolean("master",true)&&prefs.getBoolean("core_enabled",false)&&prefs.getBoolean(key,false);}
         catch(Throwable e){return false;}
     }
+    private boolean compatibilityEnabled(){try{return prefs.getBoolean(Compatibility.KEY,false);}catch(Throwable e){return false;}}
     private Class<?> type(String d)throws ClassNotFoundException{
         switch(d){case "V":return void.class;case "Z":return boolean.class;case "I":return int.class;}
         return Class.forName(d.charAt(0)=='L'?d.substring(1,d.length()-1).replace('/','.'):d.replace('/','.'),false,loader);

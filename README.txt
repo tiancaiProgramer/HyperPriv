@@ -1,5 +1,10 @@
-HyperPriv 0.4.0-preview2（GitHub 预览版）
-下载：https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.0-preview2
+HyperPriv 0.4.1-preview1（GitHub 预览版）
+下载：https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.1-preview1
+
+新版在“关于”增加默认关闭的“实验兼容模式”；开启后可放宽机型、系统构建、组件版本及设置构建白名单。
+已有版本优先用原规则，未知版本尝试最新的一组已有规则；仍逐项校验方法签名，缺失则跳过。
+关闭模式后重启目标进程，系统层需重启手机；可操作不代表已验证生效。小米 15 尚未实测。
+已在参考 MIX Fold 3 完成覆盖安装与原设置、作用域保留核对；未开启兼容模式或重启手机。
 
 保持三个独立卡片：分类展开小菜单，小菜单原地展开具体选项。关于保留显示桌面图标。
 新增安全中心、权限管理与系统框架相关选项，全部默认关闭，原有功能选择保留。

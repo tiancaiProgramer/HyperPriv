@@ -1,6 +1,8 @@
 # 检查方式
 
-普通 JVM 检查不依赖 Android 运行时。将 `Policy.java`、`CorePolicy.java`、`ExtraPolicy.java`、`Options.java`、`ExtraFeatures.java`、`UiCatalog.java`、`ExtraTargets.java`、`Rule.java` 与本目录三个 `*Check.java` 编译到临时目录，分别运行 `PolicyCheck`、`CorePolicyCheck`、`ExtraPolicyCheck`。检查策略隔离、原默认值、新增默认关闭、目录覆盖及参数边界。
+普通 JVM 检查不依赖 Android 运行时。运行 `python tests/run_checks.py --jdk /path/to/jdk17`，编译并执行 `PolicyCheck`、`CorePolicyCheck`、`ExtraPolicyCheck`、`CompatibilityCheck`，检查策略隔离、原默认值、新增默认关闭、目录覆盖、参数边界及兼容模式规则选择。
+
+同时传入 `--android-jar /path/to/android.jar --libxposed /path/to/API_ROOT` 时，还会编译完整模块并在本机 JVM 执行 `tests/host/CompatibilityHooksCheck.java`。这使用真实 `ExtraHooks` / `CoreHooks` 的回调、框架代理和自建方法样本，验证关闭兼容模式、功能及总开关时恢复原调用，以及反射拒绝缺失方法和错误返回类型。它不是手机注入或小米 15 实测。
 
 `device/` 内为单独运行的 Android 检查程序，不打包进模块 APK。先正常构建项目，再将其中的 Java 文件以 `android.jar`、libxposed API 及构建产生的 `code.jar` 为编译依赖。通过 D8 将检查类、`code.jar`、API/service/interface 三个依赖打包为单独的 dex JAR，只用于测试进程。发布模块依旧不包含 API。
 
