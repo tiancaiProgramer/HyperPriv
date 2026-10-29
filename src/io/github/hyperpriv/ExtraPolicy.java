@@ -24,9 +24,10 @@ final class ExtraPolicy {
     static boolean clipboardAllowed(String text,String pkg){try{return pkg!=null&&packages(text).contains(pkg);}catch(IllegalArgumentException e){return false;}}
     static boolean parsingSplit(StackTraceElement[] stack){
         for(StackTraceElement frame:stack){String c=frame.getClassName(),m=frame.getMethodName();
-            if(c.equals("android.content.pm.Signature")&&m.equals("areExactMatch"))continue;
+            if(CorePolicy.signatureHelperFrame(frame))continue;
             if(c.startsWith("android.")||c.startsWith("com.android."))return c.equals("com.android.internal.pm.pkg.parsing.ParsingPackageUtils")&&m.equals("getSigningDetails");
         }return false;
     }
     static boolean environmentTask(int id){return id==10||id==13||id==14||id==15||id==16;}
 }
+

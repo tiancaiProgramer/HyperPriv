@@ -530,15 +530,14 @@
   {
     "pkg": "android",
     "version": 36,
-    "cls": "com.android.internal.pm.pkg.parsing.ParsingPackageUtils",
-    "method": "getSigningDetails",
-    "returns": "Landroid/content/pm/parsing/result/ParseResult;",
+    "cls": "com.android.server.pm.InstallPackageHelper",
+    "method": "commitPackagesLocked",
+    "returns": "V",
     "group": "core_previous_signature",
     "action": "previous_signature",
     "params": [
-      "Landroid/content/pm/parsing/result/ParseInput;",
-      "Lcom/android/internal/pm/parsing/pkg/ParsedPackage;",
-      "Z"
+      "Ljava/util/List;",
+      "[I"
     ]
   },
   {

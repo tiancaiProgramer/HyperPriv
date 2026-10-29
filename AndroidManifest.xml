@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="8" android:versionName="0.4.1-preview1">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="19" android:versionName="0.4.2-preview">
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
     <queries>
         <package android:name="com.miui.packageinstaller"/><package android:name="com.miui.securitycenter"/>
@@ -16,3 +16,4 @@
         </activity-alias>
     </application>
 </manifest>
+

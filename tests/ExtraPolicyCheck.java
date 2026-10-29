@@ -17,8 +17,10 @@ public final class ExtraPolicyCheck {
         require(ExtraPolicy.restoreFlag(ExtraPolicy.LOW_SDK_FLAG|128,0,ExtraPolicy.LOW_SDK_FLAG)==128,"restore overwrote unrelated install flags");
         require(ExtraPolicy.restoreFlag(ExtraPolicy.LOW_SDK_FLAG|128,ExtraPolicy.LOW_SDK_FLAG,ExtraPolicy.LOW_SDK_FLAG)==(ExtraPolicy.LOW_SDK_FLAG|128),"restore removed originally set flag");
         require(ExtraPolicy.parsingSplit(new StackTraceElement[]{frame("com.android.internal.pm.pkg.parsing.ParsingPackageUtils","getSigningDetails")}),"split collection context missing");
+        require(ExtraPolicy.parsingSplit(new StackTraceElement[]{frame("android.graphics.FrameworkBridge","areExactMatch"),frame("com.android.internal.pm.pkg.parsing.ParsingPackageUtils","getSigningDetails")}),"framework bridge hid parser caller");
         require(!ExtraPolicy.parsingSplit(new StackTraceElement[]{frame("android.content.pm.SigningDetails","checkCapability"),frame("com.android.internal.pm.pkg.parsing.ParsingPackageUtils","getSigningDetails")}),"nested capability inherited split bypass");
         for(int id=0;id<20;id++)require(ExtraPolicy.environmentTask(id)==(id==10||id>=13&&id<=16),"unrelated environment request blocked");
         System.out.println("Extra policy: AppOp isolation, exact whitelist, signature boundaries, request selection and flag restoration passed");
     }
 }
+

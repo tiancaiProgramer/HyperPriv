@@ -1,6 +1,7 @@
 package io.github.hyperpriv;
 
 import android.content.SharedPreferences;
+import android.view.MenuItem;
 import io.github.libxposed.api.XposedInterface;
 import java.lang.reflect.*;
 import java.util.*;
@@ -9,10 +10,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 /** Executes the real callbacks with framework proxies, without a phone or live hooks. */
 public final class CompatibilityHooksCheck {
     public static final class Fixture {public boolean check(){return true;}}
+    public static final class MenuFixture {public boolean onOptionsItemSelected(MenuItem item){return false;}}
     private static final Map<String,Object> prefs=new HashMap<>();
     private static XposedInterface.Hooker callback;
     private static Executable executable;
     private static final AtomicInteger calls=new AtomicInteger();
+    private static final List<String> logs=new ArrayList<>();
     private static void require(boolean ok,String message){if(!ok)throw new AssertionError(message);}
     private static <T>T proxy(Class<T> type,InvocationHandler fn){return type.cast(Proxy.newProxyInstance(type.getClassLoader(),new Class[]{type},fn));}
     private static SharedPreferences preferences(){return proxy(SharedPreferences.class,(p,m,a)->{
@@ -20,6 +23,7 @@ public final class CompatibilityHooksCheck {
         return null;
     });}
     private static XposedInterface api(){return proxy(XposedInterface.class,(p,m,a)->{
+        if(m.getName().equals("log")){logs.add(Arrays.toString(a));return null;}
         if(!m.getName().equals("hook"))return null;
         executable=(Executable)a[0];
         return proxy(XposedInterface.HookBuilder.class,(b,bm,ba)->{
@@ -44,6 +48,25 @@ public final class CompatibilityHooksCheck {
         prefs.put(Compatibility.KEY,true);prefs.put("master",false);require(Boolean.TRUE.equals(invoke()),"master off failed");
         prefs.put("master",true);prefs.put(feature,false);require(Boolean.TRUE.equals(invoke()),"feature off failed");
     }
+    private static void checkMenuDispatch()throws Throwable{
+        ExtraHooks extra=new ExtraHooks(api(),MenuFixture.class.getClassLoader(),preferences());
+        Rule rule=new Rule("fixture",1,MenuFixture.class.getName(),"onOptionsItemSelected","Z","app_disable","app_menu",new String[]{"Landroid/view/MenuItem;"});
+        Method install=ExtraHooks.class.getDeclaredMethod("install",Rule.class);install.setAccessible(true);install.invoke(extra,rule);
+        prefs.put("master",true);prefs.put("app_disable",true);logs.clear();
+        for(int id:new int[]{android.R.id.home,1,0}){
+            MenuItem item=proxy(MenuItem.class,(p,m,a)->m.getName().equals("getItemId")?id:null);
+            AtomicInteger original=new AtomicInteger();
+            Object result=callback.intercept(proxy(XposedInterface.Chain.class,(p,m,a)->{
+                if(m.getName().equals("getArg"))return item;
+                if(m.getName().equals("getThisObject"))return new MenuFixture();
+                if(m.getName().equals("proceed")){original.incrementAndGet();return false;}
+                throw new UnsupportedOperationException(m.getName());
+            }));
+            require(Boolean.FALSE.equals(result)&&original.get()==1,"unrelated menu item did not retain original handler");
+        }
+        require(logs.isEmpty(),"unrelated MenuItem was treated as Menu: "+logs);
+        System.out.println("Menu callback: back and unrelated items retain original handler without invalid Menu cast");
+    }
     public static void main(String[] args)throws Throwable{
         ExtraHooks extra=new ExtraHooks(api(),Fixture.class.getClassLoader(),preferences());field(extra,"experimental",true);
         Rule rule=new Rule("fixture",1,Fixture.class.getName(),"check","Z","safepay_scan","false",new String[0]);
@@ -56,6 +79,9 @@ public final class CompatibilityHooksCheck {
         CoreTargets.Target target=new CoreTargets.Target(Fixture.class.getName(),"check","Z","core_downgrade","always","false");
         Method coreInstall=CoreHooks.class.getDeclaredMethod("install",CoreTargets.Target.class);coreInstall.setAccessible(true);coreInstall.invoke(core,target);
         checkGates("core_downgrade");
+        checkMenuDispatch();
+        PreviousSignatureHooksCheck.main(new String[0]);
         System.out.println("Real Hook callbacks: experimental/strict gating, master/feature off and exact reflection rejection passed");
     }
 }
+

@@ -44,7 +44,7 @@ final class ExtraTargets {
         new Rule("android",36L,"com.android.server.biometrics.sensors.fingerprint.aidl.FingerprintProvider","copyFingerprintXml","V","core_keep_fingerprint","null",new String[]{"Landroid/content/Context;","I","I"}),
         new Rule("android",36L,"com.android.server.pm.InstallPackageHelper","preparePackage","V","core_low_sdk","low_sdk",new String[]{"Lcom/android/server/pm/InstallRequest;"}),
         new Rule("android",36L,"com.android.server.pm.PackageSetting","isPersistent","Z","core_persistent","persistent",new String[]{}),
-        new Rule("android",36L,"com.android.internal.pm.pkg.parsing.ParsingPackageUtils","getSigningDetails","Landroid/content/pm/parsing/result/ParseResult;","core_previous_signature","previous_signature",new String[]{"Landroid/content/pm/parsing/result/ParseInput;","Lcom/android/internal/pm/parsing/pkg/ParsedPackage;","Z"}),
+        new Rule("android",36L,"com.android.server.pm.InstallPackageHelper","commitPackagesLocked","V","core_previous_signature","previous_signature",new String[]{"Ljava/util/List;","[I"}),
         new Rule("android",36L,"android.content.pm.SigningDetails","checkCapability","Z","core_shared_uid","shared_capability",new String[]{"Landroid/content/pm/SigningDetails;","I"}),
         new Rule("android",36L,"android.content.pm.SigningDetails","checkCapabilityRecover","Z","core_shared_uid","shared_capability",new String[]{"Landroid/content/pm/SigningDetails;","I"}),
         new Rule("android",36L,"android.content.pm.SigningDetails","hasCommonAncestor","Z","core_shared_uid","shared_ancestor",new String[]{"Landroid/content/pm/SigningDetails;"}),

@@ -28,3 +28,4 @@ with tempfile.TemporaryDirectory(prefix='hyperpriv-checks-',dir=build) as direct
         cp=os.pathsep.join(map(str,deps))
         run(exe('javac'),'-encoding','UTF-8','-source','8','-target','8','-classpath',cp,'-d',runtime,*sorted((root/'src').rglob('*.java')),*sorted((root/'tests/host').glob('*.java')))
         run(exe('java'),'-cp',os.pathsep.join([str(runtime),cp]),'io.github.hyperpriv.CompatibilityHooksCheck')
+        run(exe('java'),'-cp',os.pathsep.join([str(runtime),cp]),'io.github.hyperpriv.PreferenceCleanupCheck')

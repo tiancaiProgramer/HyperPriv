@@ -38,6 +38,8 @@ final class CoreHooks {
         deoptimize("android.util.jar.StrictJarVerifier$VerifierEntry","verify");
         deoptimize("com.android.server.pm.PackageInstallerSession","assertApkConsistentLocked");
         deoptimize("com.android.server.pm.PackageInstallerSession","validateApkInstallLocked");
+        deoptimize("android.content.pm.SigningDetails","signaturesMatchExactly");
+        deoptimize("android.content.pm.Signature","areExactMatch");
         report("core ready installed="+installed+" skipped="+skipped+"; controls default off"+(experimental?"; experimental compatibility, behavior unverified":""));
     }
     private boolean enabled(String key){
@@ -67,7 +69,18 @@ final class CoreHooks {
                     if(!CorePolicy.apkParsing(Thread.currentThread().getStackTrace()))return chain.proceed();
                     break;
                 case "split":
-                    if(!CorePolicy.splitVerification(Thread.currentThread().getStackTrace()))return chain.proceed();
+                    StackTraceElement[] stack=Thread.currentThread().getStackTrace();
+                    if(!CorePolicy.splitVerification(stack)){
+                        if(hits.add("split-preserved:"+t.id())){
+                            StringBuilder context=new StringBuilder();
+                            for(StackTraceElement frame:stack)if(frame.getClassName().startsWith("android.")||frame.getClassName().startsWith("com.android.")){
+                                if(context.length()>0)context.append(" <- ");context.append(frame.getClassName()).append('#').append(frame.getMethodName());
+                                if(context.length()>1200)break;
+                            }
+                            report("core split original context: "+context);
+                        }
+                        return chain.proceed();
+                    }
                     break;
                 case "keyset_start":
                     if(chain.getArg(1)!=null||!CorePolicy.installation(Thread.currentThread().getStackTrace()))return chain.proceed();
@@ -89,3 +102,4 @@ final class CoreHooks {
     }
     private void report(String s){api.log(Log.INFO,"HyperPriv",s);}
 }
+

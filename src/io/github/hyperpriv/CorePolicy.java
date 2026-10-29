@@ -29,7 +29,7 @@ final class CorePolicy {
     static boolean splitVerification(StackTraceElement[] stack){
         for(StackTraceElement frame:stack){
             String c=frame.getClassName(),m=frame.getMethodName();
-            if(c.equals("android.content.pm.SigningDetails")&&m.equals("signaturesMatchExactly"))continue;
+            if(signatureHelperFrame(frame))continue;
             // Only the direct split-consistency caller may bypass exact matching.
             // Nested capability/permission checks must retain the original result.
             if(c.startsWith("android.")||c.startsWith("com.android."))
@@ -38,4 +38,14 @@ final class CorePolicy {
         }
         return false;
     }
+    static boolean signatureHelperFrame(StackTraceElement frame){
+        String c=frame.getClassName(),m=frame.getMethodName();
+        if(c.equals("android.content.pm.SigningDetails")&&m.equals("signaturesMatchExactly"))return true;
+        if(c.equals("android.content.pm.Signature")&&m.equals("areExactMatch"))return true;
+        // This framework emits a randomized android.* bridge frame for the
+        // hooked method. Skip only these two comparison names; the next Android
+        // caller must still be the exact split-install method checked above.
+        return c.startsWith("android.")&&(m.equals("signaturesMatchExactly")||m.equals("areExactMatch"));
+    }
 }
+

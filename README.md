@@ -1,96 +1,62 @@
 # HyperPriv
 
-HyperOS 3 / Android 16 的 LSPosed 模块，针对下列组件版本调整安装器广告、部分资料上传入口、风险拦截及权限授权读秒。当前预览版为 **0.4.1-preview1**，下载见 [GitHub Release](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.1-preview1)。本版不是全部功能已完成实测的稳定版。
+HyperOS 3 / Android 16 的现代LSPosed API102模块。当前预览版为 **0.4.2-preview / versionCode19**，[下载本版本](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.2-preview)。不是全部功能完成实测的稳定版。
+
+本候选主要修复分包安装、沿用原签名、菜单处理和加载诊断，不包含主题功能。原有SIM安全保护选项保留。
+
+[版本更新说明](RELEASE-NOTES.md) · [对比GitHub](GITHUB-DIFF.md) · [验证状态](VALIDATION.txt) · [历史逐项实测](VERIFICATION-20261026.md)
+
+## 界面与配置
+
+保留“安装与授权”“隐私与上报”“电量与显示”三张卡片、11个原地展开小菜单；卡片与菜单分别记住展开状态，不跳转新页面。“关于”保留显示桌面图标、组件适配和恢复入口。
+
+62个布尔偏好包含模块总开关、核心总开关和实验兼容模式，另有剪贴板包名白名单、提示按钮文字与不透明度3个参数。保留既有偏好键、默认值和10项推荐作用域，未新增默认开启功能。具体功能见FEATURES.md。
 
 ## 实验兼容模式
 
-在“关于”中开启“实验兼容模式”，可放宽机型、系统构建、组件版本及设置 APK 哈希白名单，尝试现有规则。默认关闭，原有 61 个布尔偏好及三个参数不变，另外增加一个兼容模式控制项。
+默认关闭。在“关于”开启后，放宽机型、系统构建、组件版本和设置APK哈希限制，尝试现有规则。已有精确版本优先；未知版本选择该组件最新的一组定义，不混用多个版本。仍精确检查类、方法、参数和返回类型，缺失就跳过。
 
-已有精确版本优先使用原规则；未知版本只选择该组件最新的一组已有定义，不混用多个版本。每个目标仍检查类、方法、参数和返回类型，不匹配就跳过；缺少实现的安全守护 Root 检测仍不可用。同名方法的含义可能随版本变化，签名匹配不能证明行为正确。
-
-兼容模式沿用各功能当前开关，包含原来默认开启的功能。切换模式后需重新启动目标应用进程；系统层模式变化需重启手机。关闭模式会让实验回调恢复原调用，但临时状态及系统层配置仍应通过重启目标进程恢复。实验状态和跳过原因会记录到模块日志；可操作的开关不等于功能已生效。
-
-本地 JVM 策略和真实回调代理检查已通过，已在参考 MIX Fold 3 上完成原签名覆盖安装及设置保留核对。兼容模式保持关闭，未重启手机；尚未在小米 15 上验证兼容效果。
-
-[验证记录](VALIDATION.txt) · [参考项目与许可证](THIRD_PARTY_NOTICES.txt)
-
-## 界面与功能
-
-已对照手机中的 NoAdMi 布局，保留“安装与授权”“隐私与上报”“电量与显示”三张独立卡片。点击卡片原地展开小菜单，再点击小菜单展开选项；两层分别记住状态，不跳转新页面，不显示“已开启”数量。“关于”保留显示桌面图标、组件适配、恢复与更新入口。
-
-原有 19 个功能与总开关、六项核心破解及其总开关保持原配置。此次补充安全中心、权限管理、系统框架等相关选项，详见 [逐项对照与边界](FEATURES.md)。新增 34 个布尔偏好，其中安全守护 Root 检查因本机缺少对应入口不可用；其余选项对应实际实现，均默认关闭。
-
-共 61 个布尔偏好，另有剪贴板白名单、提示按钮文字与不透明度三个参数。模块没有网络权限，源码和安装包不包含原版 APK、系统 JAR、签名私钥或用户数据。
-
-支付与安装调用链补充核对见 [FEATURES.md](FEATURES.md)。本次修正灰色 Root 项名称，并补充支付场景自动扫描入口。
-
-## 现有功能的改进
-
-- 补充分包解析阶段的证书一致性入口，保持对能力、权限等其他调用路径的隔离。
-- 持久性安装检查使用当前线程的安装上下文；低 SDK 标记在退出时恢复，并保留其他标记。
-- 跨应用弹窗采用页面与按钮限定，不使用全局按钮文本自动接受其他授权。
-- 剪贴板采用完整包名白名单和读取操作限定；空白、非法和通配符名单不放宽应用。
-- 各新选项默认关闭；布尔、文字、不透明度参数分别校验并同步至框架。
-- 界面显示缺少的推荐作用域，未适配的功能保持不可操作。
+同名方法含义可能变化，反射匹配不等于行为正确。模式沿用已保存的开关，包含原来默认开启的功能。切换模式后重启目标应用；系统层变化需重启手机并检查日志。未知机型及小米15未实测。
 
 ## 适配与安装
 
-需要 Root / Zygisk / 支持现代 libxposed API 102 的框架。本地设备为 Xiaomi MIX Fold 3、Android 16、OS3.0.304.0.WMVCNXM，LSPosed 2.2.1（7912）。这不是通用设备适配。
+参考设备为Xiaomi MIX Fold3、Android16、HyperOS OS3.0.304.0.WMVCNXM、LSPosed2.2.1(7912)，需要支持现代API102的框架。这不是通用设备适配。
 
-| 组件 | 版本 |
-| --- | --- |
-| 应用包管理组件 | 5.3.6.0.1-20250825F / 53601 |
-| 安全中心 | 原规则支持 40001268、40001275；本次新增规则核对 40001275 |
-| 安全守护 | 原规则支持 256、307；新增 Root 检查暂未适配 |
-| 设置 | 16 / 36，另外核对已适配 APK SHA-256 |
-| 权限管理 | 1.9.2 / 192 |
-| 电量与性能 | 4.2.00 / 40200 |
-| Joyose | 2.4.92 / 492 |
-| MSA | 2025.07.19.06-release / 2025071906 |
-| 小米统计 | 6.31.0 / 2026082100 |
-| 系统框架 | 当前 Android 16 完整构建；参数与返回类型另行匹配 |
+已定义组件包括安装器53601、安全中心40001268/40001275、安全守护256/307、设置36及APK哈希、权限管理192、电量与性能40200、Joyose492、MSA2025071906、小米统计2026082100及当前Android16完整系统构建。精确规则见profiles.json、extra-profiles.json和Java目标定义。
 
-1. 从 Release 安装 `HyperPriv-0.4.1-preview1.apk`。沿用原签名可保留旧配置。
-2. 在 LSPosed 启用模块，原有八个应用作用域继续保留；新增权限管理 `com.lbe.security.miui` 与系统框架。
-3. 按需选择新增功能，重启对应应用进程；系统层首次加载需要重启手机。
-
-关闭模块总开关或对应子项后重启目标进程，可恢复原方法。手动更改的 USB、锁屏时间、应用启停状态，以及已经应用的云控不保证自动回退；系统的周期计时器等状态可能需要重启或再次解锁后重新建立。
-
-## 验证状态
-
-59 条新增方法定义均按本机 DEX 核对；在手机独立测试进程中只读反射解析这些方法及 8 个必要字段，67 项匹配、0 失败。这证明方法和字段存在，不代表对应行为已完成实测。
-
-策略测试覆盖旧设置默认值兼容、默认关闭、操作号隔离、完整包名白名单、分包与权限边界、环境任务筛选、安装标记恢复。手机独立进程的模拟回调测试也通过，覆盖安装线程隔离、异常恢复、操作号与总开关关闭；没有改变这些系统功能的当前开关。推荐作用域已在本机补齐，部分新菜单已实机检查；系统进程注入及各项具体行为仍有待相应重启和端到端场景验证，详见 [验证记录](VALIDATION.txt)。
-
-2026-10-23 补充实机验证：在真实安全中心进程中，通过已有服务入口受控重放支付环境事件，取得 `GuardService#Q` 的 LSPosed 命中；关闭时扫描、开启时拦截、恢复关闭后扫描恢复。该结果不等同于支付宝登录后的自然支付流程已验证。设备已经由用户重启，但本次启动仍缺少系统层注册记录；不能据此确认系统层功能生效。测试后的功能开关和参数均已恢复。
-
-## AVB 与真实电池容量
-
-本版**没有移除 AVB，也没有解除真实电池锁容**。AVB 属于应用启动前的启动链校验，Xposed 无法代替 vbmeta/启动镜像适配；本项目未写入任何启动分区。实际容量受电池状态、驱动、固件和充电策略共同影响；容量低于设计值不足以证明被官方锁容。本版没有定位到可验证的真实容量限制入口，不伪造容量或修改充电电压。
-
-## 构建
-
-依赖 Python 3、JDK 17、Android SDK Platform 35 / Build Tools 36.0.0，以及官方 [libxposed API](https://github.com/libxposed/api)、[service / interface](https://github.com/libxposed/service) 102 的 `classes.jar`。
-
-将三个 JAR 分别放在 `API_ROOT/api/classes.jar`、`API_ROOT/service/classes.jar`、`API_ROOT/interface/classes.jar`。API 仅用于编译，service/interface 运行时会打包进 APK。
-
-创建自己的 PKCS12 签名证书（别名 `hyperpriv`），通过环境变量 `HYPERPRIV_SIGN_PASSWORD` 传递签名密码，然后执行：
+候选APK保持原签名，本次已完成升级、重启加载和文档注明的自建样本实测。用户确认测试时使用普通安装，ADB可指定：
 
 ```sh
-python3 build.py \
-  --jdk /path/to/jdk17 \
-  --sdk /path/to/android-sdk \
-  --libxposed /path/to/API_ROOT \
-  --keystore /path/to/signing.p12 \
-  --out HyperPriv.apk
+adb install --no-incremental -r HyperPriv-0.4.2-preview.apk
 ```
 
-签名私钥不随源码分发，自签构建无法覆盖安装已发布安装包。仓库不包含原版系统 APK、用户应用或第三方 APK 修改版。
+此前定位过增量安装导致早期启动读取模块失败；覆盖安装成功不能代替系统进程已加载。在LSPosed启用模块并勾选9个应用和系统框架，共10项作用域。修改应用选项后重启对应应用；修改系统层选项或模式后重启手机。框架服务显示同步成功不证明运行中系统进程采用新值。
+
+关闭单项或总开关并重启目标进程，可恢复对应原调用。已经手动更改的USB、锁屏、应用启停和缓存云控不保证自动回退。
+
+## 验证边界
+
+本候选Java编译、完整APK构建、签名验证及与原签名一致性、主机策略和真实回调代理检查通过；源码及DEX未发现已移除的目标引用。**新APK已升级、重启并通过所记录的场景对照；不是全部功能已完成实测。**
+
+历史2026-10-26的62项逐项记录保留为有日期证据。匹配、回调、入口命中、场景对照、条件不足和未测试分别记录，不能合并为全部通过。
+
+安全守护Root开关可保存，但业务未适配。温度选项仅限指定屏幕刷新率分支，不能等同解除全部游戏锁帧、CPU/GPU温控、过热关机或充电保护。
+
+## 构建与检查
+
+需要Python3、JDK17、Android SDK Platform35 / Build Tools36.0.0，以及libxposed API/service/interface102的classes.jar。分别置于API_ROOT的api、service、interface子目录；API仅编译使用，service/interface为打包运行时。
+
+使用自己的PKCS12密钥，别名hyperpriv，密码通过HYPERPRIV_SIGN_PASSWORD环境变量传递：
+
+```sh
+python3 build.py --jdk /path/to/jdk17 --sdk /path/to/android-sdk --libxposed /path/to/API_ROOT --keystore /path/to/signing.p12 --out HyperPriv.apk
+python3 tests/run_checks.py --jdk /path/to/jdk17 --android-jar /path/to/android-sdk/platforms/android-35/android.jar --libxposed /path/to/API_ROOT
+```
+
+私钥和密码不随源码分发。自签构建不能直接覆盖原签名安装包，不应未经用户同意卸载或清空配置。
 
 ## 来源与许可
 
-参考 [HyperCeiler](https://github.com/ReChronoRain/HyperCeiler) 的相关 Hook，基于目标组件实际方法签名独立实现现代 API 102 模块；原有功能参考提交为 `861be0473847d5c020102191f2c2891acda5d628`；0.4 增补参考于 2026-10-23 获取，逐文件版本见 [REFERENCE_BLOBS.json](REFERENCE_BLOBS.json)。
+参考HyperCeiler对应Hook并按实际设备适配现代API102，保留AGPL-3.0-only及来源声明；libxposed按Apache2.0使用。具体来源见THIRD_PARTY_NOTICES.txt、REFERENCE_BLOBS.json、LICENSE和LICENSE-APACHE-2.0。源码包不含原版系统APK、第三方修改APK、私钥或用户设备数据。
 
-HyperPriv 源码按 **AGPL-3.0-only** 发布，保留 HyperCeiler 的来源与许可声明。libxposed 依赖按 Apache-2.0 使用。具体文件与声明见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)、[LICENSE](LICENSE) 和 [LICENSE-APACHE-2.0](LICENSE-APACHE-2.0)。
-
-显示分支隔离检查：使用 JDK 17 将 `Policy.java` 与 `tests/PolicyCheck.java` 编译到临时目录，运行 `io.github.hyperpriv.PolicyCheck`，检查只匹配温度刷新率 cookie，不匹配其他显示模式。
+本轮清理、加载和实机验证见[2026-10-29记录](VERIFICATION-20261029.md)。

@@ -13,9 +13,10 @@ public final class RuntimeAudit {
   for(Rule r:ExtraTargets.ALL){ClassLoader loader=loaders.get(r.pkg);if(loader==null){failed++;System.out.println("MISSING LOADER "+r.pkg);continue;}
    try{Reflect.executable(r,loader);matched++;}catch(Throwable e){failed++;System.out.println("FAIL "+r.group+" "+r.id()+" "+e.getClass().getSimpleName()+":"+e.getMessage());}
   }
-  String[][] fields={{"android.content.pm.SigningInfo","mSigningDetails"},{"android.window.ScreenCapture$CaptureArgs","mCaptureSecureLayers"},{"com.android.server.pm.ReconcilePackageUtils","ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS"},{"com.android.server.pm.SharedUserSetting","uidFlags"},{"com.android.server.pm.SharedUserSetting","mPackages"},{"com.android.server.pm.InstallArgs","mInstallFlags"},{"com.android.server.pm.InstallRequest","mInstallArgs"},{"com.android.server.pm.PackageSignatures","mSigningDetails"}};
+  String[][] fields={{"android.content.pm.SigningInfo","mSigningDetails"},{"android.window.ScreenCapture$CaptureArgs","mCaptureSecureLayers"},{"com.android.server.pm.ReconcilePackageUtils","ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS"},{"com.android.server.pm.SharedUserSetting","uidFlags"},{"com.android.server.pm.SharedUserSetting","mPackages"},{"com.android.server.pm.InstallArgs","mInstallFlags"},{"com.android.server.pm.InstallRequest","mInstallArgs"},{"com.android.server.pm.PackageSignatures","mSigningDetails"},{"com.android.server.pm.InstallArgs","mSigningDetails"},{"com.android.server.pm.ReconciledPackage","mInstallRequest"},{"com.android.server.pm.ReconciledPackage","mSigningDetails"}};
   for(String[] f:fields)try{Reflect.field(Class.forName(f[0],false,system),f[1]);matched++;}catch(Throwable e){failed++;System.out.println("FIELD FAIL "+Arrays.toString(f)+" "+e.getClass().getSimpleName());}
   System.out.println("Runtime reflective audit matched="+matched+" failed="+failed);
   if(failed!=0)System.exit(2);
  }
 }
+

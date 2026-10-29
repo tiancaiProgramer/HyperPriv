@@ -113,7 +113,7 @@ public final class MainActivity extends Activity {
         refreshers.add(()->{
             title.setText(Settings.remote!=null?"框架服务已连接":"等待框架服务连接");
             message.setText(Settings.remote==null?"请在 LSPosed 启用模块并勾选推荐作用域；未连接时可先保存设置。"
-                    :selected("master")?"展开分类与小菜单设置；保存后请重新启动对应应用进程。":"总开关已关闭，下面的独立设置仍会保留。");
+                    :selected("master")?"展开分类与小菜单设置；保存后重启对应应用；系统框架选项改动后需重启手机。":"总开关已关闭，下面的独立设置仍会保留。");
             service.setText(Settings.status+"\n"+Settings.scopeStatus());
         });
     }
@@ -137,7 +137,7 @@ public final class MainActivity extends Activity {
         boolean compatibility=selected(Compatibility.KEY);
         if(pkg.equals("android")){
             boolean strict=Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
-            return new AppState(strict||compatibility,strict?"Android 16 · 已匹配本机构建，首次加载需重启":compatibility?"实验兼容 · 当前系统构建未经验证":"系统构建未适配",Build.VERSION.SDK_INT);
+            return new AppState(strict||compatibility,strict?"Android 16 · 已匹配本机构建，系统选项改动后需重启":compatibility?"实验兼容 · 当前系统构建未经验证":"系统构建未适配",Build.VERSION.SDK_INT);
         }
         try{
             PackageInfo info=getPackageManager().getPackageInfo(pkg,0);long version=info.getLongVersionCode();boolean supported=false;
@@ -157,7 +157,7 @@ public final class MainActivity extends Activity {
     private void coreSettings(LinearLayout box){
         boolean strict=Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
         boolean supported=strict||selected(Compatibility.KEY);
-        label(box,strict?"已适配当前系统构建。首次使用需勾选系统框架并重启手机。":supported?"实验兼容：当前构建未经验证，逐项尝试现有方法；系统层需重启后检查加载日志。":"当前系统构建尚未适配，可在关于中按需开启实验兼容模式。",12,ACCENT,false);
+        label(box,strict?"已适配当前系统构建。勾选系统框架，修改系统选项后重启手机。":supported?"实验兼容：当前构建未经验证，逐项尝试现有方法；系统层需重启后检查加载日志。":"当前系统构建尚未适配，可在关于中按需开启实验兼容模式。",12,ACCENT,false);
         label(box,"新选项默认关闭，请按需开启。",12,MUTED,false);
         toggle(box,"启用核心破解","core_enabled","同时受上方模块总开关控制。",supported);
         toggle(box,"允许降级安装","core_downgrade","保留应用数据安装旧版，可能存在数据兼容问题。",supported);
@@ -197,7 +197,7 @@ public final class MainActivity extends Activity {
             if(section.detail!=null)label(options,section.detail,12,ACCENT,false);
             for(String key:section.keys){
                 AppState state=appState(UiCatalog.target(key));String note=UiCatalog.note(key);boolean available=state.supported;
-                if(ExtraFeatures.get(key)!=null){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&Compatibility.supports(ExtraTargets.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY));}
+                if(ExtraFeatures.get(key)!=null){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&(key.equals("guard_environment")||Compatibility.supports(ExtraTargets.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY)));}
                 if(available&&state.text.contains("实验兼容"))note=(note==null?"":note+"\n")+"实验兼容：可尝试开启，是否生效以加载与命中日志为准。";
                 if(!available)note=(note==null?"":note+"\n")+"对应入口尚未适配或组件未安装，原有设置已保留。";
                 toggle(options,UiCatalog.label(key),key,note,available);
@@ -225,7 +225,9 @@ public final class MainActivity extends Activity {
             long now=SystemClock.elapsedRealtime();
             if(now-lastSaveNotice>=2500){
                 lastSaveNotice=now;
-                Toast.makeText(this,Settings.remote==null?"已保存到本机，连接框架后同步":key.equals(Compatibility.KEY)?"已保存，请重启目标应用；系统层兼容模式变化需重启手机":key.startsWith("core_")?"已保存；系统框架首次加载需重启手机":"已保存，请重新启动对应应用进程",Toast.LENGTH_SHORT).show();
+                ExtraFeatures.Feature feature=ExtraFeatures.get(key);
+                boolean systemOption=key.equals("master")||key.startsWith("core_")||(feature!=null&&feature.pkg.equals("android"));
+                Toast.makeText(this,Settings.remote==null?"已保存到本机，连接框架后同步":key.equals(Compatibility.KEY)?"已保存，请重启目标应用；系统层兼容模式变化需重启手机":systemOption?"已保存；请重启手机使系统框架设置生效":"已保存，请重新启动对应应用进程",Toast.LENGTH_SHORT).show();
             }
         });
         refreshers.add(()->{control.setChecked(selected(key));control.setEnabled(available);name.setTextColor(available?INK:MUTED);});
@@ -263,7 +265,7 @@ public final class MainActivity extends Activity {
         label(box,"tiancaiProgramer/HyperPriv · 安装包与更新说明",12,MUTED,false);
         LinearLayout usage=information(box,"usage","使用与恢复");
         label(usage,"开关开启表示执行对应调整；关闭单项后恢复原方法。关闭总开关不会清除独立设置。",12,MUTED,false);
-        label(usage,"应用功能需勾选对应的九个应用作用域；新增自启动与剪贴板提示需要权限管理作用域。系统层功能还需勾选系统框架并重启手机完成首次加载。",12,MUTED,false);
+        label(usage,"应用功能需勾选对应作用域；自启动与剪贴板提示需要权限管理作用域。系统层功能还需勾选系统框架，修改选项后重启手机。",12,MUTED,false);
         label(usage,"停用或卸载本模块后重启目标进程，也可恢复原方法。手动开启的 USB 设置或选择的锁屏时间需自行恢复。",12,MUTED,false);
         TextView disable=label(usage,"关闭模块总开关",14,ACCENT,true);clickable(disable);
         disable.setOnClickListener(v->{Settings.set(this,"master",false);refresh();Toast.makeText(this,"总开关已关闭，独立设置已保留",Toast.LENGTH_SHORT).show();});
@@ -274,10 +276,9 @@ public final class MainActivity extends Activity {
         }
         label(versions,"默认模式另核对设置安装包构建；实验兼容模式放宽此校验。这里的版本信息不代表规则已实际命中。",12,MUTED,false);
         LinearLayout limits=information(box,"limits","验证进度与功能边界");
-        label(limits,"尚未完成无账号 / 无 SIM / 离线 USB 开启、高温效果、安装完成页和整机抓包验证。上传入口屏蔽不代表关闭全部系统采集。",12,MUTED,false);
-        label(limits,"核心破解曾在参考设备核对方法签名；实验兼容不代表当前设备已完成系统注入或安装验证。完整记录见功能说明。",12,MUTED,false);
-        label(limits,"新增系统层功能默认关闭。共享 UID、沿用原签名、未知来源安装与权限放宽需按需手动开启；实际效果仍待对应场景验证。",12,MUTED,false);
-        label(limits,"本版未提供 AVB 移除与真实电池锁容解除，也不修改充电电压或电池固件。",12,MUTED,false);
+        label(limits,"本机已有部分安装、读秒、导航和截图对照；无账号 / 无 SIM / 离线组合、长期行为及整机抓包仍待验证。",12,MUTED,false);
+        label(limits,"方法匹配、入口命中与实际业务对照分别记录；实验兼容不保证未知机型生效。完整状态见功能说明。",12,MUTED,false);
+        label(limits,"新增系统层功能默认关闭。安全守护 Root 检测业务尚未适配，对应开关仅保存选择。",12,MUTED,false);
         link(limits,"查看逐项功能说明","https://github.com/tiancaiProgramer/HyperPriv/blob/main/FEATURES.md");
         LinearLayout source=information(box,"source","项目与许可");
         link(source,"HyperPriv 源码","https://github.com/tiancaiProgramer/HyperPriv");
@@ -285,3 +286,4 @@ public final class MainActivity extends Activity {
         label(source,"AGPL-3.0 · 模块无网络权限。界面参考 NoAdMi；核心破解入口参考 HyperCeiler 与 CorePatch 的设计。",12,MUTED,false);
     }
 }
+

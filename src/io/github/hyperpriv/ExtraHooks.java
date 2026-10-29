@@ -43,7 +43,7 @@ final class ExtraHooks {
             try{install(r);count++;}catch(Throwable e){skipped++;report("extra skip "+r.id()+": "+e.getClass().getSimpleName());}
         }
         if(pkg.equals("android")){
-            deopt("com.android.server.pm.InstallPackageHelper","preparePackage");
+            deopt("com.android.server.pm.InstallPackageHelper","preparePackage","commitInstallPackages");
             deopt("com.android.server.pm.PackageManagerServiceUtils","verifySignatures","canJoinSharedUserId");
             deopt("com.android.server.pm.ReconcilePackageUtils","reconcilePackages");
             deopt("com.android.internal.pm.pkg.parsing.ParsingPackageUtils","getSigningDetails");
@@ -80,6 +80,7 @@ final class ExtraHooks {
             Object result;
             switch(r.action){
                 case "null":hit(r);return null;
+                case "zero":hit(r);return 0;
                 case "true":hit(r);return true;
                 case "false":hit(r);return false;
                 case "privacy_tip":
@@ -91,7 +92,8 @@ final class ExtraHooks {
                 case "persistent":
                     if(preparing.get()==null||preparing.get()==0)return chain.proceed();hit(r);return false;
                 case "split_digest":
-                    if(!ExtraPolicy.parsingSplit(Thread.currentThread().getStackTrace()))return chain.proceed();hit(r);return true;
+                    StackTraceElement[] splitStack=Thread.currentThread().getStackTrace();
+                    if(!ExtraPolicy.parsingSplit(splitStack)&&!CorePolicy.splitVerification(splitStack))return chain.proceed();hit(r);return true;
                 case "shared_capability":
                     if(!sharedConfigured||!ExtraPolicy.sharedCapability((Integer)chain.getArg(1))||!CorePolicy.installation(Thread.currentThread().getStackTrace()))return chain.proceed();
                     hit(r);return true;
@@ -129,9 +131,10 @@ final class ExtraHooks {
                     int oldFlags=info.flags;info.flags|=ApplicationInfo.FLAG_SYSTEM;
                     try{hit(r);return chain.proceed();}finally{info.flags=ExtraPolicy.restoreFlag(info.flags,oldFlags,ApplicationInfo.FLAG_SYSTEM);}
                 case "previous_signature":
-                    try{Object previous=previousSigningDetails((String)Reflect.call(chain.getArg(1),"getPackageName"));
-                        if(previous!=null){Object success=Reflect.call(chain.getArg(0),"success",previous);hit(r);return success;}
-                    }catch(Throwable error){failure(r,error);}return chain.proceed();
+                    List<SigningChange> changes=Collections.emptyList();
+                    try{changes=preservePreviousSignatures((List<?>)chain.getArg(0));if(!changes.isEmpty())hit(r);}
+                    catch(Throwable error){failure(r,error);}
+                    try{return chain.proceed();}catch(Throwable error){restoreSignatures(changes);throw error;}
                 case "overlay_direct":
                     try{Activity activity=(Activity)chain.getThisObject();Intent intent=activity.getIntent();
                         if(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION.equals(intent.getAction())&&intent.getData()!=null&&"package".equals(intent.getData().getScheme())){
@@ -141,8 +144,11 @@ final class ExtraHooks {
                 case "offline_ctor":
                     Object[] args=chain.getArgs().toArray();if(args.length>1&&args[1] instanceof Boolean){args[1]=false;hit(r);}return chain.proceed(args);
                 case "app_menu":
-                    if(r.method.equals("onOptionsItemSelected")&&chain.getArg(0) instanceof MenuItem&&((MenuItem)chain.getArg(0)).getItemId()==MENU_STATE){
-                        try{changeAppState((Activity)chain.getThisObject());hit(r);return true;}catch(Throwable error){failure(r,error);return chain.proceed();}
+                    if(r.method.equals("onOptionsItemSelected")){
+                        if(chain.getArg(0) instanceof MenuItem&&((MenuItem)chain.getArg(0)).getItemId()==MENU_STATE){
+                            try{changeAppState((Activity)chain.getThisObject());hit(r);return true;}catch(Throwable error){failure(r,error);}
+                        }
+                        return chain.proceed();
                     }
                     result=chain.proceed();try{configureAppMenu((Activity)chain.getThisObject(),(Menu)chain.getArg(0));hit(r);}catch(Throwable error){failure(r,error);}return result;
                 default:
@@ -170,14 +176,36 @@ final class ExtraHooks {
             if(depth==0)preparing.remove();else preparing.set(depth);
         }
     }
-    private Object previousSigningDetails(String pkg)throws Exception{
-        Application app=(Application)Reflect.call(Class.forName("android.app.ActivityThread",false,loader),"currentApplication");
-        if(app==null)return null;
-        PackageInfo installed;
-        try{installed=app.getPackageManager().getPackageInfo(pkg,PackageManager.GET_SIGNING_CERTIFICATES);}catch(PackageManager.NameNotFoundException e){return null;}
-        if(installed.signingInfo==null)return null;
-        Object details=Reflect.get(installed.signingInfo,"mSigningDetails");
-        Constructor<?> copy=details.getClass().getDeclaredConstructor(details.getClass());copy.setAccessible(true);return copy.newInstance(details);
+    private static final class SigningChange {
+        final Object reconciled,parsed,args,reconciledBefore,parsedBefore,argsBefore;
+        SigningChange(Object reconciled,Object parsed,Object args)throws Exception{
+            this.reconciled=reconciled;this.parsed=parsed;this.args=args;
+            reconciledBefore=Reflect.get(reconciled,"mSigningDetails");parsedBefore=Reflect.call(parsed,"getSigningDetails");argsBefore=Reflect.get(args,"mSigningDetails");
+        }
+    }
+    private List<SigningChange> preservePreviousSignatures(List<?> reconciled)throws Exception{
+        List<SigningChange> changes=new ArrayList<>();
+        try{
+            for(Object item:reconciled){
+                if(item==null)continue;
+                Object request=Reflect.get(item,"mInstallRequest"),parsed=Reflect.call(request,"getParsedPackage"),old=Reflect.call(request,"getScanRequestOldPackageSetting");
+                if(parsed==null||old==null||!Objects.equals(Reflect.call(parsed,"getPackageName"),Reflect.call(old,"getPackageName")))continue;
+                Object details=Reflect.call(old,"getSigningDetails"),args=Reflect.get(request,"mInstallArgs");
+                if(details==null||args==null||!Boolean.TRUE.equals(Reflect.call(details,"hasSignatures")))continue;
+                Constructor<?> copy=details.getClass().getDeclaredConstructor(details.getClass());copy.setAccessible(true);Object previous=copy.newInstance(details);
+                SigningChange change=new SigningChange(item,parsed,args);changes.add(change);
+                // The incoming APK has already passed parsing and verification. Only
+                // the same installed package's metadata is changed before commit.
+                Reflect.set(item,"mSigningDetails",previous);Reflect.call(parsed,"setSigningDetails",previous);Reflect.set(args,"mSigningDetails",previous);
+            }
+            return changes;
+        }catch(Exception error){restoreSignatures(changes);throw error;}
+    }
+    private void restoreSignatures(List<SigningChange> changes){
+        for(int i=changes.size()-1;i>=0;i--){SigningChange c=changes.get(i);
+            try{Reflect.set(c.reconciled,"mSigningDetails",c.reconciledBefore);Reflect.call(c.parsed,"setSigningDetails",c.parsedBefore);Reflect.set(c.args,"mSigningDetails",c.argsBefore);}
+            catch(Throwable error){report("extra previous signature rollback unavailable: "+error.getClass().getSimpleName());}
+        }
     }
     private void initializeSharedFlag(){
         try{sharedAllow=Reflect.field(Class.forName("com.android.server.pm.ReconcilePackageUtils",false,loader),"ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS");originalSharedAllow=sharedAllow.getBoolean(null);configureSharedFlag(enabled("core_shared_uid"));}
@@ -278,3 +306,4 @@ final class ExtraHooks {
     private void failure(Rule r,Throwable e){String id="fail:"+r.id();if(hits.add(id))report("extra action unavailable "+r.id()+": "+e.getClass().getSimpleName());}
     private void report(String text){api.log(android.util.Log.INFO,"HyperPriv",text);}
 }
+

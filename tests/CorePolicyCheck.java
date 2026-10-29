@@ -14,6 +14,12 @@ public final class CorePolicyCheck {
         require(!CorePolicy.apkParsing(new StackTraceElement[0]),"empty context must stay original");
         StackTraceElement split=frame("com.android.server.pm.PackageInstallerSession","assertApkConsistentLocked");
         require(CorePolicy.splitVerification(new StackTraceElement[]{split}),"direct split check must match");
+        require(CorePolicy.splitVerification(new StackTraceElement[]{frame("android.content.pm.Signature","areExactMatch"),frame("android.content.pm.SigningDetails","signaturesMatchExactly"),split}),"exact signature helper chain must retain split context");
+        require(CorePolicy.splitVerification(new StackTraceElement[]{frame("android.graphics.FrameworkBridge","signaturesMatchExactly"),split}),"framework bridge hid the direct split caller");
+        require(CorePolicy.splitVerification(new StackTraceElement[]{frame("android.location.RandomBridge","signaturesMatchExactly"),split}),"randomized bridge package hid split caller");
+        require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("android.graphics.FrameworkBridge","signaturesMatchExactly"),frame("android.content.pm.SigningDetails","checkCapability"),split}),"bridge skipped nested capability checks");
+        require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("android.graphics.Unrelated","checkPermission"),split}),"unrelated graphics frame was skipped");
+        require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("android.content.pm.Signature","areExactMatch"),frame("android.content.pm.SigningDetails","checkCapability"),split}),"signature helper must not bypass nested capability checks");
         require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("android.content.pm.SigningDetails","checkCapability"),split}),"nested capability must not inherit split bypass");
         require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("com.android.server.permission.PermissionManagerService","checkPermission"),split}),"nested permissions must not inherit split bypass");
         require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("android.content.pm.SigningInfo","signersMatchExactly"),split}),"public signing queries must stay original");
@@ -35,3 +41,4 @@ public final class CorePolicyCheck {
         System.out.println("Core policy: install-only context, capability boundaries and default-off migration passed");
     }
 }
+

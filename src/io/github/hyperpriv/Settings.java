@@ -11,6 +11,21 @@ final class Settings {
     static volatile Runnable changed;
     static volatile java.util.List<String> scopes;
     static SharedPreferences local(Context c){return c.getSharedPreferences("options",0);}
+    static boolean storedKey(String key,boolean local){
+        return Options.accepts(key)||java.util.Arrays.asList(ExtraFeatures.STRING_KEYS).contains(key)
+            ||key.equals("clipboard_opacity")||(local&&key.equals("initialized"));
+    }
+    static int removeObsolete(SharedPreferences prefs,SharedPreferences.Editor editor,boolean local){
+        int removed=0;
+        for(String key:new java.util.ArrayList<>(prefs.getAll().keySet()))if(!storedKey(key,local)){
+            editor.remove(key);removed++;
+        }
+        return removed;
+    }
+    static boolean cleanStoredKeys(SharedPreferences prefs,boolean local){
+        SharedPreferences.Editor editor=prefs.edit();
+        return removeObsolete(prefs,editor,local)==0||editor.commit();
+    }
     static synchronized void bind(Context c,XposedService s){
         try {
             SharedPreferences own=local(c), received=s.getRemotePreferences(Options.PREFS);
@@ -31,6 +46,7 @@ final class Settings {
         if(remote==null)return false;
         try {
             SharedPreferences.Editor e=remote.edit();
+            removeObsolete(remote,e,false);
             for(String k:Options.KEYS)e.putBoolean(k,local(c).getBoolean(k,Options.defaultValue(k)));
             for(String k:ExtraFeatures.STRING_KEYS)e.putString(k,local(c).getString(k,""));
             e.putInt("clipboard_opacity",Math.max(0,Math.min(100,local(c).getInt("clipboard_opacity",100))));
@@ -60,7 +76,8 @@ final class Settings {
             boolean present=current.contains(component.pkg)||(component.pkg.equals("android")&&current.contains("system"));
             if(!present)missing.add(component.title);
         }
-        return missing.isEmpty()?"推荐作用域已勾选；系统层首次加载仍需重启":"待勾选作用域："+String.join("、",missing);
+        return missing.isEmpty()?"推荐作用域已勾选；系统选项改动后需重启手机":"待勾选作用域："+String.join("、",missing);
     }
     static void notifyChanged(){Runnable r=changed;if(r!=null)r.run();}
 }
+

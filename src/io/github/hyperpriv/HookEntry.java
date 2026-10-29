@@ -26,6 +26,10 @@ public final class HookEntry extends XposedModule {
     private boolean experimental;
     private final Set<String> hits=Collections.synchronizedSet(new HashSet<>());
 
+    @Override public void onModuleLoaded(ModuleLoadedParam param){
+        report("module loaded process="+param.getProcessName()+" system="+param.isSystemServer());
+    }
+
     @Override public void onSystemServerStarting(SystemServerStartingParam param){
         new CoreHooks(this,param.getClassLoader()).install();
         try{new ExtraHooks(this,param.getClassLoader(),getRemotePreferences(Options.PREFS)).install("android",android.os.Build.VERSION.SDK_INT);}
@@ -198,3 +202,4 @@ public final class HookEntry extends XposedModule {
         return true;
     }
 }
+

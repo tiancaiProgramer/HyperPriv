@@ -1,12 +1,11 @@
 # 检查方式
 
-普通 JVM 检查不依赖 Android 运行时。运行 `python tests/run_checks.py --jdk /path/to/jdk17`，编译并执行 `PolicyCheck`、`CorePolicyCheck`、`ExtraPolicyCheck`、`CompatibilityCheck`，检查策略隔离、原默认值、新增默认关闭、目录覆盖、参数边界及兼容模式规则选择。
+`python3 tests/run_checks.py --jdk /path/to/jdk17`执行四类纯JVM策略检查，覆盖显示分支、安装上下文、能力边界、额外策略、偏好完整性和兼容选择。
 
-同时传入 `--android-jar /path/to/android.jar --libxposed /path/to/API_ROOT` 时，还会编译完整模块并在本机 JVM 执行 `tests/host/CompatibilityHooksCheck.java`。这使用真实 `ExtraHooks` / `CoreHooks` 的回调、框架代理和自建方法样本，验证关闭兼容模式、功能及总开关时恢复原调用，以及反射拒绝缺失方法和错误返回类型。它不是手机注入或小米 15 实测。
+同时传入 `--android-jar /path/to/android.jar --libxposed /path/to/API_ROOT` 会编译完整模块及host/下的主机代理。CompatibilityHooksCheck检查实际菜单分发、总开关/功能门控和精确反射拒绝，并调用PreviousSignatureHooksCheck验证同包名元数据更新、缺少旧包、部分失败及提交异常恢复。没有重复单独执行同一个入口。
 
-`device/` 内为单独运行的 Android 检查程序，不打包进模块 APK。先正常构建项目，再将其中的 Java 文件以 `android.jar`、libxposed API 及构建产生的 `code.jar` 为编译依赖。通过 D8 将检查类、`code.jar`、API/service/interface 三个依赖打包为单独的 dex JAR，只用于测试进程。发布模块依旧不包含 API。
+device/检查不打包到模块APK。AllTargetsAudit和AllGatesAudit用于独立设备进程的目标/字段与门控审计；RuntimeAudit和ExtraHooksIntegrationCheck保留其他独立检查。运行时按组件补齐系统共享库，不能把缺少classpath导致的ClassNotFound直接归为不适配。
 
-- `RuntimeAudit`：在 Root 的 `app_process` 独立进程中运行，参数为 `包名=当前APK绝对路径`，应传入安全中心、权限管理、设置和安装器四个包。只读解析目标和字段；所有包齐全时应为 67 匹配、0 失败。程序只对自身进程临时放宽隐藏 API 反射，不改变系统配置。
-- `ExtraHooksIntegrationCheck`：同样在独立 `app_process` 中运行，使用模拟框架接口捕获真实回调，并只在该进程内提供测试偏好和模拟请求。验证线程边界、异常恢复、操作号、剪贴板白名单和总开关关闭。不会向系统发起安装、剪贴板读取或启停应用请求。传入安全中心当前 APK 路径作为唯一参数时，还会在模拟 API 中注册支付自动扫描入口，核对启用拦截、单项关闭和总开关关闭的回调行为。
+这些检查不能替代LSPosed真实进程加载或业务对照。历史结论按日期与构建记录，不沿用旧总数声称新APK实机通过。
 
-这两类检查均不证明 LSPosed 已在 system_server 注入，也不替代真实安装、授权、锁屏或截图场景测试。应在实际设备构建匹配时运行；检查结束可删除临时 JAR。
+PreferenceCleanupCheck检查真实配置清理编辑：保留支持的布尔/字符串/数值和本地初始化标记，清理无效键，未变化不重复提交，提交失败保持原值。

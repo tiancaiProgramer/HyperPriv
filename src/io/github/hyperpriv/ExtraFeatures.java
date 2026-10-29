@@ -19,7 +19,7 @@ final class ExtraFeatures {
         new Feature("sim_success","隐藏 SIM 验证成功弹窗",null,"com.miui.securitycenter"),
         new Feature("root_detection","停用安全中心 Root 检测","含支付环境检查中的本地 Root 判断，仅作用于已识别的手机管家入口。","com.miui.securitycenter"),
         new Feature("environment_checks","阻止安全中心环境检测","阻止指定环境任务交给小米信任服务，向调用方返回不可用。","com.miui.securitycenter"),
-        new Feature("guard_environment","停用安全守护 Root 检测","参考版本 3.0.7 尚未找到上游对应的 Root 检查入口。支付自动检查与安装扫描已有独立选项。","com.miui.guardprovider"),
+        new Feature("guard_environment","停用安全守护 Root 检测","本机待适配：可开启或关闭并保存选择，但安全守护 3.0.7 尚未找到对应业务入口，当前不执行此项拦截。支付自动检查与安装扫描另有独立选项。","com.miui.guardprovider"),
         new Feature("safepay_scan","停用支付保护自动检查","覆盖进入支付场景后的自动扫描入口，以及已识别的自动扫描设置入口。","com.miui.securitycenter"),
         new Feature("permission_tips","隐藏权限使用提示","仅调整权限提示管理路径。","com.miui.securitycenter"),
         new Feature("pin_shuffle","应用锁 PIN 键盘乱序","只改变数字按键位置，保留原来的数字和点击行为。","com.miui.securitycenter"),
@@ -48,3 +48,4 @@ final class ExtraFeatures {
     static final String[] INT_KEYS={"clipboard_opacity"};
     private ExtraFeatures(){}
 }
+
