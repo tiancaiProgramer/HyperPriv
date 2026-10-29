@@ -1,8 +1,2 @@
-HyperPriv 0.4.2-preview / versionCode19（2026-10-29预览版）
-
-保留三张卡片、十一个原地展开小菜单、62个布尔偏好、三个参数、十项作用域。
-本版以安装兼容性、菜单处理、诊断和验证记录修正为主，不包含主题功能。
-安全守护Root业务仍未适配。
-候选APK已完成原签名构建和主机检查，已完成本机后台升级和配置迁移；系统14项核心和33项额外Hook加载及记录中的前台场景对照通过。历史验证不代表新构建已全量实测。
-详细更新见RELEASE-NOTES.md，比较见GITHUB-DIFF.md，验证边界见VALIDATION.txt。
-用户已确认发布；下载与版本信息以GitHub v0.4.2-preview Release为准。
+HyperPriv 0.4.3-preview1 / versionCode20，预览版。
+更新见RELEASE-NOTES.md；未完成验证见UNVERIFIED.md；逐项状态见VERIFICATION-0.4.3-preview1.csv。

@@ -209,6 +209,16 @@
     {
       "pkg": "com.miui.packageinstaller",
       "version": 53601,
+      "cls": "com.miui.packageInstaller.NewInstallerPrepareActivity",
+      "method": "A1",
+      "returns": "V",
+      "group": "scan",
+      "action": "null",
+      "params": []
+    },
+    {
+      "pkg": "com.miui.packageinstaller",
+      "version": 53601,
       "cls": "com.miui.packageInstaller.b0",
       "method": "b",
       "params": [

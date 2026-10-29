@@ -19,6 +19,8 @@ new Rule("com.miui.packageinstaller",53601L,"com.miui.packageInstaller.model.Clo
 new Rule("com.miui.packageinstaller",53601L,"com.miui.packageInstaller.model.RiskControlRules","getCurrentLevel","I","rate","zero",new String[]{}),
 new Rule("com.miui.packageinstaller",53601L,"C2.l","g","V","upload","null",new String[]{"Lcom/miui/packageInstaller/g;","Lcom/miui/packageInstaller/model/ApkInfo;","Z","Lo2/h;"}),
 new Rule("com.miui.packageinstaller",53601L,"com.miui.packageInstaller.e","c","Ljava/lang/Object;","cloud","cloud",new String[]{"Landroid/content/Context;","Lcom/miui/packageInstaller/g;","I","Lcom/miui/packageInstaller/model/ApkInfo;","Ljava/util/HashMap;","Lz3/d;"}),
+// Loading fragment is presentation-only; keep parsing and source authorization in the activity.
+new Rule("com.miui.packageinstaller",53601L,"com.miui.packageInstaller.NewInstallerPrepareActivity","A1","V","scan","null",new String[]{}),
 new Rule("com.miui.packageinstaller",53601L,"com.miui.packageInstaller.b0","b","Ljava/lang/Object;","scan","null",new String[]{"Ljava/lang/String;","Lcom/miui/packageInstaller/model/ApkInfo;","Lz3/d;"}),
 new Rule("com.miui.packageinstaller",53601L,"com.android.packageinstaller.utils.t","b","Z","guards","false",new String[]{"Lcom/miui/packageInstaller/model/Virus;","Lcom/miui/packageInstaller/model/ApkInfo;"}),
 new Rule("com.miui.packageinstaller",53601L,"com.miui.packageInstaller.model.ApkInfo","getCloudParams","Lcom/miui/packageInstaller/model/CloudParams;","master","sanitize_return",new String[]{}),

@@ -1,8 +1,8 @@
 # HyperPriv
 
-HyperOS 3 / Android 16 的现代LSPosed API102模块。当前预览版为 **0.4.2-preview / versionCode19**，[下载本版本](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.2-preview)。不是全部功能完成实测的稳定版。
+HyperOS 3 / Android 16 的现代LSPosed API102模块。当前预览版为 **0.4.3-preview1 / versionCode20**，[下载本版本](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.3-preview1)。不是全部功能完成实测的稳定版。
 
-本候选主要修复分包安装、沿用原签名、菜单处理和加载诊断，不包含主题功能。原有SIM安全保护选项保留。
+本候选在0.4.2-preview基础上补齐“跳过安装时病毒扫描”：开启时同时阻止通用扫描加载页及动画的创建，关闭时恢复原调用。沿用原开关、菜单和作用域。
 
 [版本更新说明](RELEASE-NOTES.md) · [对比GitHub](GITHUB-DIFF.md) · [验证状态](VALIDATION.txt) · [历史逐项实测](VERIFICATION-20261026.md)
 
@@ -24,10 +24,10 @@ HyperOS 3 / Android 16 的现代LSPosed API102模块。当前预览版为 **0.4.
 
 已定义组件包括安装器53601、安全中心40001268/40001275、安全守护256/307、设置36及APK哈希、权限管理192、电量与性能40200、Joyose492、MSA2025071906、小米统计2026082100及当前Android16完整系统构建。精确规则见profiles.json、extra-profiles.json和Java目标定义。
 
-候选APK保持原签名，本次已完成升级、重启加载和文档注明的自建样本实测。用户确认测试时使用普通安装，ADB可指定：
+候选APK保持原签名。基线19版已有重启加载证据；本次20版仅变更安装器展示，已普通升级并重启安装器进程完成自建样本对照，无需重启手机。ADB可指定：
 
 ```sh
-adb install --no-incremental -r HyperPriv-0.4.2-preview.apk
+adb install --no-incremental -r HyperPriv-0.4.3-preview1.apk
 ```
 
 此前定位过增量安装导致早期启动读取模块失败；覆盖安装成功不能代替系统进程已加载。在LSPosed启用模块并勾选9个应用和系统框架，共10项作用域。修改应用选项后重启对应应用；修改系统层选项或模式后重启手机。框架服务显示同步成功不证明运行中系统进程采用新值。
@@ -36,7 +36,7 @@ adb install --no-incremental -r HyperPriv-0.4.2-preview.apk
 
 ## 验证边界
 
-本候选Java编译、完整APK构建、签名验证及与原签名一致性、主机策略和真实回调代理检查通过；源码及DEX未发现已移除的目标引用。**新APK已升级、重启并通过所记录的场景对照；不是全部功能已完成实测。**
+本地20版Java编译、完整APK构建、签名验证及与原签名一致性、主机策略和真实回调代理检查通过。**本次新APK已升级并通过扫描加载页开启/关闭安装对照；其他功能沿用基线19版证据，未全部重新实测。**
 
 历史2026-10-26的62项逐项记录保留为有日期证据。匹配、回调、入口命中、场景对照、条件不足和未测试分别记录，不能合并为全部通过。
 
@@ -60,3 +60,7 @@ python3 tests/run_checks.py --jdk /path/to/jdk17 --android-jar /path/to/android-
 参考HyperCeiler对应Hook并按实际设备适配现代API102，保留AGPL-3.0-only及来源声明；libxposed按Apache2.0使用。具体来源见THIRD_PARTY_NOTICES.txt、REFERENCE_BLOBS.json、LICENSE和LICENSE-APACHE-2.0。源码包不含原版系统APK、第三方修改APK、私钥或用户设备数据。
 
 本轮清理、加载和实机验证见[2026-10-29记录](VERIFICATION-20261029.md)。
+
+本地扫描加载页修复及本次验证见[SCAN-UI-FIX-20261029.md](SCAN-UI-FIX-20261029.md)。上一版重启与其他功能证据保留为历史范围，本次仅改安装器展示规则。
+
+本次发布只将已测20版版本名移除-local后缀；实机证据保留原构建标签。未完成项目和方案见[UNVERIFIED.md](UNVERIFIED.md)，当前62项状态见[验证表](VERIFICATION-0.4.3-preview1.csv)。

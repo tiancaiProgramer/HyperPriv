@@ -89,7 +89,7 @@ final class UiCatalog {
         ExtraFeatures.Feature extra=ExtraFeatures.get(key);if(extra!=null)return extra.note;
         switch(key){
             case "usb_local":return "需设置与安全中心作用域；无账号 / 无 SIM / 离线开启仍待场景实测。";
-            case "scan":return "关闭后不再通过此入口检查有害安装包。";
+            case "scan":return "跳过病毒扫描并隐藏扫描加载页；仍保留安装解析和来源授权。";
             case "guards":return "关闭已识别的纯净模式、备案、风险和账号校验分支。";
             case "power_cloud":case "joyose_cloud":return "已经应用或缓存的云控不保证全部回退。";
             case "battery_report":return "同时需要安全中心和电量与性能作用域。";

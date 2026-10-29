@@ -1,3 +1,10 @@
+HyperPriv 0.4.3-preview1 / versionCode20 验证状态
+本次20版local扫描开关实际首次安装对照通过。发布版只整理版本名称，DEX/资源、编译类文件及签名按构建记录核对，不声称重新全量实测。
+62项分层状态见VERIFICATION-0.4.3-preview1.csv，39项未完成场景对照及1项未适配见UNVERIFIED.md。
+本次具体样本见SCAN-UI-FIX-20261029.md。
+
+以下0.4.2-preview是上一版历史验证，不能视为对新候选全部重新测试。
+
 HyperPriv 0.4.2-preview / versionCode19 验证状态
 日期：2026-10-29，Asia/Shanghai
 

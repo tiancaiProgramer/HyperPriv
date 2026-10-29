@@ -1,43 +1,13 @@
-# 与GitHub当前版本的差异
+# 相对GitHub发布版的本地改动
 
-比较时间：2026-10-28。只读查询时，[远端最新提交为b7e01d8](https://github.com/tiancaiProgramer/HyperPriv/commit/b7e01d810a6cbe869dffcda284437814637b9686)，版本0.4.1-preview1 / versionCode8。本候选为0.4.2-preview / versionCode19。
+基线：v0.4.2-preview，提交786aef72be2efbf6542a8da9cca9c4862d386bbb。
+本次预览版：0.4.3-preview1 / versionCode20。用户于2026-10-29确认发布，实机证据保留原local标签。
 
-本候选相对远端修改10个产品Java实现文件。其余变化为版本、规则记录、说明与检查工具，没有新增主题功能。
+- Profiles.java / profiles.json：仅新增安装器53601的NewInstallerPrepareActivity.A1()V展示规则，归属现有scan组，使用现有null动作。原规则全部保留。
+- UiCatalog.java：补充原开关说明，说明扫描加载页与动画也会隐藏。
+- AndroidManifest.xml：版本号20，原包名与签名保留。
+- 文档：补充本次修复与实测证据。未新增权限、作用域或偏好键。
 
-| 更新 | 对应实现文件 | 实际行为与验证边界 |
-| --- | --- | --- |
-| 分包安装兼容性 | CoreHooks.java、CorePolicy.java、ExtraPolicy.java | 识别框架桥接帧，仍要求精确安装上下文；补充反优化和未命中诊断。本次新候选自建分包拒绝→成功→拒绝通过。 |
-| 沿用原签名的元数据一致性 | ExtraHooks.java、ExtraTargets.java | 从解析入口改为同包名提交阶段同步有关元数据，中途失败或提交异常时恢复。规则JSON同步修改，真实回调代理覆盖失败分支；新候选覆盖安装保留签名、关闭恢复及坏包拒绝通过。 |
-| 应用启停菜单修复 | ExtraHooks.java | 自己的菜单项自行处理，其余菜单事件交回原方法，避免Menu类型转换错误。主机回调及新候选实际停用/恢复与菜单显隐对照通过。 |
-| 安全守护开关保存 | ExtraFeatures.java、MainActivity.java | 原不可操作项允许开关并保存，明确业务未适配、当前不执行拦截；不是新增Root隐藏实现。 |
-| 加载诊断 | HookEntry.java | 增加模块加载的进程与系统进程标记日志，帮助区分安装成功和实际加载。 |
-| 生效提示 | MainActivity.java、Settings.java | 区分应用重启和系统选项变更后的手机重启，避免把服务同步视为运行中系统进程已采用新值。 |
+不修改APK解析、来源授权和最终确认流程。Core/Extra编译类文件与19版一致，本次无需手机重启；应用更新后强制停止再启动安装器即可加载。
 
-新增通用旧配置清理：Settings.java与ModuleApp.java按当前配置定义移除无效旧键，保留现有开关、参数及初始化状态；主机及真实手机迁移样本通过。
-
-## 配置和界面保持
-
-Options.java、UiCatalog.java、Profiles.java、scope.list、模块API配置及图标与远端内容一致：3张卡片、11个原地展开小菜单、62个布尔偏好、3个参数和10项推荐作用域。旧README中“61个”不包含另增的实验兼容开关，本次文档统一总数为62。
-
-未改变旧偏好键和默认值；显示桌面图标、实验兼容模式、SIM安全保护等原有功能保留。
-
-## 本地实验范围的裁剪
-
-相对先前本地实验版，去掉全部主题选项、相关目标、主题包查询、哈希记录和作用域。远端基线本来没有这些功能，因此它们不是从GitHub既有功能中删除的变更。
-
-## 新增或更新的检查与说明
-
-- 核心/额外策略补充桥接调用栈的正反例。
-- 新增PreviousSignatureHooksCheck，检查已安装同包名元数据一致性、缺少旧包、部分失败和提交异常恢复。
-- CompatibilityHooksCheck新增菜单事件检查并调用签名回归；检查入口避免重复运行同一项。
-- 新增AllTargetsAudit、AllGatesAudit设备独立审计工具；RuntimeAudit同步扩展字段读取。它们不打包到模块APK。
-- 补充2026-10-26的62项历史逐项实测，重写README、功能表、验证边界及候选更新说明。
-- 模块描述去掉本地实验主题内容；Manifest只更新版本号，推荐作用域保持远端10项。
-
-## 发布前状态
-
-APK完整构建、签名校验、原证书一致性、主机检查及移除项引用检查通过。**本候选已完成升级、重启加载及记录中的场景对照**；未实现和未测试部分见RELEASE-NOTES.md与VALIDATION.txt。
-
-2026-10-29用户确认发布本版本；发布前重新核对远端仍为上述基线。以下差异仅相对该基线，不包含其他历史或本地实验产物。
-
-2026-10-29实机详情及收尾差异见VERIFICATION-20261029.md，62项分层状态见同名CSV。
+新增UNVERIFIED.md及VERIFICATION-0.4.3-preview1.csv，区分场景、入口、部分、未适配和控制项，未将旧证据改写为全部新测。

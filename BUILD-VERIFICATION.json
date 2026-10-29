@@ -1,0 +1,18 @@
+{
+  "tested_version": "0.4.3-preview1-local",
+  "release_version": "0.4.3-preview1",
+  "versionCode": 20,
+  "all_java_sources_identical": true,
+  "compiled_class_files_identical": 27,
+  "dex_and_resources_identical": true,
+  "non_signature_zip_entry_differences": [
+    "AndroidManifest.xml"
+  ],
+  "resigning_entries_updated": 3,
+  "dex_sha256": "ccb536a2e225a4d326a8704622521b40cfc35fa27ab5b44a8575e0535b06fa5b",
+  "certificate_sha256": "c6ae75664f8635ac1c038a57bec0cc5f1028a11a541ab03156dfaaebd12f4a36",
+  "release_apk_sha256": "b0068373b3e5cc6eb5b1e205dad42001d4272241ccff81fab73aabbbe3ce4ccb",
+  "host_checks_passed": true,
+  "new_phone_test": false,
+  "phone_evidence": "20版local开关对照；元数据整理后未重复实机测试"
+}
