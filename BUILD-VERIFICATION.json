@@ -1,18 +1,21 @@
 {
-  "tested_version": "0.4.3-preview1-local",
-  "release_version": "0.4.3-preview1",
-  "versionCode": 20,
-  "all_java_sources_identical": true,
-  "compiled_class_files_identical": 27,
+  "version": "0.4.4-preview2",
+  "versionCode": 22,
+  "tested_build": "0.4.4-preview2-local / code22",
+  "all_java_sources_identical_to_tested_build": true,
+  "compiled_classes_identical": 27,
   "dex_and_resources_identical": true,
-  "non_signature_zip_entry_differences": [
+  "non_signature_zip_changes": [
     "AndroidManifest.xml"
   ],
-  "resigning_entries_updated": 3,
-  "dex_sha256": "ccb536a2e225a4d326a8704622521b40cfc35fa27ab5b44a8575e0535b06fa5b",
+  "dex_sha256": "d9c785abeb979211eb202dfe0d1912168706e7ef1197c694054838a6e21e9571",
   "certificate_sha256": "c6ae75664f8635ac1c038a57bec0cc5f1028a11a541ab03156dfaaebd12f4a36",
-  "release_apk_sha256": "b0068373b3e5cc6eb5b1e205dad42001d4272241ccff81fab73aabbbe3ce4ccb",
-  "host_checks_passed": true,
-  "new_phone_test": false,
-  "phone_evidence": "20版local开关对照；元数据整理后未重复实机测试"
+  "release_apk_sha256": "14fb39e16d435a7cff64ed2c4cacd34b92aa8cafe456e90a07f4915ef79e2983",
+  "prior_host_policy_and_gate_checks_passed": true,
+  "isolated_callback_assertions": 121,
+  "native_rule_count": 22,
+  "native_selfcheck_assertions": 12,
+  "normal22_native_load_verified": true,
+  "renamed_apk_retested_on_phone": false,
+  "diagnostic_entry_in_release": false
 }

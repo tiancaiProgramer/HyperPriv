@@ -1,6 +1,5 @@
-HyperPriv 0.4.3-preview1 / versionCode20
-日期：2026-10-29 Asia/Shanghai，用户确认发布预览版。
-基于GitHub v0.4.2-preview / 786aef72be2efbf6542a8da9cca9c4862d386bbb。
-新增安装器53601扫描加载片段展示拦截，沿用scan分组；发布整理仅移除local版本名后缀。
-原签名保持一致；源码不含私钥、密码、系统APK或用户设备数据。
-来源与许可见THIRD_PARTY_NOTICES.txt、REFERENCE_BLOBS.json及许可证；未完成验证见UNVERIFIED.md。
+HyperPriv 0.4.4-preview2 / versionCode22
+2026-11-04，用户确认发布预览版。
+基于0.4.3-preview1 / 099d8c8798add3c9ed2e280fd689407b4da8d515，按实机APK独立研究新增SystemHelper精确版本/哈希的采集上报规则。
+实机证据对应原local构建，发布只整理版本名称和文档；不分发系统APK、反编译源码、手机私有数据或签名密钥。
+许可、来源和具体验证范围见对应文档。

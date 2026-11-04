@@ -25,7 +25,7 @@ public final class CorePolicyCheck {
         require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("android.content.pm.SigningInfo","signersMatchExactly"),split}),"public signing queries must stay original");
         java.util.Set<String> keys=new java.util.HashSet<>();
         for(String key:Options.KEYS)require(keys.add(key),"duplicate preference "+key);
-        require(keys.size()==62,"preference migration count");
+        require(keys.size()==63,"preference migration count");
         require(!Options.defaultValue(Compatibility.KEY),"experimental compatibility enabled by default");
         for(ExtraFeatures.Feature f:ExtraFeatures.ALL)require(!Options.defaultValue(f.key),"new option enabled by default: "+f.key);
         for(String key:Options.CORE_KEYS)require(!Options.defaultValue(key),"new core option enabled by default: "+key);

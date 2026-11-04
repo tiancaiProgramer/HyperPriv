@@ -1,7 +1,29 @@
 package io.github.hyperpriv;
 final class Profiles {
-static String apkHash(String pkg,long version){return pkg.equals("com.android.settings")&&version==36L?"ad232849df7307a47a3a64e7fec59518ed146a4db4f2d4ebaece1d490a75f62e":null;}
+static String apkHash(String pkg,long version){if(pkg.equals("com.mobiletools.systemhelper")&&version==31L)return "5267008ede808c467988df588915791d21a6f1f3fbe219c57b125a235000df4f";return pkg.equals("com.android.settings")&&version==36L?"ad232849df7307a47a3a64e7fec59518ed146a4db4f2d4ebaece1d490a75f62e":null;}
 static final Rule[] ALL = {
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.OnBootReceiver","onReceive","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","Landroid/content/Intent;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.SIMStateReceiver","onReceive","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","Landroid/content/Intent;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.ConnectStateReceiver","onReceive","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","Landroid/content/Intent;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.ScheduleRegisterReceiver","onReceive","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","Landroid/content/Intent;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.AppInfoRegisterReceiver","onReceive","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","Landroid/content/Intent;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.SignalInfoRegisterReceiver","onReceive","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","Landroid/content/Intent;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.GetSignalInfoReceiver","onReceive","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","Landroid/content/Intent;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.b","a","Lcom/mobiletools/systemhelper/control/b;","systemhelper_report","null",new String[]{"Landroid/content/Context;","Ljava/lang/String;"}),
+new Rule("com.mobiletools.systemhelper",31L,"c.d.a.a.n","a","Lcom/mobiletools/systemhelper/control/b;","systemhelper_report","null",new String[]{"Landroid/content/Context;","Ljava/lang/String;"}),
+new Rule("com.mobiletools.systemhelper",31L,"c.d.a.a.a","e","V","systemhelper_report","null",new String[]{"Landroid/content/Context;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.c","run","V","systemhelper_report","null",new String[]{}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.e","run","V","systemhelper_report","null",new String[]{}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.f","run","V","systemhelper_report","null",new String[]{}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.g","run","V","systemhelper_report","null",new String[]{}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.f","b","Ljava/util/List;","systemhelper_report","empty_list",new String[]{}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.d","a","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","I","Lc/d/a/b/n;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.d","b","V","systemhelper_report","null",new String[]{"Landroid/content/Context;","I","Lc/d/a/b/n;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.g","a","Z","systemhelper_report","false",new String[]{"Lcom/mobiletools/systemhelper/control/b;"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.mobiletools.systemhelper.control.e","a","Z","systemhelper_report","false",new String[]{"Lorg/json/JSONObject;"}),
+new Rule("com.mobiletools.systemhelper",31L,"c.d.a.b.f","a","Z","systemhelper_report","false",new String[]{"Ljava/lang/String;","[B","[B"}),
+new Rule("com.mobiletools.systemhelper",31L,"com.baidu.location.f","onCreate","V","systemhelper_report","null",new String[]{}),
+new Rule("com.mobiletools.systemhelper",31L,"com.baidu.location.f","onBind","Landroid/os/IBinder;","systemhelper_report","null",new String[]{"Landroid/content/Intent;"}),
 new Rule("com.miui.packageinstaller",53601L,"A0.c","o","Z","ads","false",new String[]{}),
 new Rule("com.miui.packageinstaller",53601L,"A0.c","p","Z","ads","false",new String[]{}),
 new Rule("com.miui.packageinstaller",53601L,"i2.n","u","Z","ads","false",new String[]{}),

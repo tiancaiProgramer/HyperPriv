@@ -143,8 +143,10 @@ public final class MainActivity extends Activity {
             PackageInfo info=getPackageManager().getPackageInfo(pkg,0);long version=info.getLongVersionCode();boolean supported=false;
             for(Rule rule:Profiles.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
             for(Rule rule:ExtraTargets.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
+            if(pkg.equals("com.mobiletools.systemhelper")&&version!=31L)return new AppState(false,"SystemHelper版本未适配",version);
             boolean trial=compatibility&&(!Compatibility.select(Profiles.ALL,pkg,version,true).isEmpty()||!Compatibility.select(ExtraTargets.ALL,pkg,version,true).isEmpty());
             String status=!supported?(trial?"实验兼容 · 版本未经验证":"未适配"):Profiles.apkHash(pkg,version)!=null?(compatibility?"实验兼容 · 放宽构建校验":"启用时核对构建"):"版本已适配";
+            if(pkg.equals("com.mobiletools.systemhelper"))status="运行时严格核对APK";
             return new AppState(supported||trial,"已安装 "+info.versionName+" · "+status,version);
         }catch(Exception e){return new AppState(false,"未安装");}
     }
@@ -197,7 +199,7 @@ public final class MainActivity extends Activity {
             if(section.detail!=null)label(options,section.detail,12,ACCENT,false);
             for(String key:section.keys){
                 AppState state=appState(UiCatalog.target(key));String note=UiCatalog.note(key);boolean available=state.supported;
-                if(ExtraFeatures.get(key)!=null){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&(key.equals("guard_environment")||Compatibility.supports(ExtraTargets.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY)));}
+                if(ExtraFeatures.get(key)!=null){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&(key.equals("guard_environment")||(Compatibility.supports(ExtraTargets.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY))||Compatibility.supports(Profiles.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY))));}
                 if(available&&state.text.contains("实验兼容"))note=(note==null?"":note+"\n")+"实验兼容：可尝试开启，是否生效以加载与命中日志为准。";
                 if(!available)note=(note==null?"":note+"\n")+"对应入口尚未适配或组件未安装，原有设置已保留。";
                 toggle(options,UiCatalog.label(key),key,note,available);

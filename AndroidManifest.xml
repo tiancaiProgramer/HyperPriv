@@ -1,6 +1,7 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="20" android:versionName="0.4.3-preview1">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="22" android:versionName="0.4.4-preview2">
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
     <queries>
+        <package android:name="com.mobiletools.systemhelper"/>
         <package android:name="com.miui.packageinstaller"/><package android:name="com.miui.securitycenter"/>
         <package android:name="com.miui.guardprovider"/><package android:name="com.miui.analytics"/>
         <package android:name="com.android.settings"/><package android:name="com.miui.powerkeeper"/><package android:name="com.lbe.security.miui"/>

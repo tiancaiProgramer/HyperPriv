@@ -54,9 +54,10 @@ public final class HookEntry extends XposedModule {
             long version=context.getPackageManager().getPackageInfo(pkg,0).getLongVersionCode();
             prefs=getRemotePreferences(Options.PREFS);
             boolean compatibility=prefs.getBoolean(Compatibility.KEY,false);
+            if(pkg.equals("com.mobiletools.systemhelper")&&version!=31L){report("unsupported SystemHelper version="+version);return;}
             String expected=Profiles.apkHash(pkg,version);
             boolean hashMismatch=expected!=null&&!expected.equals(apkHash(context.getApplicationInfo().sourceDir));
-            if(hashMismatch&&!compatibility){
+            if(hashMismatch&&(!compatibility||pkg.equals("com.mobiletools.systemhelper"))){
                 report("unsupported APK hash: "+pkg);return;
             }
             experimental=hashMismatch||Compatibility.profileVersion(Profiles.ALL,pkg,version,compatibility)!=version;
@@ -70,7 +71,7 @@ public final class HookEntry extends XposedModule {
         }catch(Throwable e){report("setup failed: "+e.getClass().getSimpleName());}
     }
     private boolean enabled(String key){
-        try{return prefs!=null&&(!experimental||prefs.getBoolean(Compatibility.KEY,false))&&prefs.getBoolean("master",true)&&prefs.getBoolean(key,true);}
+        try{return prefs!=null&&(!experimental||prefs.getBoolean(Compatibility.KEY,false))&&prefs.getBoolean("master",true)&&prefs.getBoolean(key,Options.defaultValue(key));}
         catch(Throwable e){return false;}
     }
     private void hit(Rule r){if(hits.add(r.id()))report("hit "+r.group+" "+r.id());}

@@ -7,6 +7,7 @@ final class ExtraFeatures {
         Feature(String key,String title,String note,String pkg){this.key=key;this.title=title;this.note=note;this.pkg=pkg;}
     }
     static final Feature[] ALL={
+        new Feature("systemhelper_report","阻止 SystemHelper 采集与上报","仅适配com.mobiletools.systemhelper 3.0.1-20250311的已核对APK；阻止应用使用统计、设备/SIM/信号信息采集、注册及历史上传和内置定位启动。需勾选SystemHelper作用域并重启其进程。","com.mobiletools.systemhelper"),
         new Feature("permission_direct","直接跳过授权警告页","开启后直接完成已识别的授权警告页；与只移除读秒分别控制。","com.miui.securitycenter"),
         new Feature("accessibility_keep","阻止静默关闭无障碍","阻止安全中心的已识别自动撤销入口。","com.miui.securitycenter"),
         new Feature("autostart_keep","保留自启动授权","阻止权限管理组件的自动关闭任务。","com.lbe.security.miui"),

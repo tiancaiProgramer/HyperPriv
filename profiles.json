@@ -13,7 +13,8 @@
     "com.miui.powerkeeper": 40200,
     "com.xiaomi.joyose": 492,
     "com.miui.systemAdSolution": 2025071906,
-    "com.android.settings": 36
+    "com.android.settings": 36,
+    "com.mobiletools.systemhelper": 31
   },
   "rules": [
     {
@@ -866,9 +867,277 @@
       "returns": "Lcom/miui/app/a/b$a;",
       "group": "msa",
       "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.OnBootReceiver",
+      "method": "onReceive",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/content/Intent;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.SIMStateReceiver",
+      "method": "onReceive",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/content/Intent;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.ConnectStateReceiver",
+      "method": "onReceive",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/content/Intent;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.ScheduleRegisterReceiver",
+      "method": "onReceive",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/content/Intent;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.AppInfoRegisterReceiver",
+      "method": "onReceive",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/content/Intent;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.SignalInfoRegisterReceiver",
+      "method": "onReceive",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/content/Intent;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.GetSignalInfoReceiver",
+      "method": "onReceive",
+      "params": [
+        "Landroid/content/Context;",
+        "Landroid/content/Intent;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.b",
+      "method": "a",
+      "params": [
+        "Landroid/content/Context;",
+        "Ljava/lang/String;"
+      ],
+      "returns": "Lcom/mobiletools/systemhelper/control/b;",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "c.d.a.a.n",
+      "method": "a",
+      "params": [
+        "Landroid/content/Context;",
+        "Ljava/lang/String;"
+      ],
+      "returns": "Lcom/mobiletools/systemhelper/control/b;",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "c.d.a.a.a",
+      "method": "e",
+      "params": [
+        "Landroid/content/Context;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.c",
+      "method": "run",
+      "params": [],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.e",
+      "method": "run",
+      "params": [],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.f",
+      "method": "run",
+      "params": [],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.g",
+      "method": "run",
+      "params": [],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.f",
+      "method": "b",
+      "params": [],
+      "returns": "Ljava/util/List;",
+      "group": "systemhelper_report",
+      "action": "empty_list"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.d",
+      "method": "a",
+      "params": [
+        "Landroid/content/Context;",
+        "I",
+        "Lc/d/a/b/n;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.d",
+      "method": "b",
+      "params": [
+        "Landroid/content/Context;",
+        "I",
+        "Lc/d/a/b/n;"
+      ],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.g",
+      "method": "a",
+      "params": [
+        "Lcom/mobiletools/systemhelper/control/b;"
+      ],
+      "returns": "Z",
+      "group": "systemhelper_report",
+      "action": "false"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.mobiletools.systemhelper.control.e",
+      "method": "a",
+      "params": [
+        "Lorg/json/JSONObject;"
+      ],
+      "returns": "Z",
+      "group": "systemhelper_report",
+      "action": "false"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "c.d.a.b.f",
+      "method": "a",
+      "params": [
+        "Ljava/lang/String;",
+        "[B",
+        "[B"
+      ],
+      "returns": "Z",
+      "group": "systemhelper_report",
+      "action": "false"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.baidu.location.f",
+      "method": "onCreate",
+      "params": [],
+      "returns": "V",
+      "group": "systemhelper_report",
+      "action": "null"
+    },
+    {
+      "pkg": "com.mobiletools.systemhelper",
+      "version": 31,
+      "cls": "com.baidu.location.f",
+      "method": "onBind",
+      "params": [
+        "Landroid/content/Intent;"
+      ],
+      "returns": "Landroid/os/IBinder;",
+      "group": "systemhelper_report",
+      "action": "null"
     }
   ],
   "apkHashes": {
-    "com.android.settings@36": "ad232849df7307a47a3a64e7fec59518ed146a4db4f2d4ebaece1d490a75f62e"
+    "com.android.settings@36": "ad232849df7307a47a3a64e7fec59518ed146a4db4f2d4ebaece1d490a75f62e",
+    "com.mobiletools.systemhelper@31": "5267008ede808c467988df588915791d21a6f1f3fbe219c57b125a235000df4f"
   }
 }

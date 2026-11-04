@@ -1,13 +1,10 @@
-# 相对GitHub发布版的本地改动
+# 相对开发基线0.4.3-preview1的本地改动
 
-基线：v0.4.2-preview，提交786aef72be2efbf6542a8da9cca9c4862d386bbb。
-本次预览版：0.4.3-preview1 / versionCode20。用户于2026-10-29确认发布，实机证据保留原local标签。
+基线提交099d8c8798add3c9ed2e280fd689407b4da8d515。当前发布整理0.4.4-preview2 / code22，用户于2026-11-04确认发布；实机证据保留原local标签。
 
-- Profiles.java / profiles.json：仅新增安装器53601的NewInstallerPrepareActivity.A1()V展示规则，归属现有scan组，使用现有null动作。原规则全部保留。
-- UiCatalog.java：补充原开关说明，说明扫描加载页与动画也会隐藏。
-- AndroidManifest.xml：版本号20，原包名与签名保留。
-- 文档：补充本次修复与实测证据。未新增权限、作用域或偏好键。
-
-不修改APK解析、来源授权和最终确认流程。Core/Extra编译类文件与19版一致，本次无需手机重启；应用更新后强制停止再启动安装器即可加载。
-
-新增UNVERIFIED.md及VERIFICATION-0.4.3-preview1.csv，区分场景、入口、部分、未适配和控制项，未将旧证据改写为全部新测。
+- 新增SystemHelper精确31版/APK哈希的22条采集、注册/历史发送及内置定位入口规则。
+- 新增systemhelper_report独立开关，沿用统计与上报菜单；作用域新增com.mobiletools.systemhelper，总计11项；原作用域及偏好值保留。
+- 缺省布尔值读取沿用Options.defaultValue，确保新增默认关闭开关在远程值缺失时不被误开启；其他原默认值保留。
+- 支持界面识别Profiles中的新增功能，当前SystemHelper严格版本/哈希边界不被实验兼容模式放宽。
+- 当前63项布尔设置、3参数。22版仅通过元数据递增排除21版诊断缓存，正常21/22版DEX与资源一致。
+- 增加静态证据、121项隔离回调和真实目标加载/受控检查记录；未将自然长期和其他版本改写为通过。

@@ -68,6 +68,14 @@ public final class CompatibilityHooksCheck {
         System.out.println("Menu callback: back and unrelated items retain original handler without invalid Menu cast");
     }
     public static void main(String[] args)throws Throwable{
+        HookEntry entry=new HookEntry();field(entry,"prefs",preferences());
+        Method enabled=HookEntry.class.getDeclaredMethod("enabled",String.class);enabled.setAccessible(true);
+        prefs.clear();require(Boolean.FALSE.equals(enabled.invoke(entry,"systemhelper_report")),"new feature active with missing preference");
+        require(Boolean.TRUE.equals(enabled.invoke(entry,"ads")),"existing default changed");
+        prefs.put("systemhelper_report",true);require(Boolean.TRUE.equals(enabled.invoke(entry,"systemhelper_report")),"explicit new setting ignored");
+        prefs.put("master",false);require(Boolean.FALSE.equals(enabled.invoke(entry,"systemhelper_report")),"master off did not block new feature");
+        prefs.put("master",true);prefs.put("systemhelper_report",false);require(Boolean.FALSE.equals(enabled.invoke(entry,"systemhelper_report")),"new feature off ignored");
+        prefs.clear();System.out.println("SystemHelper feature: missing preference defaults off; explicit feature/master gates passed");
         ExtraHooks extra=new ExtraHooks(api(),Fixture.class.getClassLoader(),preferences());field(extra,"experimental",true);
         Rule rule=new Rule("fixture",1,Fixture.class.getName(),"check","Z","safepay_scan","false",new String[0]);
         Method install=ExtraHooks.class.getDeclaredMethod("install",Rule.class);install.setAccessible(true);install.invoke(extra,rule);

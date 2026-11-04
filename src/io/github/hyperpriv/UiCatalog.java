@@ -17,6 +17,7 @@ final class UiCatalog {
         Group(String id,String title,String detail,Section...sections){this.id=id;this.title=title;this.detail=detail;this.sections=sections;}
     }
     static final Component[] COMPONENTS={
+        new Component("SystemHelper","com.mobiletools.systemhelper"),
         new Component("系统框架","android"),
         new Component("权限管理","com.lbe.security.miui"),
         new Component("应用包管理组件","com.miui.packageinstaller"),
@@ -41,7 +42,7 @@ final class UiCatalog {
             new Section("checks","环境与检查",null,"root_detection","environment_checks","guard_environment","safepay_scan"),
             new Section("privacy_tools","隐私权限与提示",null,"permission_tips","pin_shuffle","clipboard_toast","clipboard_close_once","framework_clipboard","framework_log_access"),
             new Section("sim","SIM 安全保护",null,"sim_account","sim_success"),
-            new Section("reports","统计与上报",null,"analytics","msa","battery_report","network_offline")),
+            new Section("reports","统计与上报",null,"analytics","msa","battery_report","network_offline","systemhelper_report")),
         new Group("display","电量与显示","性能云控、屏幕与锁屏选项。",
             new Section("performance","性能云控",null,"power_cloud","joyose_cloud"),
             new Section("screen","屏幕与锁屏",null,"thermal_fps","never_sleep","framework_capture","framework_password_timeout"))
@@ -100,6 +101,7 @@ final class UiCatalog {
     }
     static String versions(String pkg){
         switch(pkg){
+            case "com.mobiletools.systemhelper":return "3.0.1-20250311 · 已核对APK";
             case "android":return "Android 16 · OS3.0.304.0.WMVCNXM 的已适配构建";
             case "com.lbe.security.miui":return "1.9.2";
             case "com.miui.packageinstaller":return "5.3.6.0.1-20250825F";

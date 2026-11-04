@@ -1,3 +1,16 @@
+# 0.4.4-preview2 / versionCode22（预览版）
+
+- 递增正常候选版本元数据，排除同版本号诊断代码缓存；正常21版与22版DEX/资源一致。
+- SystemHelper真实22条加载/命中及12项受控检查通过；正常候选实际启动入口再次确认，临时隔离措施已撤销。
+- 2026-11-04用户确认发布。实机标签与未覆盖范围见SYSTEMHELPER-20261104.md及UNVERIFIED.md。
+
+# 0.4.4-preview1-local / versionCode21（本地开发）
+
+- 增加com.mobiletools.systemhelper指定版本及APK哈希的采集、注册/历史上传和内置定位拦截。
+- 沿用统计与上报菜单，独立开关默认关闭，推荐作用域新增SystemHelper。
+- 修正缺失远程偏好时默认值读取，确保新默认关闭功能不被意外启用。
+- 静态证据、验证及限制见SYSTEMHELPER-20261104.md。未发布GitHub。
+
 # 0.4.3-preview1 / versionCode20（预览版）
 
 - 开启“跳过安装时病毒扫描”时，不再创建安装准备阶段的通用扫描加载片段及动画。
