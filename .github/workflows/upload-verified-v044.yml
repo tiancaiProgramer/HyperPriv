@@ -1,0 +1,34 @@
+name: Upload verified HyperPriv 0.4.4 release assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify tag and upload only the five reviewed public assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EXPECTED_SOURCE_COMMIT: b0d7a80a79e3cd3eca183f6e0a21b9f4ab4aecab
+          EXPECTED_MANIFEST_SHA256: 3c0439a2cbb7e383fbc4c54561a46124ca3acbe35dad15ac138c29cc21f4f618
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$GH_REPO" = "tiancaiProgramer/HyperPriv"
+          tag_object=$(gh api "repos/$GH_REPO/git/ref/tags/v0.4.4" --jq '.object.sha')
+          source_commit=$(gh api "repos/$GH_REPO/git/tags/$tag_object" --jq '.object.sha')
+          test "$source_commit" = "$EXPECTED_SOURCE_COMMIT"
+          for file in HyperPriv-0.4.4.apk HyperPriv-0.4.4-source.zip SHA256SUMS.txt RELEASE-VERIFICATION.json RELEASE-NOTES.md; do
+            gh api "repos/$GH_REPO/contents/dist/releases/v0.4.4/$file?ref=$GITHUB_SHA" --jq '.content' | base64 --decode > "$file"
+          done
+          echo "$EXPECTED_MANIFEST_SHA256  SHA256SUMS.txt" | sha256sum --check -
+          sha256sum --check SHA256SUMS.txt
+          test "$(gh api "repos/$GH_REPO/releases/tags/v0.4.4" --jq '.draft')" = "false"
+          gh release upload v0.4.4 HyperPriv-0.4.4.apk HyperPriv-0.4.4-source.zip SHA256SUMS.txt RELEASE-VERIFICATION.json RELEASE-NOTES.md --repo "$GH_REPO"
