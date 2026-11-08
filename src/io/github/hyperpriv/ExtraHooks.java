@@ -34,12 +34,12 @@ final class ExtraHooks {
     }
     void install(String pkg,long version,boolean forceExperimental){
         boolean compatibility=compatibilityEnabled();
-        boolean unknownSystem=pkg.equals("android")&&!Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+        boolean unknownSystem=pkg.equals("android")&&!RuntimeProfile.knownSystem();
         if(unknownSystem&&!compatibility)return;
         experimental=forceExperimental||unknownSystem||Compatibility.profileVersion(ExtraTargets.ALL,pkg,version,compatibility)!=version;
         int count=0,skipped=0;
         if(pkg.equals("android"))initializeSharedFlag();
-        for(Rule r:Compatibility.select(ExtraTargets.ALL,pkg,version,compatibility)){
+        for(Rule r:RuntimeProfile.select(ExtraTargets.ALL,pkg,version,compatibility)){
             try{install(r);count++;}catch(Throwable e){skipped++;report("extra skip "+r.id()+": "+e.getClass().getSimpleName());}
         }
         if(pkg.equals("android")){
@@ -53,12 +53,16 @@ final class ExtraHooks {
         }
         if(pkg.equals("com.miui.securitycenter")&&(version==40001275L||experimental)&&count>0)
             deopt("com.miui.antivirus.service.GuardService","J");
+        if(pkg.equals("com.miui.securitycenter")&&version==40001283L&&count>0){
+            deopt("com.miui.antivirus.service.GuardService","E");
+            deopt("com.miui.antivirus.service.VirusScanJobService","i");
+        }
         if(experimental&&count>0)report("experimental extra compatibility "+pkg+" version="+version+"; definitions matched, behavior unverified");
         report("extra ready "+pkg+" version="+version+" installed="+count+" skipped="+skipped);
     }
     private boolean enabled(String key){
         try{
-            if(experimental&&!compatibilityEnabled())return false;
+            if(!RuntimeProfile.allowed(key)||(experimental&&!compatibilityEnabled()))return false;
             if(!prefs.getBoolean("master",true)||!prefs.getBoolean(key,false))return false;
             if(key.startsWith("core_")&&!prefs.getBoolean("core_enabled",false))return false;
             if(key.equals("core_previous_signature")&&!prefs.getBoolean("core_update_signature",false))return false;
@@ -66,8 +70,9 @@ final class ExtraHooks {
             return true;
         }catch(Throwable e){return false;}
     }
-    private boolean compatibilityEnabled(){try{return prefs.getBoolean(Compatibility.KEY,false);}catch(Throwable e){return false;}}
+    private boolean compatibilityEnabled(){try{return prefs.getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY));}catch(Throwable e){return false;}}
     private void install(Rule r)throws Exception{
+        if(!RuntimeProfile.register(r))return;
         Executable e=Reflect.executable(r,loader);
         api.hook(e).intercept(chain->{
             if(r.action.equals("shared_reconcile")){
@@ -83,6 +88,9 @@ final class ExtraHooks {
                 case "zero":hit(r);return 0;
                 case "true":hit(r);return true;
                 case "false":hit(r);return false;
+                case "accessibility_revoke":
+                    if(!ExtraPolicy.containsFrame(Thread.currentThread().getStackTrace(),"com.miui.antivirus.service.VirusScanJobService",null))return chain.proceed();
+                    hit(r);return Collections.emptyList();
                 case "privacy_tip":
                     if(!ExtraPolicy.containsFrame(Thread.currentThread().getStackTrace(),"com.miui.permcenter.o",null))return chain.proceed();
                     hit(r);return true;
@@ -104,7 +112,7 @@ final class ExtraHooks {
                     return chain.proceed();
                 case "environment":
                     try{Object request=chain.getArg(0);
-                        if(request!=null&&request.getClass().getName().equals("Ma.a")&&ExtraPolicy.environmentTask((Integer)Reflect.get(request,"a"))){
+                        if(request!=null&&request.getClass().getName().equals(r.version==40001283L?"La.a":"Ma.a")&&ExtraPolicy.environmentTask((Integer)Reflect.get(request,"a"))){
                             Reflect.call(request,"c",null,1001);hit(r);return null;
                         }
                     }catch(Throwable error){failure(r,error);}return chain.proceed();

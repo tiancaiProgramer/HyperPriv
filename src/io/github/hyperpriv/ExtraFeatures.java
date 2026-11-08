@@ -7,7 +7,7 @@ final class ExtraFeatures {
         Feature(String key,String title,String note,String pkg){this.key=key;this.title=title;this.note=note;this.pkg=pkg;}
     }
     static final Feature[] ALL={
-        new Feature("systemhelper_report","阻止 SystemHelper 采集与上报","仅适配com.mobiletools.systemhelper 3.0.1-20250311的已核对APK；阻止应用使用统计、设备/SIM/信号信息采集、注册及历史上传和内置定位启动。需勾选SystemHelper作用域并重启其进程。","com.mobiletools.systemhelper"),
+        new Feature("systemhelper_report","阻止 SystemHelper 采集与上报","适配已核对的 CN31、CN34、EU34；兼容模式允许与 CN34/EU34 的完整 DEX 相同的变体。阻止已识别的采集、注册、上传及内置定位入口；需对应作用域，组件停用时不会运行。","com.mobiletools.systemhelper"),
         new Feature("permission_direct","直接跳过授权警告页","开启后直接完成已识别的授权警告页；与只移除读秒分别控制。","com.miui.securitycenter"),
         new Feature("accessibility_keep","阻止静默关闭无障碍","阻止安全中心的已识别自动撤销入口。","com.miui.securitycenter"),
         new Feature("autostart_keep","保留自启动授权","阻止权限管理组件的自动关闭任务。","com.lbe.security.miui"),
@@ -24,7 +24,7 @@ final class ExtraFeatures {
         new Feature("safepay_scan","停用支付保护自动检查","覆盖进入支付场景后的自动扫描入口，以及已识别的自动扫描设置入口。","com.miui.securitycenter"),
         new Feature("permission_tips","隐藏权限使用提示","仅调整权限提示管理路径。","com.miui.securitycenter"),
         new Feature("pin_shuffle","应用锁 PIN 键盘乱序","只改变数字按键位置，保留原来的数字和点击行为。","com.miui.securitycenter"),
-        new Feature("network_offline","停用网络助手离线配置","调整离线配置标记，不代表阻断全部联网请求。","com.miui.securitycenter"),
+        new Feature("network_offline","忽略网络助手服务下线标记","忽略运营商相关服务的下线标记，尝试保留流量校正、话费查询等原入口；服务端停止服务时仍可能不可用。","com.miui.securitycenter"),
         new Feature("app_disable","增加应用停用与启用入口","在手机管家应用详情菜单中手动选择；不会自动停用应用。","com.miui.securitycenter"),
         new Feature("clipboard_toast","自定义剪贴板读取提示",null,"com.lbe.security.miui"),
         new Feature("clipboard_close_once","关闭按钮只关闭本次提示","配合“自定义剪贴板读取提示”使用。","com.lbe.security.miui"),

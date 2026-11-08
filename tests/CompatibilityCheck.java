@@ -21,7 +21,7 @@ public final class CompatibilityCheck {
         require(Compatibility.supports(ExtraTargets.ALL,"safepay_scan","com.miui.securitycenter",999,true),"known payment definitions unavailable for trial");
         require(Compatibility.strictSystem(36,CoreTargets.FINGERPRINT),"known build rejected");
         require(!Compatibility.strictSystem(36,"different-device")&&!Compatibility.strictSystem(35,CoreTargets.FINGERPRINT),"default build guard widened");
-        require(!Options.defaultValue(Compatibility.KEY)&&Options.accepts(Compatibility.KEY),"compatibility preference default/persistence invalid");
+        require(Options.defaultValue(Compatibility.KEY)&&Options.accepts(Compatibility.KEY),"compatibility preference default/persistence invalid");
         System.out.println("Compatibility selection: opt-in, exact-profile priority, isolated fallback, conflicts and missing features passed");
     }
 }

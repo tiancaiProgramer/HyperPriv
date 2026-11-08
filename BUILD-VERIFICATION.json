@@ -1,21 +1,129 @@
 {
-  "version": "0.4.4-preview2",
-  "versionCode": 22,
-  "tested_build": "0.4.4-preview2-local / code22",
-  "all_java_sources_identical_to_tested_build": true,
-  "compiled_classes_identical": 27,
-  "dex_and_resources_identical": true,
-  "non_signature_zip_changes": [
-    "AndroidManifest.xml"
+  "version": "0.4.4",
+  "versionCode": 28,
+  "baseTag": "v0.4.4-preview2",
+  "baseCommit": "32fa2ff55981fba640d2841e86d9af785b132972",
+  "createdAt": "2026-11-08T13:55:21.241303+00:00",
+  "apkSHA256": "3164a7bf8027f989e3318dd421469f3c48215f631061c102ccb4013d0c5cb73a",
+  "apkBytes": 111505,
+  "signingCertificateSHA256": "c6ae75664f8635ac1c038a57bec0cc5f1028a11a541ab03156dfaaebd12f4a36",
+  "signatureVerified": true,
+  "zipAlignmentVerified": true,
+  "booleanPreferenceSchema": 63,
+  "parameters": 3,
+  "menuUniqueControls": 63,
+  "corePrimaryControls": 4,
+  "coreMoreControls": 10,
+  "compatibilityDefault": true,
+  "explicitCompatibilityFalsePreserved": true,
+  "guardRootPlaceholderHiddenOnBothRomProfiles": true,
+  "systemHelperProfiles": {
+    "CN31": 22,
+    "CN34": 25,
+    "EU34": 26
+  },
+  "systemHelperSameDexCompatibilityFamilies": [
+    "CN34",
+    "EU34"
   ],
-  "dex_sha256": "d9c785abeb979211eb202dfe0d1912168706e7ef1197c694054838a6e21e9571",
-  "certificate_sha256": "c6ae75664f8635ac1c038a57bec0cc5f1028a11a541ab03156dfaaebd12f4a36",
-  "release_apk_sha256": "14fb39e16d435a7cff64ed2c4cacd34b92aa8cafe456e90a07f4915ef79e2983",
-  "prior_host_policy_and_gate_checks_passed": true,
-  "isolated_callback_assertions": 121,
-  "native_rule_count": 22,
-  "native_selfcheck_assertions": 12,
-  "normal22_native_load_verified": true,
-  "renamed_apk_retested_on_phone": false,
-  "diagnostic_entry_in_release": false
+  "installedOnMixFold3": true,
+  "mixFold3Rom": "OS3.0.304.0.WMVCNXM / Android16",
+  "mixFold3FrameworkConnected": true,
+  "mixFold3RecommendedScopesSelected": true,
+  "mixFold3ExistingBooleansPreserved": 18,
+  "mixFold3ReflectiveTargetsPassed": 159,
+  "mixFold3CallbackOffGatesPassed": 159,
+  "mixFold3SimpleOnCallbacksPassed": 98,
+  "mixFold3SettingsBaseHooksLoaded": 2,
+  "mixFold3SettingsBaseHooksSkipped": 0,
+  "mixFold3NeverEntryVisible": true,
+  "mixFold3NeverSleepDedicatedHitObserved": false,
+  "mixFold3TimeoutUnchanged": true,
+  "phoneRebooted": false,
+  "systemHelperStartedByTests": false,
+  "temporaryProbesCleaned": true,
+  "hostChecksPassed": true,
+  "euEvidence": {
+    "buildVersionCodes": [
+      26,
+      27
+    ],
+    "reflectiveTargets": 139,
+    "callbackOffGates": 139,
+    "simpleOnCallbacks": 77,
+    "systemHelperCn34Callbacks": 25,
+    "systemHelperEu34Callbacks": 26,
+    "code28FullEuRetest": false
+  },
+  "uiEvidence": {
+    "buildVersionCode": 27,
+    "leftHierarchyGuidesAndNestedMoreScreenshotVerified": true,
+    "layoutRetainedIn28": true
+  },
+  "sourceSHA256": {
+    "src/io/github/hyperpriv/Compatibility.java": "d2ce9bf0e2306448337a71dde32a126d1b0528e11726f997371d9ce13b1c9704",
+    "src/io/github/hyperpriv/CoreHooks.java": "7378893d41ab105a44db37f32a9fec75132130827b8f8278c3fb09e54d5af506",
+    "src/io/github/hyperpriv/CorePolicy.java": "73fd86b30424cc01e9d820076653028ff084cff14e1372a3d315b05452280b64",
+    "src/io/github/hyperpriv/CoreTargets.java": "1c7c3c09209f6439a330880051063d0bb343f0101fe730f2876c70a0568444d5",
+    "src/io/github/hyperpriv/DexEntrances.java": "43874c0db1020643bea3fe9c4cf8232d2b6064d6732795caa0cbbb2c6aa4d56b",
+    "src/io/github/hyperpriv/EuBuild.java": "cc4e2fdb06181c15ee3f6d9fb1baa44686dbb31ddc70c3c2ad6e13285ec0a4d4",
+    "src/io/github/hyperpriv/EuEnvironment.java": "6da392a9853d197f0985aa15f07d13b153650e1237622eaeeacdf5cc5f72ca20",
+    "src/io/github/hyperpriv/ExtraFeatures.java": "649a5ac1cf57394cb29af0667d4c5c4db9f61dd8b219e91a7e3f86346ef19a8d",
+    "src/io/github/hyperpriv/ExtraHooks.java": "acdfcf79572f1c4ab6a9a02fda1c2c57816970ec4676f022b10bbf8ff3760f9f",
+    "src/io/github/hyperpriv/ExtraPolicy.java": "841d267df15cf78b29bea4cc58250042535749cc6c697da3d79e83bd3ebef531",
+    "src/io/github/hyperpriv/ExtraTargets.java": "e0481ee09a2f01701ccdd9c643eed22e267fa09547213610bf5c4fc572836da5",
+    "src/io/github/hyperpriv/FeaturePresence.java": "0b5f94b4f481a014a4489d340af376bfa05b6cb6d2f90e5134780c6c28c4ee38",
+    "src/io/github/hyperpriv/HelperCompatibility.java": "c30fe39d40f3ffa45df7561eda06ebd5e0693dc1cb97d7f75252c271118bb156",
+    "src/io/github/hyperpriv/HookEntry.java": "cd886c492d214711c17ed92cd47aa3800038277df764a1a3f01b8fb0180bef77",
+    "src/io/github/hyperpriv/MainActivity.java": "d0ad206cd95fba193968504ee475bc64dda5b092c19ce649a6c386d506401964",
+    "src/io/github/hyperpriv/ModuleApp.java": "50fb2fd67649c7c5acf1035039bc511a2078595c5504de4db5c0733de67a76fe",
+    "src/io/github/hyperpriv/Options.java": "3bbb1180ea7ad8b91899e88cbe86c4a4beeae463004d5e853cafdebc50dccfda",
+    "src/io/github/hyperpriv/Policy.java": "e5b2a78144f4a8a8b5ec6827bfe11e5211f55f235813a90c5f7e0a8e25cbab67",
+    "src/io/github/hyperpriv/Profiles.java": "9c017557443f3df3fa7bd34d987c1ec7fc91c87a6841063c4682fa3d2cfe02fd",
+    "src/io/github/hyperpriv/Reflect.java": "728b4afb7aa1971d2005fbee9e4ba54cbb784a07d4c6fa6423601fa78353ca78",
+    "src/io/github/hyperpriv/RomPolicy.java": "9cfaed8244eb47df6d1b2657610843b4c9dca76987e589cc34dc5eb97a7ff738",
+    "src/io/github/hyperpriv/Rule.java": "4bfb799fba58e0be0e6c3a06adb42dd37d5cafa043664870f15919ee4cb06364",
+    "src/io/github/hyperpriv/RuntimeProfile.java": "2e06077fb715ebc7a61a7ad22df5ec8aa583d0c8663e94e003a4f68bfb3921ce",
+    "src/io/github/hyperpriv/Settings.java": "133cc9a28828c2c6b00d3e913897535ea6f4cb69f0db92dfd4b9c87b48aa4088",
+    "src/io/github/hyperpriv/UiCatalog.java": "0901d2c15171e620b41a8e505a9a37c297d0417d965b29ba93a577526fc369c5"
+  },
+  "logs": {
+    "host": {
+      "path": "testing/release-20261108-code28/host-checks.log",
+      "sha256": "5bd44e0504bc6424558953a0e0521a1b460b30dab35a2ea3011291abe7c0af8b"
+    },
+    "menu": {
+      "path": "testing/release-20261108-code28/button-audit.log",
+      "sha256": "c46177ec51e0188dd6bd812abc4a4b509b16b64acebf3cd405c783df25a37681"
+    },
+    "mix-reflection": {
+      "path": "testing/release-20261108-code28/mixfold3/device-reflection.log",
+      "sha256": "0f31a50c3185cd5018b3a1593a52233cce3f4fde6e0259ae5f38ffcdb8193b15"
+    },
+    "mix-callbacks": {
+      "path": "testing/release-20261108-code28/mixfold3/device-proxy-gates.log",
+      "sha256": "f4788f0e1c899ccfd15796d7160ea1f378746e302ea02a3583a10ece2503ee96"
+    },
+    "mix-ui": {
+      "path": "testing/release-20261108-code28/mixfold3/ui-and-package-final.json",
+      "sha256": "ab5bfdb38e33366cdc1930da334f9cdfd76526166dd9d9fcb10b68c5a7d53565"
+    },
+    "mix-upgrade": {
+      "path": "testing/release-20261108-code28/mixfold3/upgrade-and-probe.log",
+      "sha256": "3053b1e4a6f93fd4fa1dcf14ed0c95b9bed3069568eb0e86d36daa531a469847"
+    },
+    "mix-settings": {
+      "path": "testing/release-20261108-code28/mixfold3/screen-timeout-check.json",
+      "sha256": "cbbf060882fe6ee85a4d5c1505b8b450ab1f80bbb0eed0438731369b594eb8e3"
+    }
+  },
+  "validationLimits": [
+    "Independent reflection/fake-framework checks are not full live business validation.",
+    "System-server hooks were not rebooted or counted as newly live-tested in code28.",
+    "Never entry visibility was observed, but no dedicated never_sleep hit was observed on that page.",
+    "EU historical checks retain their original version scope; no code28 full EU business retest.",
+    "Payment, other ROM/APK versions, long-term collection/upload and full network/telephony remain incomplete."
+  ],
+  "privateDataIncluded": false,
+  "publishingStatus": "Prepared before GitHub publication; publication receipt is recorded separately."
 }

@@ -7,6 +7,7 @@ import io.github.libxposed.service.XposedServiceHelper;
 public final class ModuleApp extends Application {
     @Override public void onCreate(){
         super.onCreate();
+        RuntimeProfile.initializeUi(this);
         try{if(!Settings.cleanStoredKeys(Settings.local(this),true))Settings.status="旧配置清理未完成，现有设置保留";}
         catch(Throwable ignored){Settings.status="旧配置清理未完成，现有设置保留";}
         XposedServiceHelper.registerListener(new XposedServiceHelper.OnServiceListener(){

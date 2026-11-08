@@ -766,5 +766,262 @@
     "params": [
       "Landroid/content/pm/ApplicationInfo;"
     ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.xiaomi.security.xsof.MiSafetyDetectService",
+    "method": "n",
+    "returns": "V",
+    "group": "environment_checks",
+    "action": "environment",
+    "params": [
+      "Ljava/lang/Object;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.permcenter.privacymanager.InterceptBaseFragment",
+    "method": "onInflateView",
+    "returns": "Landroid/view/View;",
+    "group": "permission_direct",
+    "action": "permission_direct",
+    "params": [
+      "Landroid/view/LayoutInflater;",
+      "Landroid/view/ViewGroup;",
+      "Landroid/os/Bundle;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.simlock.SimLockUtils",
+    "method": "m",
+    "returns": "Z",
+    "group": "sim_account",
+    "action": "true",
+    "params": [
+      "Landroid/content/Context;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.simlock.activity.SuccessDialogActivity",
+    "method": "onCreate",
+    "returns": "V",
+    "group": "sim_success",
+    "action": "finish",
+    "params": [
+      "Landroid/os/Bundle;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.wakepath.ui.ConfirmStartActivity",
+    "method": "onDialogCreated",
+    "returns": "V",
+    "group": "wake_popup",
+    "action": "wake_popup",
+    "params": [
+      "Lmiuix/appcompat/app/AlertDialog;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.networkassistant.ui.bean.OffLineData$BaseData",
+    "method": "isOffline",
+    "returns": "Z",
+    "group": "network_offline",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.networkassistant.ui.bean.OffLineData$BaseData",
+    "method": "<init>",
+    "returns": "V",
+    "group": "network_offline",
+    "action": "offline_ctor",
+    "params": [
+      "Ljava/lang/String;",
+      "Z",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Ljava/lang/String;",
+      "Lcom/miui/networkassistant/ui/bean/ClickActionData;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$NetworkAssistantHomeModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$CardSlotModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$SettingModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$VoiceModule;",
+      "Lcom/miui/networkassistant/ui/bean/OffLineData$ReminderModule;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.applicationlock.widget.MiuiNumericInputView",
+    "method": "<init>",
+    "returns": "V",
+    "group": "pin_shuffle",
+    "action": "pin_shuffle",
+    "params": [
+      "Landroid/content/Context;",
+      "Landroid/util/AttributeSet;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.appmanager.ApplicationsDetailsActivity",
+    "method": "onCreateOptionsMenu",
+    "returns": "Z",
+    "group": "app_disable",
+    "action": "app_menu",
+    "params": [
+      "Landroid/view/Menu;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.appmanager.ApplicationsDetailsActivity",
+    "method": "onPrepareOptionsMenu",
+    "returns": "Z",
+    "group": "app_disable",
+    "action": "app_menu",
+    "params": [
+      "Landroid/view/Menu;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.appmanager.ApplicationsDetailsActivity",
+    "method": "onOptionsItemSelected",
+    "returns": "Z",
+    "group": "app_disable",
+    "action": "app_menu",
+    "params": [
+      "Landroid/view/MenuItem;"
+    ]
+  },
+  {
+    "pkg": "com.miui.packageinstaller",
+    "version": 55500,
+    "cls": "com.android.packageinstaller.PackageUtil",
+    "method": "u",
+    "returns": "Z",
+    "group": "core_system_update",
+    "action": "installer_system",
+    "params": [
+      "Landroid/content/pm/ApplicationInfo;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "q1.c",
+    "method": "i",
+    "returns": "Ljava/util/List;",
+    "group": "accessibility_keep",
+    "action": "accessibility_revoke",
+    "params": [
+      "Ljava/util/List;"
+    ]
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "r6.c",
+    "method": "t",
+    "returns": "Z",
+    "group": "usb_intercept",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "q1.l",
+    "method": "n",
+    "returns": "Z",
+    "group": "safepay_scan",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.antivirus.service.GuardService",
+    "method": "K",
+    "returns": "V",
+    "group": "safepay_scan",
+    "action": "null",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "q1.l",
+    "method": "o",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "q1.k",
+    "method": "f",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.antivirus.activity.P",
+    "method": "f",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.firstaidkit.model.other.SystemRootModel",
+    "method": "checkSystemRoot",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.securityscan.model.manualitem.PermissionRootModel",
+    "method": "checkSystemRoot",
+    "returns": "Z",
+    "group": "root_detection",
+    "action": "false",
+    "params": []
+  },
+  {
+    "pkg": "com.miui.securitycenter",
+    "version": 40001283,
+    "cls": "com.miui.permcenter.u",
+    "method": "D",
+    "returns": "Z",
+    "group": "permission_tips",
+    "action": "privacy_tip",
+    "params": []
   }
 ]

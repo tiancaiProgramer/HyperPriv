@@ -1,54 +1,19 @@
 # HyperPriv
 
-HyperOS 3 / Android 16 的现代LSPosed API102模块。当前预览版 **0.4.4-preview2 / versionCode22**，[下载本版本](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.4-preview2)。仍有未完成场景验证或尚未适配项目。
+普通 / xiaomi.eu 统一版：**0.4.4 / versionCode 28**，基于 GitHub [v0.4.4-preview2](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.4-preview2)。同一个 APK 自动识别 EU，并隐藏已确认由 ROM 处理、组件缺失或没有对应业务的选项。未知 EU 构建保留尝试入口。
 
-本版本新增SystemHelper指定版本/APK哈希的采集与上报阻止，沿用统计与上报菜单，独立开关默认关闭。当前63个布尔设置、3个参数、11项作用域，保留3张卡片及11个原地展开菜单。既有安装器扫描加载页修复保留。
+这 12 项标准版均已有实现；按本机实际 APK 方法定义自动识别入口，确认没有的隐藏。组件缺失时，普通版和 EU 均隐藏对应选项。读取失败则保留，隐藏不清除设置。
 
-[更新说明](RELEASE-NOTES.md) · [新增实测](SYSTEMHELPER-20261104.md) · [63项状态](VERIFICATION-0.4.4-preview2.csv) · [未完成验证及方案](UNVERIFIED.md) · [相对基线改动](GITHUB-DIFF.md)
+核心签名的 10 项高级功能收进默认折叠的“更多选项”，展开子菜单增加左侧竖线与逐层缩进；网络助手选项改名“忽略网络助手服务下线标记”。SystemHelper 新增独立 CN34 分支，并支持 CN34/EU34 的相同完整 DEX 变体。
 
-## SystemHelper
+兼容模式默认开启，保留用户已经保存的关闭状态。普通版原有规则与其他默认值保留；EU 新安装其余独立功能默认关闭，升级保留已有选择。此前 14 项 EU 待适配入口中，12 项已完成目标版本映射、2 项确认没有对应业务并隐藏。
 
-目标`com.mobiletools.systemhelper`，3.0.1-20250311 / versionCode31，仅已核对哈希5267008ede808c467988df588915791d21a6f1f3fbe219c57b125a235000df4f。严格检查版本/哈希，实验兼容不放宽此目标。不会因名称相似而处理高通同名组件。
+- [界面整理、重复按钮排查与 SystemHelper CN/EU 对比](UI-HELPER-20261108.md)
+- [适配、构建与实测边界](UNIFIED-ADAPTATION.md)
+- [63 项设置的普通 / EU 默认值与本机可见性](UNIFIED-FEATURES-20261108.csv)
+- [本次发布说明](RELEASE-NOTES.md)
+- [最终28版核验记录](RELEASE-VERIFICATION.json)
 
-代码中存在应用列表、使用时长及流量、设备/SIM/信号和定位采集，以及注册/历史数据加密POST链路；这证明能力，不证明每个自然周期都会运行或服务端用于反诈。
+本次小米 15 EU 样本的 12 项入口自动识别、139 个保留目标反射及关闭门控检查通过，77 个简单开启回调通过；复杂返回类型与指定请求分支另有隔离检查。这不等于实际 LSPosed 业务全部生效，仍需手动测试。27版已安装到当前小米15并核对展开层级，未改功能开关、未重启或发布 GitHub。
 
-在LSPosed为HyperPriv勾选SystemHelper作用域，再开启“隐私与上报 → 统计与上报 → 阻止 SystemHelper 采集与上报”，重启目标进程生效。只勾选作用域、只保存开关或显示版本适配均不能单独证明实际命中。
-
-当前设备已记录22条真实加载、受控12项检查及121项隔离回调对照；自然长期、重启、其他版本和完整联网内容仍待验证。实机测试在该UID临时双栈外网隔离下进行，临时规则/工具已清理。
-
-## 配置、适配与恢复
-
-菜单包含安装与授权、隐私与上报、电量与显示三张卡片，子菜单原地展开；关于提供桌面图标、兼容及组件说明。63项布尔设置包含模块总控、核心总控和兼容模式，另有剪贴板白名单、提示文字及不透明度3参数。原62项偏好键及默认值保留，新功能默认关闭。
-
-参考设备MIX Fold3，Android16，HyperOS OS3.0.304.0.WMVCNXM，LSPosed2.2.1(7912)。其他精确组件定义见profiles.json、extra-profiles.json及Java目标定义。共11项推荐作用域：系统框架、安装器、安全中心、安全守护、设置、权限管理、电量与性能、Joyose、小米统计、MSA、SystemHelper。
-
-实验兼容模式默认关闭。对原适配规则可放宽构建及版本限制以尝试现有定义；仍检查方法签名，缺失跳过，未知设备不保证效果。SystemHelper保持严格版本/哈希要求。应用层修改后重启对应进程；系统层修改或兼容模式变化需重启手机。
-
-原签名覆盖升级可保留配置，ADB建议普通安装：
-
-```sh
-adb install --no-incremental -r HyperPriv-0.4.4-preview2.apk
-```
-
-关闭单项/总开关后重启对应进程可恢复原调用；停用或卸载模块后重启目标也可恢复。手动选择的USB设置、休眠时长及已有缓存云控不保证自动回退。
-
-## 验证边界
-
-本次主要测试新增SystemHelper，其他功能沿用有日期的历史记录，未重新全量验证。当前63项中20项有记录内场景对照、28项待场景、8项入口命中但完整效果未验证、3项部分验证、1项业务未适配、3项控制设置。数量不代表覆盖所有版本或条件。
-
-安全守护Root开关仍只保存选择，不执行该业务拦截。温度选项仅针对指定屏幕刷新率分支。未完成清单与逐项方案见UNVERIFIED.md；实际样本、限制及构建标签见相应报告。
-
-## 构建与检查
-
-需要Python3、JDK17、Android SDK Platform35 / Build Tools36.0.0，以及libxposed API/service/interface102的classes.jar，分别放入API_ROOT的api、service、interface子目录。API只用于编译，service/interface为运行时依赖。
-
-```sh
-python3 build.py --jdk /path/to/jdk17 --sdk /path/to/android-sdk --libxposed /path/to/API_ROOT --keystore /path/to/signing.p12 --out HyperPriv.apk
-python3 tests/run_checks.py --jdk /path/to/jdk17 --android-jar /path/to/android-sdk/platforms/android-35/android.jar --libxposed /path/to/API_ROOT
-```
-
-密钥别名hyperpriv，密码使用HYPERPRIV_SIGN_PASSWORD环境变量。自签包不能直接覆盖原签名包；私钥与密码不随源码分发。
-
-## 来源与许可
-
-AGPL-3.0-only。既有Hook参考HyperCeiler并按实机适配现代API；SystemHelper规则按当前系统APK独立研究，未分发原APK或反编译实现。libxposed依Apache2.0使用。详见THIRD_PARTY_NOTICES.txt、REFERENCE_BLOBS.json及许可证。
+源码、资源和测试位于项目根目录，公开依赖见 `dependencies/libxposed`。不包含主题破解或 eSIM Hook；SIM 安全保护功能保留。源码包不包含签名密钥或设备原 APK。历史验证文档保留各自原始版本范围。AGPL-3.0-only，保留第三方许可声明。

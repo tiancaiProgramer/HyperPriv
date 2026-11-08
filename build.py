@@ -9,6 +9,8 @@ for key in ('jdk','sdk','libxposed','keystore','out'):p.add_argument('--'+key,re
 p.add_argument('--password-env',default='HYPERPRIV_SIGN_PASSWORD')
 p.add_argument('--build-dir',type=Path)
 a=p.parse_args();root=Path(__file__).resolve().parent;build=a.build_dir or root/'build';tools=a.sdk/'build-tools/36.0.0';android=a.sdk/'platforms/android-35/android.jar'
+build=build.resolve()
+if not build.is_relative_to(root) or build==root:raise ValueError('Build directory must be inside this project')
 api=a.libxposed/'api/classes.jar';runtime=[a.libxposed/'service/classes.jar',a.libxposed/'interface/classes.jar']
 def run(*args):subprocess.run(list(map(str,args)),check=True)
 for file in [android,api,*runtime,a.keystore]:

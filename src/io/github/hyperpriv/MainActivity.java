@@ -46,7 +46,8 @@ public final class MainActivity extends Activity {
         Settings.changed=settingsChanged;
         render();
     }
-    @Override public void onResume(){super.onResume();Settings.changed=settingsChanged;Settings.refreshScopes();refresh();}
+    @Override public void onResume(){super.onResume();Settings.changed=settingsChanged;RuntimeProfile.initializeUi(this);Settings.refreshScopes();render();}
+    @Override public void onPause(){restoredScroll=scroll==null?0:scroll.getScrollY();super.onPause();}
     @Override public void onSaveInstanceState(Bundle out){
         out.putInt("scroll_y",scroll==null?0:scroll.getScrollY());super.onSaveInstanceState(out);
     }
@@ -72,7 +73,7 @@ public final class MainActivity extends Activity {
         android.util.TypedValue value=new android.util.TypedValue();
         if(getTheme().resolveAttribute(android.R.attr.selectableItemBackground,value,true))text.setBackgroundResource(value.resourceId);
     }
-    private boolean selected(String key){return Settings.local(this).getBoolean(key,Options.defaultValue(key));}
+    private boolean selected(String key){return Settings.local(this).getBoolean(key,RuntimeProfile.defaultValue(key));}
     private void refresh(){
         if(isFinishing()||isDestroyed())return;
         updating=true;
@@ -97,7 +98,7 @@ public final class MainActivity extends Activity {
         scroll.requestApplyInsets();
         String version="";try{version=getPackageManager().getPackageInfo(getPackageName(),0).versionName;}catch(Exception ignored){}
         label(content,"HYPERPRIV  /  "+version,12,ACCENT,true);
-        label(content,"HyperPriv",30,INK,true);label(content,"按需调整，少些打扰。",14,MUTED,false);
+        label(content,RuntimeProfile.eu()?"HyperPriv · EU":"HyperPriv",30,INK,true);label(content,"按需调整，少些打扰。",14,MUTED,false);
         statusCard();
         for(UiCatalog.Group group:UiCatalog.GROUPS)featureCard(group);
         aboutCard();
@@ -136,17 +137,20 @@ public final class MainActivity extends Activity {
     private AppState appState(String pkg){
         boolean compatibility=selected(Compatibility.KEY);
         if(pkg.equals("android")){
-            boolean strict=Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+            boolean strict=RuntimeProfile.knownSystem();
             return new AppState(strict||compatibility,strict?"Android 16 · 已匹配本机构建，系统选项改动后需重启":compatibility?"实验兼容 · 当前系统构建未经验证":"系统构建未适配",Build.VERSION.SDK_INT);
         }
         try{
             PackageInfo info=getPackageManager().getPackageInfo(pkg,0);long version=info.getLongVersionCode();boolean supported=false;
             for(Rule rule:Profiles.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
             for(Rule rule:ExtraTargets.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
-            if(pkg.equals("com.mobiletools.systemhelper")&&version!=31L)return new AppState(false,"SystemHelper版本未适配",version);
+            if(pkg.equals(HelperCompatibility.PACKAGE)){
+                HelperCompatibility.Match match=HelperCompatibility.resolve(version,EuEnvironment.hash(info.applicationInfo.sourceDir),info.applicationInfo.sourceDir,compatibility);
+                return new AppState(match!=null,"已安装 "+info.versionName+" · "+(match==null?"代码未适配":match.experimental?"实验兼容 · "+match.label:"已核对 "+match.label)+(info.applicationInfo.enabled?"":" · 组件已停用"),version);
+            }
             boolean trial=compatibility&&(!Compatibility.select(Profiles.ALL,pkg,version,true).isEmpty()||!Compatibility.select(ExtraTargets.ALL,pkg,version,true).isEmpty());
             String status=!supported?(trial?"实验兼容 · 版本未经验证":"未适配"):Profiles.apkHash(pkg,version)!=null?(compatibility?"实验兼容 · 放宽构建校验":"启用时核对构建"):"版本已适配";
-            if(pkg.equals("com.mobiletools.systemhelper"))status="运行时严格核对APK";
+            if(RuntimeProfile.eu()&&EuBuild.expectedHash(pkg,version)!=null&&!EuBuild.matches(pkg,version,EuEnvironment.hash(info.applicationInfo.sourceDir))){supported=false;trial=compatibility;status=compatibility?"实验兼容 · EU 构建未经验证":"EU 构建未核对";}
             return new AppState(supported||trial,"已安装 "+info.versionName+" · "+status,version);
         }catch(Exception e){return new AppState(false,"未安装");}
     }
@@ -157,18 +161,17 @@ public final class MainActivity extends Activity {
         fold(header,body,"group_"+id,title);return body;
     }
     private void coreSettings(LinearLayout box){
-        boolean strict=Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+        boolean strict=RuntimeProfile.knownSystem();
         boolean supported=strict||selected(Compatibility.KEY);
         label(box,strict?"已适配当前系统构建。勾选系统框架，修改系统选项后重启手机。":supported?"实验兼容：当前构建未经验证，逐项尝试现有方法；系统层需重启后检查加载日志。":"当前系统构建尚未适配，可在关于中按需开启实验兼容模式。",12,ACCENT,false);
         label(box,"新选项默认关闭，请按需开启。",12,MUTED,false);
-        toggle(box,"启用核心破解","core_enabled","同时受上方模块总开关控制。",supported);
-        toggle(box,"允许降级安装","core_downgrade","保留应用数据安装旧版，可能存在数据兼容问题。",supported);
-        toggle(box,"允许不同签名覆盖安装","core_update_signature","允许覆盖安装不同签名的同名应用。",supported);
-        toggle(box,"跳过 APK 完整性校验","core_apk_integrity","放宽已识别的 APK 内容与签名方案检查。",supported);
-        toggle(box,"允许不同签名的分包","core_split_signature","允许同一应用的分包使用不同签名。",supported);
-        toggle(box,"停用系统安装验证代理","core_verification_agent","跳过系统安装验证代理的检测。",supported);
-        toggle(box,"解除 resources.arsc 限制","core_resources","允许压缩或未对齐的 APK 资源表。",supported);
-        for(ExtraFeatures.Feature extra:ExtraFeatures.ALL)if(extra.key.startsWith("core_"))toggle(box,extra.title,extra.key,extra.note,supported&&Compatibility.supports(ExtraTargets.ALL,extra.key,"android",Build.VERSION.SDK_INT,selected(Compatibility.KEY)));
+        for(String key:UiCatalog.CORE_PRIMARY)coreOption(box,key,supported);
+        LinearLayout more=information(box,"core_more","更多选项");
+        for(String key:UiCatalog.CORE_MORE)coreOption(more,key,supported);
+    }
+    private void coreOption(LinearLayout box,String key,boolean supported){
+        boolean available=supported&&(ExtraFeatures.get(key)==null||Compatibility.supports(ExtraTargets.ALL,key,"android",Build.VERSION.SDK_INT,selected(Compatibility.KEY)));
+        toggle(box,UiCatalog.label(key),key,UiCatalog.note(key),available);
     }
     private void launcherIconControl(LinearLayout box){
         LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(0,gap(12),0,gap(12));
@@ -212,6 +215,7 @@ public final class MainActivity extends Activity {
         }
     }
     private void toggle(LinearLayout parent,String title,String key,String note,boolean available){
+        if(RuntimeProfile.state().hidden(key))return;
         LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(0,gap(12),0,gap(12));row.setMinimumHeight(dp(48));
         LinearLayout copy=vertical();LinearLayout.LayoutParams copyParams=new LinearLayout.LayoutParams(0,-2,1);copyParams.rightMargin=dp(12);row.addView(copy,copyParams);
@@ -252,7 +256,12 @@ public final class MainActivity extends Activity {
     }
     private LinearLayout information(LinearLayout parent,String id,String title){
         TextView header=label(parent,"",16,INK,true);clickable(header);header.setPadding(0,gap(12),0,gap(12));
-        LinearLayout body=vertical();parent.addView(body,new LinearLayout.LayoutParams(-1,-2));fold(header,body,"info_"+id,title);return body;
+        LinearLayout branch=new LinearLayout(this);branch.setOrientation(LinearLayout.HORIZONTAL);branch.setPadding(dp(8),0,0,0);
+        LinearLayout.LayoutParams branchParams=new LinearLayout.LayoutParams(-1,-2);branchParams.topMargin=gap(2);branchParams.bottomMargin=gap(6);parent.addView(branch,branchParams);
+        View guide=new View(this);guide.setBackground(background(0xffd6e2cc,1));guide.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        branch.addView(guide,new LinearLayout.LayoutParams(dp(2),-1));
+        LinearLayout body=vertical();body.setPadding(dp(12),0,0,0);branch.addView(body,new LinearLayout.LayoutParams(0,-2,1));
+        fold(header,branch,"info_"+id,title);return body;
     }
     private void link(LinearLayout parent,String label,String url){
         TextView target=label(parent,label+"  ↗",15,ACCENT,true);clickable(target);target.setContentDescription(label+"，在浏览器打开");
@@ -261,8 +270,13 @@ public final class MainActivity extends Activity {
     }
     private void aboutCard(){
         LinearLayout box=appGroup("about","关于");
+        {
+            LinearLayout eu=information(box,"eu_profile","本机已隐藏的项目");
+            label(eu,"标准版与 EU 都自动检查组件和功能入口；确认不存在的选项隐藏，保留原设置。EU 另隐藏已确认由 ROM 处理的功能。读取失败时保留选项。",12,MUTED,false);
+            for(String key:Options.KEYS)if(RuntimeProfile.state().hidden(key))label(eu,UiCatalog.label(key)+"："+RuntimeProfile.state().reason(key),12,MUTED,false);
+        }
         launcherIconControl(box);
-        toggle(box,"实验兼容模式",Compatibility.KEY,"默认关闭。开启后放宽机型、版本及设置构建校验，尝试现有规则，沿用各功能当前开关。方法匹配不代表行为正确；缺失方法跳过，不会补齐尚未实现的功能。切换后重启目标进程，系统层需重启手机。",true);
+        toggle(box,"实验兼容模式",Compatibility.KEY,"默认开启，可手动关闭。开启后放宽机型、版本及设置构建校验，尝试现有规则，沿用各功能当前开关。方法匹配不代表行为正确；缺失方法跳过，不会补齐尚未实现的功能。切换后重启目标进程，系统层需重启手机。",true);
         link(box,"检查更新","https://github.com/tiancaiProgramer/HyperPriv/releases");
         label(box,"tiancaiProgramer/HyperPriv · 安装包与更新说明",12,MUTED,false);
         LinearLayout usage=information(box,"usage","使用与恢复");
@@ -273,14 +287,15 @@ public final class MainActivity extends Activity {
         disable.setOnClickListener(v->{Settings.set(this,"master",false);refresh();Toast.makeText(this,"总开关已关闭，独立设置已保留",Toast.LENGTH_SHORT).show();});
         LinearLayout versions=information(box,"versions","组件适配说明");
         for(UiCatalog.Component app:UiCatalog.COMPONENTS){
+            if(!RuntimeProfile.state().needsScope(app.pkg))continue;
             label(versions,app.title,14,INK,true);label(versions,appState(app.pkg).text,12,MUTED,false);
             label(versions,"已核对版本 "+UiCatalog.versions(app.pkg),12,MUTED,false);
         }
         label(versions,"默认模式另核对设置安装包构建；实验兼容模式放宽此校验。这里的版本信息不代表规则已实际命中。",12,MUTED,false);
         LinearLayout limits=information(box,"limits","验证进度与功能边界");
-        label(limits,"本机已有部分安装、读秒、导航和截图对照；无账号 / 无 SIM / 离线组合、长期行为及整机抓包仍待验证。",12,MUTED,false);
+        label(limits,"本次 EU 适配已核对方法定义与隔离回调，实际业务仍需测试；此前普通版的安装、读秒、导航和截图记录保留原验证范围。",12,MUTED,false);
         label(limits,"方法匹配、入口命中与实际业务对照分别记录；实验兼容不保证未知机型生效。完整状态见功能说明。",12,MUTED,false);
-        label(limits,"新增系统层功能默认关闭。安全守护 Root 检测业务尚未适配，对应开关仅保存选择。",12,MUTED,false);
+        label(limits,"新增系统层功能默认关闭。没有已适配业务入口的安全守护 Root 选项已隐藏，原设置仍保留。",12,MUTED,false);
         link(limits,"查看逐项功能说明","https://github.com/tiancaiProgramer/HyperPriv/blob/main/FEATURES.md");
         LinearLayout source=information(box,"source","项目与许可");
         link(source,"HyperPriv 源码","https://github.com/tiancaiProgramer/HyperPriv");

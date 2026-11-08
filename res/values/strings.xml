@@ -1,1 +1,1 @@
-<resources><string name="module_description">HyperOS 隐私上报、安装与 USB、显示与电量云控调整；精确版本适配。</string></resources>
+<resources><string name="module_description">普通版与 EU 合并适配；EU 自动省略已处理及缺失功能，兼容模式默认开启。</string></resources>

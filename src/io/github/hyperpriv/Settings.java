@@ -31,7 +31,7 @@ final class Settings {
             SharedPreferences own=local(c), received=s.getRemotePreferences(Options.PREFS);
             SharedPreferences.Editor init=own.edit();
             if(!own.getBoolean("initialized",false)){
-                for(String k:Options.KEYS)init.putBoolean(k,received.getBoolean(k,Options.defaultValue(k)));
+                for(String k:Options.KEYS)init.putBoolean(k,received.getBoolean(k,RuntimeProfile.defaultValue(k)));
                 for(String k:ExtraFeatures.STRING_KEYS)init.putString(k,received.getString(k,""));
                 init.putInt("clipboard_opacity",received.getInt("clipboard_opacity",100));
                 init.putBoolean("initialized",true).commit();
@@ -47,14 +47,14 @@ final class Settings {
         try {
             SharedPreferences.Editor e=remote.edit();
             removeObsolete(remote,e,false);
-            for(String k:Options.KEYS)e.putBoolean(k,local(c).getBoolean(k,Options.defaultValue(k)));
+            for(String k:Options.KEYS)e.putBoolean(k,RuntimeProfile.allowed(k)&&local(c).getBoolean(k,RuntimeProfile.defaultValue(k)));
             for(String k:ExtraFeatures.STRING_KEYS)e.putString(k,local(c).getString(k,""));
             e.putInt("clipboard_opacity",Math.max(0,Math.min(100,local(c).getInt("clipboard_opacity",100))));
             return e.commit();
         }catch(Throwable e){status="设置已本地保存，等待框架重连";return false;}
     }
     static void set(Context c,String k,boolean v){
-        if(!Options.accepts(k))throw new IllegalArgumentException(k);
+        if(!Options.accepts(k)||!RuntimeProfile.allowed(k))throw new IllegalArgumentException(k);
         local(c).edit().putBoolean(k,v).putBoolean("initialized",true).commit();sync(c);
     }
     static void setText(Context c,String key,String value){
@@ -73,6 +73,7 @@ final class Settings {
         java.util.List<String> current=scopes;if(current==null)return "作用域状态待框架确认";
         java.util.ArrayList<String> missing=new java.util.ArrayList<>();
         for(UiCatalog.Component component:UiCatalog.COMPONENTS){
+            if(!RuntimeProfile.state().needsScope(component.pkg))continue;
             boolean present=current.contains(component.pkg)||(component.pkg.equals("android")&&current.contains("system"));
             if(!present)missing.add(component.title);
         }

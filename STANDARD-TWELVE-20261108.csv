@@ -1,0 +1,13 @@
+key,label,standardBaselineImplemented,standardBaselineProfiles,baselineRuleCount
+accessibility_keep,阻止静默关闭无障碍,True,com.miui.securitycenter:40001275,1
+cloud,关闭安装器云端检测,True,com.miui.packageinstaller:53601,1
+completed_tip,隐藏安装完成后的安全守护推荐,True,com.miui.packageinstaller:53601,1
+core_system_update,放宽系统应用安装与更新限制,True,android:36; com.miui.packageinstaller:53601,2
+guards,解除安装器纯净模式与风险拦截,True,com.miui.packageinstaller:53601,11
+permission_tips,隐藏权限使用提示,True,com.miui.securitycenter:40001275,1
+risk_notice,屏蔽风险应用通知,True,com.miui.securitycenter:40001268; com.miui.securitycenter:40001275,2
+root_detection,停用安全中心 Root 检测,True,com.miui.securitycenter:40001275,5
+safepay_scan,停用支付保护自动检查,True,com.miui.securitycenter:40001275,2
+systemhelper_report,阻止 SystemHelper 采集与上报,True,com.mobiletools.systemhelper:31,22
+upload,阻止安装资料与 APK 片段上传,True,com.miui.packageinstaller:53601,1
+usb_intercept,停用 USB 安装拦截,True,com.miui.securitycenter:40001275,1

@@ -20,8 +20,9 @@ final class CoreHooks {
     private boolean experimental;
     CoreHooks(XposedInterface api,ClassLoader loader){this.api=api;this.loader=loader;}
     void install(){
+        RuntimeProfile.initializeSystem();
         try{prefs=api.getRemotePreferences(Options.PREFS);}catch(Throwable e){report("core preferences unavailable");return;}
-        experimental=!Compatibility.strictSystem(Build.VERSION.SDK_INT,Build.FINGERPRINT);
+        experimental=!RuntimeProfile.knownSystem();
         if(experimental&&!compatibilityEnabled()){
             report("core unsupported framework; original methods preserved");return;
         }
@@ -43,10 +44,10 @@ final class CoreHooks {
         report("core ready installed="+installed+" skipped="+skipped+"; controls default off"+(experimental?"; experimental compatibility, behavior unverified":""));
     }
     private boolean enabled(String key){
-        try{return (!experimental||prefs.getBoolean(Compatibility.KEY,false))&&prefs.getBoolean("master",true)&&prefs.getBoolean("core_enabled",false)&&prefs.getBoolean(key,false);}
+        try{return RuntimeProfile.allowed(key)&&(!experimental||prefs.getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY)))&&prefs.getBoolean("master",true)&&prefs.getBoolean("core_enabled",false)&&prefs.getBoolean(key,false);}
         catch(Throwable e){return false;}
     }
-    private boolean compatibilityEnabled(){try{return prefs.getBoolean(Compatibility.KEY,false);}catch(Throwable e){return false;}}
+    private boolean compatibilityEnabled(){try{return prefs.getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY));}catch(Throwable e){return false;}}
     private Class<?> type(String d)throws ClassNotFoundException{
         switch(d){case "V":return void.class;case "Z":return boolean.class;case "I":return int.class;}
         return Class.forName(d.charAt(0)=='L'?d.substring(1,d.length()-1).replace('/','.'):d.replace('/','.'),false,loader);

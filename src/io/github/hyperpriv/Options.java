@@ -11,6 +11,6 @@ final class Options {
         String[] all=new String[first.length+second.length];
         System.arraycopy(first,0,all,0,first.length);System.arraycopy(second,0,all,first.length,second.length);return all;
     }
-    static boolean defaultValue(String key){for(String old:APP_KEYS)if(old.equals(key))return true;return false;}
+    static boolean defaultValue(String key){if(key.equals(Compatibility.KEY))return true;for(String old:APP_KEYS)if(old.equals(key))return true;return false;}
     static boolean accepts(String key){for(String k:KEYS)if(k.equals(key))return true;return false;}
 }

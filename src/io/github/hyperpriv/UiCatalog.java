@@ -2,6 +2,8 @@ package io.github.hyperpriv;
 
 /** Presentation only. IDs in Options remain the persistent Hook preference keys. */
 final class UiCatalog {
+    static final String[] CORE_PRIMARY={"core_enabled","core_downgrade","core_update_signature","core_apk_integrity"};
+    static final String[] CORE_MORE={"core_split_signature","core_verification_agent","core_resources","core_shared_uid","core_previous_signature","core_low_sdk","core_persistent","core_isolation","core_system_update","core_keep_fingerprint"};
     static final class Component {
         final String title,pkg;
         Component(String title,String pkg){this.title=title;this.pkg=pkg;}
@@ -30,12 +32,12 @@ final class UiCatalog {
         new Component("MSA 广告服务","com.miui.systemAdSolution")
     };
     static final Group[] GROUPS={
-        new Group("install","安装与授权","安装器、权限与 USB、核心破解、应用管理。",
+        new Group("install","安装与授权","安装器、权限与 USB、核心签名、应用管理。",
             new Section("installer","安装器","广告推荐、安装检测与安装限制。",
                 "ads","completed_tip","upload","cloud","scan","guards","rate"),
             new Section("permissions","权限与 USB","授权等待、授权保留、USB 与权限入口。",
                 "permission_timer","permission_direct","accessibility_keep","autostart_keep","usb_timer","usb_local","usb_intercept","overlay_direct","accessibility_direct","framework_unknown_sources"),
-            new Section("core","核心破解",null,Options.CORE_KEYS),
+            new Section("core","核心签名",null,Options.CORE_KEYS),
             new Section("apps","应用管理","增加手动停用入口，按需放宽系统保护限制。","app_disable","framework_freeze","framework_disable_checks")),
         new Group("privacy","隐私与上报","应用启动、环境检查、隐私提示与指定上传入口。",
             new Section("app_list","应用启动与通知",null,"app_list","risk_notice","wake_popup","wake_checker"),
@@ -64,6 +66,13 @@ final class UiCatalog {
     static String label(String key){
         ExtraFeatures.Feature extra=ExtraFeatures.get(key);if(extra!=null)return extra.title;
         switch(key){
+            case "core_enabled":return "启用核心签名";
+            case "core_downgrade":return "允许降级安装";
+            case "core_update_signature":return "允许不同签名覆盖安装";
+            case "core_apk_integrity":return "跳过 APK 完整性校验";
+            case "core_split_signature":return "允许不同签名的分包";
+            case "core_verification_agent":return "停用系统安装验证代理";
+            case "core_resources":return "解除 resources.arsc 限制";
             case "ads":return "屏蔽安装器广告与推荐";
             case "completed_tip":return "隐藏安装完成后的安全守护推荐";
             case "upload":return "阻止安装资料与 APK 片段上传";
@@ -89,6 +98,13 @@ final class UiCatalog {
     static String note(String key){
         ExtraFeatures.Feature extra=ExtraFeatures.get(key);if(extra!=null)return extra.note;
         switch(key){
+            case "core_enabled":return "同时受上方模块总开关控制。";
+            case "core_downgrade":return "保留应用数据安装旧版，可能存在数据兼容问题。";
+            case "core_update_signature":return "允许覆盖安装不同签名的同名应用。";
+            case "core_apk_integrity":return "放宽已识别的 APK 内容与签名方案检查。";
+            case "core_split_signature":return "允许同一应用的分包使用不同签名。";
+            case "core_verification_agent":return "跳过系统安装验证代理的检测。";
+            case "core_resources":return "允许压缩或未对齐的 APK 资源表。";
             case "usb_local":return "需设置与安全中心作用域；无账号 / 无 SIM / 离线开启仍待场景实测。";
             case "scan":return "跳过病毒扫描并隐藏扫描加载页；仍保留安装解析和来源授权。";
             case "guards":return "关闭已识别的纯净模式、备案、风险和账号校验分支。";
@@ -101,15 +117,15 @@ final class UiCatalog {
     }
     static String versions(String pkg){
         switch(pkg){
-            case "com.mobiletools.systemhelper":return "3.0.1-20250311 · 已核对APK";
+            case "com.mobiletools.systemhelper":return "CN 3.0.1-20250311 / 3.0.1-20260313；EU 4.0.0-20260610；34版支持相同 DEX 变体";
             case "android":return "Android 16 · OS3.0.304.0.WMVCNXM 的已适配构建";
             case "com.lbe.security.miui":return "1.9.2";
-            case "com.miui.packageinstaller":return "5.3.6.0.1-20250825F";
-            case "com.miui.securitycenter":return "12.6.8-260609.0.1 / 12.7.5-260709.0.1";
+            case "com.miui.packageinstaller":return "5.3.6.0.1 / 5.5.5.0.0";
+            case "com.miui.securitycenter":return "12.6.8 / 12.7.5 / 12.8.3";
             case "com.miui.guardprovider":return "2.5.6-20251106.0 / 3.0.7-20260708.0";
             case "com.android.settings":return "16 · 仅已适配的安装包构建";
             case "com.miui.powerkeeper":return "4.2.00";
-            case "com.xiaomi.joyose":return "2.4.92";
+            case "com.xiaomi.joyose":return "2.4.92 / 2.5.14";
             case "com.miui.analytics":return "6.31.0";
             case "com.miui.systemAdSolution":return "2025.07.19.06-release";
             default:throw new IllegalArgumentException(pkg);

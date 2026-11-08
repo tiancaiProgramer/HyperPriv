@@ -1,3 +1,11 @@
+# 当前发布：0.4.4 / versionCode28
+
+普通/EU统一版，兼容模式缺省开启并保留手动关闭。当前默认值及本机EU可见性见UNIFIED-FEATURES-20261108.csv，普通版原12项实现对应表见STANDARD-TWELVE-20261108.csv；无业务实现的安全守护Root开关两类ROM均隐藏。
+
+本轮功能、界面及SystemHelper兼容范围见RELEASE-NOTES.md、UNIFIED-ADAPTATION.md和UI-HELPER-20261108.md；最新证据见RELEASE-VERIFICATION.json。以下保留旧版本功能表及其原始验证范围，不当作28版重新实测。
+
+---
+
 当前完整状态见VERIFICATION-0.4.4-preview2.csv，新增SystemHelper实测见SYSTEMHELPER-20261104.md；旧62项历史范围保留，未做全量重测。
 
 # 功能与状态

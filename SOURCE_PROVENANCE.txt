@@ -3,3 +3,21 @@ HyperPriv 0.4.4-preview2 / versionCode22
 基于0.4.3-preview1 / 099d8c8798add3c9ed2e280fd689407b4da8d515，按实机APK独立研究新增SystemHelper精确版本/哈希的采集上报规则。
 实机证据对应原local构建，发布只整理版本名称和文档；不分发系统APK、反编译源码、手机私有数据或签名密钥。
 许可、来源和具体验证范围见对应文档。
+
+EU specialization 2026-11-08: baseline v0.4.4-preview2 / 32fa2ff55981fba640d2841e86d9af785b132972.
+ROM input fingerprints and rule ownership described in EU-EDITION.md and EU-FEATURES-20261108.csv.
+No proprietary ROM code is included in the module sources or source distribution.
+
+Unified candidate 2026-11-08: 0.4.4 / versionCode24, based on the same v0.4.4-preview2 commit.
+Standard rules retained; independently mapped EU component entry points share the runtime profiles.
+Exact ROM-byte facts control EU deduplication; compatibility defaults on without overriding an explicit false setting.
+Current source distribution and validation are described in UNIFIED-ADAPTATION.md and UNIFIED-BUILD-VERIFICATION.json.
+The preceding EU specialization notes describe the superseded prototype, not the current binary.
+
+0.4.4 / versionCode25: independently implemented read-only DEX declaration matching for automatic visibility of the twelve adapted features on standard and EU ROMs. Does not execute vendor code. Missing packages hidden on both profiles; unreadable inputs remain unknown.
+
+0.4.4 / versionCode26: menu regrouping/dividers and network-assistant label correction. Independently compared local dada CN305 SystemHelper34 with EU307 SystemHelper34; distinct verified profiles and identical-DEX wrapper compatibility, without redistributing vendor APKs or decompiled code. See UI-HELPER-20261108.md.
+
+0.4.4 / versionCode27: corrected menu hierarchy guides based on the user-opened NoAdMi UI. Only MainActivity layout and manifest version changed; 35 non-UI compiled classes remain identical to code26. User-provided visual reference only, no copied proprietary assets.
+
+0.4.4 / versionCode28 unified release: local compatibility preference read corrected, non-implemented GuardProvider Root placeholder hidden on both ROM profiles. Final host checks and MIX Fold 3 isolated verification recorded separately from historical EU tests. No reboot or collection/upload target invocation.

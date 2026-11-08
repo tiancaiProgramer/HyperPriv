@@ -2,7 +2,7 @@ package io.github.hyperpriv;
 
 import java.util.*;
 
-/** Explicit opt-in trial of existing definitions; signature matches are not behavior validation. */
+/** Default-on compatibility with a single isolated fallback profile; matching is not behavior validation. */
 final class Compatibility {
     static final String KEY="experimental_compatibility";
     static boolean strictSystem(int sdk,String fingerprint){return sdk==36&&CoreTargets.FINGERPRINT.equals(fingerprint);}

@@ -26,7 +26,7 @@ public final class CorePolicyCheck {
         java.util.Set<String> keys=new java.util.HashSet<>();
         for(String key:Options.KEYS)require(keys.add(key),"duplicate preference "+key);
         require(keys.size()==63,"preference migration count");
-        require(!Options.defaultValue(Compatibility.KEY),"experimental compatibility enabled by default");
+        require(Options.defaultValue(Compatibility.KEY),"compatibility is not enabled by default");
         for(ExtraFeatures.Feature f:ExtraFeatures.ALL)require(!Options.defaultValue(f.key),"new option enabled by default: "+f.key);
         for(String key:Options.CORE_KEYS)require(!Options.defaultValue(key),"new core option enabled by default: "+key);
         require(Options.defaultValue("master")&&Options.defaultValue("ads"),"old defaults changed");

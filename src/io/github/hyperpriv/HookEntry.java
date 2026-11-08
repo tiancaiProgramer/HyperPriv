@@ -39,6 +39,10 @@ public final class HookEntry extends XposedModule {
     @Override public void onPackageReady(PackageReadyParam param){
         String pkg=param.getPackageName();
         if(!param.isFirstPackage()||!Arrays.asList(Options.TARGETS).contains(pkg))return;
+        if(pkg.equals("com.miui.guardprovider")&&param.getApplicationInfo()!=null
+                &&RomPolicy.skipComponent(EuEnvironment.isEuRom(),pkg,EuEnvironment.hash(param.getApplicationInfo().sourceDir))){
+            report("EU GuardProvider has no remaining module targets; bootstrap skipped");return;
+        }
         loader=param.getClassLoader();
         try {
             Method attach=Application.class.getDeclaredMethod("attach",Context.class);
@@ -52,17 +56,25 @@ public final class HookEntry extends XposedModule {
     private void install(Context context,String pkg){
         try {
             long version=context.getPackageManager().getPackageInfo(pkg,0).getLongVersionCode();
+            String actualHash=apkHash(context.getApplicationInfo().sourceDir);
+            RuntimeProfile.initializePackage(pkg,actualHash);
             prefs=getRemotePreferences(Options.PREFS);
-            boolean compatibility=prefs.getBoolean(Compatibility.KEY,false);
-            if(pkg.equals("com.mobiletools.systemhelper")&&version!=31L){report("unsupported SystemHelper version="+version);return;}
+            boolean compatibility=prefs.getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY));
+            HelperCompatibility.Match helper=null;
+            if(pkg.equals(HelperCompatibility.PACKAGE)){
+                helper=HelperCompatibility.resolve(version,actualHash,context.getApplicationInfo().sourceDir,compatibility);
+                if(helper==null){report("unsupported SystemHelper code/version="+version);return;}
+                RuntimeProfile.helper(helper);report("SystemHelper profile="+helper.label+(helper.experimental?"; experimental same-code compatibility":"; exact audited APK"));
+            }
             String expected=Profiles.apkHash(pkg,version);
-            boolean hashMismatch=expected!=null&&!expected.equals(apkHash(context.getApplicationInfo().sourceDir));
-            if(hashMismatch&&(!compatibility||pkg.equals("com.mobiletools.systemhelper"))){
+            boolean hashMismatch=helper!=null?helper.experimental:expected!=null&&!RuntimeProfile.hashMatches(pkg,version,actualHash);
+            if(RuntimeProfile.eu()&&EuBuild.expectedHash(pkg,version)!=null&&!EuBuild.matches(pkg,version,actualHash))hashMismatch=true;
+            if(hashMismatch&&!compatibility){
                 report("unsupported APK hash: "+pkg);return;
             }
-            experimental=hashMismatch||Compatibility.profileVersion(Profiles.ALL,pkg,version,compatibility)!=version;
+            experimental=hashMismatch||helper==null&&Compatibility.profileVersion(Profiles.ALL,pkg,version,compatibility)!=version;
             int count=0,skipped=0;
-            for(Rule r:Compatibility.select(Profiles.ALL,pkg,version,compatibility)){
+            for(Rule r:RuntimeProfile.select(Profiles.ALL,pkg,version,compatibility)){
                 try{installRule(r);count++;}catch(Throwable e){skipped++;report("skip "+r.id()+": "+e.getClass().getSimpleName());}
             }
             new ExtraHooks(this,loader,prefs).install(pkg,version,hashMismatch);
@@ -71,7 +83,7 @@ public final class HookEntry extends XposedModule {
         }catch(Throwable e){report("setup failed: "+e.getClass().getSimpleName());}
     }
     private boolean enabled(String key){
-        try{return prefs!=null&&(!experimental||prefs.getBoolean(Compatibility.KEY,false))&&prefs.getBoolean("master",true)&&prefs.getBoolean(key,Options.defaultValue(key));}
+        try{return RuntimeProfile.allowed(key)&&prefs!=null&&(!experimental||prefs.getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY)))&&prefs.getBoolean("master",true)&&prefs.getBoolean(key,RuntimeProfile.defaultValue(key));}
         catch(Throwable e){return false;}
     }
     private void hit(Rule r){if(hits.add(r.id()))report("hit "+r.group+" "+r.id());}
@@ -81,6 +93,7 @@ public final class HookEntry extends XposedModule {
         return Class.forName(d.charAt(0)=='L'?d.substring(1,d.length()-1).replace('/','.'):d.replace('/','.'),false,loader);
     }
     private void installRule(final Rule r)throws Exception{
+        if(!RuntimeProfile.register(r))return;
         Class<?> c=Class.forName(r.cls,false,loader);Class<?>[] p=new Class<?>[r.params.length];
         for(int i=0;i<p.length;i++)p[i]=type(r.params[i]);
         Executable executable;
@@ -140,6 +153,8 @@ public final class HookEntry extends XposedModule {
                 case "none":result="NONE";break;
                 case "empty_list":result=Collections.emptyList();break;
                 case "cloud":result=localCloud();break;
+                case "cloud_result":Object cp=localCloud();result=Class.forName("com.miui.packageInstaller.model.CloudResult$Success",true,loader).getConstructor(cp.getClass()).newInstance(cp);break;
+                case "empty_device":Constructor<?> constructor=type(r.returns).getDeclaredConstructor();constructor.setAccessible(true);result=constructor.newInstance();break;
                 default:result=null;
             }
             hit(r);return result;

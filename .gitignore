@@ -12,5 +12,12 @@ __pycache__/
 local.properties
 /local-build/
 /work/
+/private/
+/history/
+/research/
+/testing/
+/dist/
+/CONTINUATION-LOCAL.txt
+/_local-history/
 /evidence/
 /signing.json

@@ -26,6 +26,7 @@ public final class PreferenceCleanupCheck {
     public static void main(String[] args){
         Store local=new Store();
         local.values.put("master",false);local.values.put("core_previous_signature",true);
+        local.values.put(Compatibility.KEY,false);
         local.values.put("clipboard_packages","fixture.allowed");local.values.put("clipboard_close_text","");
         local.values.put("clipboard_opacity",42);local.values.put("initialized",true);
         Map<String,Object> expected=new HashMap<>(local.values);local.values.put("obsolete_fixture_flag",true);
