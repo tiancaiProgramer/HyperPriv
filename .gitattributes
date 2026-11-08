@@ -1,0 +1,2 @@
+# Release attachments are immutable byte-verified artifacts, including text files.
+dist/releases/** binary

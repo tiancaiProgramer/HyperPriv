@@ -29,6 +29,6 @@ jobs:
             gh api "repos/$GH_REPO/contents/dist/releases/v0.4.4/$file?ref=$GITHUB_SHA" --jq '.content' | base64 --decode > "$file"
           done
           echo "$EXPECTED_MANIFEST_SHA256  SHA256SUMS.txt" | sha256sum --check -
-          sha256sum --check SHA256SUMS.txt
+          tr -d '\r' < SHA256SUMS.txt | sha256sum --check -
           test "$(gh api "repos/$GH_REPO/releases/tags/v0.4.4" --jq '.draft')" = "false"
           gh release upload v0.4.4 HyperPriv-0.4.4.apk HyperPriv-0.4.4-source.zip SHA256SUMS.txt RELEASE-VERIFICATION.json RELEASE-NOTES.md --repo "$GH_REPO"
