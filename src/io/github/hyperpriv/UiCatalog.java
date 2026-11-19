@@ -25,6 +25,7 @@ final class UiCatalog {
         new Component("应用包管理组件","com.miui.packageinstaller"),
         new Component("安全中心","com.miui.securitycenter"),
         new Component("设置","com.android.settings"),
+        new Component("系统界面（SystemUI）","com.android.systemui"),
         new Component("系统安全组件","com.miui.guardprovider"),
         new Component("电量与性能","com.miui.powerkeeper"),
         new Component("Joyose","com.xiaomi.joyose"),
@@ -45,13 +46,15 @@ final class UiCatalog {
             new Section("privacy_tools","隐私权限与提示",null,"permission_tips","pin_shuffle","clipboard_toast","clipboard_close_once","framework_clipboard","framework_log_access"),
             new Section("sim","SIM 安全保护",null,"sim_account","sim_success"),
             new Section("reports","统计与上报",null,"analytics","msa","battery_report","network_offline","systemhelper_report")),
-        new Group("display","电量与显示","性能云控、屏幕与锁屏选项。",
+        new Group("display","系统与交互","性能云控、屏幕、锁屏与按键操作。",
             new Section("performance","性能云控",null,"power_cloud","joyose_cloud"),
-            new Section("screen","屏幕与锁屏",null,"thermal_fps","never_sleep","framework_capture","framework_password_timeout"))
+            new Section("screen","屏幕与锁屏",null,"thermal_fps","never_sleep","framework_capture","framework_password_timeout","hdmi_auto_confirm"),
+            new Section("keys","按键与快捷动作",null,"key_actions"))
     };
     static String target(String key){
         ExtraFeatures.Feature extra=ExtraFeatures.get(key);if(extra!=null)return extra.pkg;
         switch(key){
+            case "key_actions":return "android";
             case "ads":case "completed_tip":case "upload":case "cloud":case "scan":case "guards":case "rate":return "com.miui.packageinstaller";
             case "permission_timer":case "usb_timer":case "risk_notice":return "com.miui.securitycenter";
             case "usb_local":case "never_sleep":return "com.android.settings";
@@ -66,6 +69,7 @@ final class UiCatalog {
     static String label(String key){
         ExtraFeatures.Feature extra=ExtraFeatures.get(key);if(extra!=null)return extra.title;
         switch(key){
+            case "key_actions":return "启用自定义按键";
             case "core_enabled":return "启用核心签名";
             case "core_downgrade":return "允许降级安装";
             case "core_update_signature":return "允许不同签名覆盖安装";
@@ -124,6 +128,7 @@ final class UiCatalog {
             case "com.miui.securitycenter":return "12.6.8 / 12.7.5 / 12.8.3";
             case "com.miui.guardprovider":return "2.5.6-20251106.0 / 3.0.7-20260708.0";
             case "com.android.settings":return "16 · 仅已适配的安装包构建";
+            case "com.android.systemui":return "16.03.251211.r · MIX Fold 3 国行已核对构建";
             case "com.miui.powerkeeper":return "4.2.00";
             case "com.xiaomi.joyose":return "2.4.92 / 2.5.14";
             case "com.miui.analytics":return "6.31.0";

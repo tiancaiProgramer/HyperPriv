@@ -33,6 +33,7 @@ final class ExtraFeatures {
         new Feature("framework_disable_checks","放宽系统应用停用限制","调整本机系统扩展服务的停用检查。","android"),
         new Feature("framework_password_timeout","取消定期锁屏密码验证","需重启后使用；首次解锁和其他强认证场景仍由系统处理。","android"),
         new Feature("framework_log_access","跳过设备日志访问确认","系统已接受的日志访问请求会直接获准。","android"),
+        new Feature("hdmi_auto_confirm","HDMI 接入时自动确认镜像","开启后，接入外接显示屏时自动选择「镜像显示屏」。关闭后由系统弹窗确认。需启用 SystemUI 作用域。","com.android.systemui"),
         new Feature("framework_capture","允许受保护画面截图与录屏","调整系统画面捕获入口；应用自绘、DRM 内容仍可能受限。","android"),
         new Feature("framework_clipboard","允许白名单后台读取剪贴板","只处理下方白名单中的完整包名，空白名单不放宽任何应用。","android"),
         new Feature("core_shared_uid","允许不同签名共享 UID","放宽安装时共享 UID 的签名检查；需重启后使用。","android"),
@@ -45,7 +46,7 @@ final class ExtraFeatures {
     };
     static Feature get(String key){for(Feature f:ALL)if(f.key.equals(key))return f;return null;}
     static String[] keys(boolean core){java.util.ArrayList<String> out=new java.util.ArrayList<>();for(Feature f:ALL)if(f.key.startsWith("core_")==core)out.add(f.key);return out.toArray(new String[0]);}
-    static final String[] STRING_KEYS={"clipboard_packages","clipboard_close_text"};
+    static final String[] STRING_KEYS={"clipboard_packages","clipboard_close_text","key_bindings"};
     static final String[] INT_KEYS={"clipboard_opacity"};
     private ExtraFeatures(){}
 }

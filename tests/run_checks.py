@@ -37,3 +37,4 @@ with tempfile.TemporaryDirectory(prefix='hyperpriv-checks-',dir=build) as direct
         run(exe('java'),'-cp',os.pathsep.join([str(runtime),cp]),'io.github.hyperpriv.PreferenceCleanupCheck')
         run(exe('java'),'-cp',os.pathsep.join([str(runtime),cp]),'io.github.hyperpriv.UnifiedHooksCheck')
         run(exe('java'),'-cp',os.pathsep.join([str(runtime),cp]),'io.github.hyperpriv.AdaptedCallbacksCheck')
+        run(exe('java'),'-cp',os.pathsep.join([str(runtime),cp]),'io.github.hyperpriv.TelemetryPackagesCheck')

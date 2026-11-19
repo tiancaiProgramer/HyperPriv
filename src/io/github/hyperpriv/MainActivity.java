@@ -35,6 +35,8 @@ public final class MainActivity extends Activity {
     private LinearLayout content;
     private ScrollView scroll;
     private boolean updating;
+    private String[] pendingKeyShortcut;
+    private static final int KEY_SHORTCUT_REQUEST=704;
     private long lastSaveNotice=-3000;
     private int restoredScroll;
     private final Runnable settingsChanged=()->runOnUiThread(this::refresh);
@@ -43,12 +45,14 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         ui=getSharedPreferences("hyperpriv_ui",MODE_PRIVATE);
         restoredScroll=state==null?0:state.getInt("scroll_y",0);
+        pendingKeyShortcut=state==null?null:state.getStringArray("pending_key_shortcut");
         Settings.changed=settingsChanged;
         render();
     }
     @Override public void onResume(){super.onResume();Settings.changed=settingsChanged;RuntimeProfile.initializeUi(this);Settings.refreshScopes();render();}
     @Override public void onPause(){restoredScroll=scroll==null?0:scroll.getScrollY();super.onPause();}
     @Override public void onSaveInstanceState(Bundle out){
+        out.putStringArray("pending_key_shortcut",pendingKeyShortcut);
         out.putInt("scroll_y",scroll==null?0:scroll.getScrollY());super.onSaveInstanceState(out);
     }
     @Override public void onDestroy(){if(Settings.changed==settingsChanged)Settings.changed=null;super.onDestroy();}
@@ -141,7 +145,14 @@ public final class MainActivity extends Activity {
             return new AppState(strict||compatibility,strict?"Android 16 · 已匹配本机构建，系统选项改动后需重启":compatibility?"实验兼容 · 当前系统构建未经验证":"系统构建未适配",Build.VERSION.SDK_INT);
         }
         try{
-            PackageInfo info=getPackageManager().getPackageInfo(pkg,0);long version=info.getLongVersionCode();boolean supported=false;
+            PackageInfo info=getPackageManager().getPackageInfo(pkg,TelemetryBackups.PACKAGE_FLAGS);long version=info.getLongVersionCode();boolean supported=false;
+            if(pkg.equals(HdmiCompatibility.PACKAGE)){
+                HdmiCompatibility.Match match=RuntimeProfile.hdmiMatch();
+                String status=match==HdmiCompatibility.Match.EXACT?"HDMI 确认入口已核对":
+                        match==HdmiCompatibility.Match.EXPERIMENTAL?(compatibility?"实验兼容 · HDMI 确认入口已匹配":"需开启实验兼容模式"):
+                        compatibility?"未匹配到 HDMI 确认入口":"需开启实验兼容模式尝试匹配";
+                return new AppState(match.allowed(compatibility),"已安装 "+info.versionName+" · "+status,version);
+            }
             for(Rule rule:Profiles.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
             for(Rule rule:ExtraTargets.ALL)if(rule.pkg.equals(pkg)&&rule.version==version){supported=true;break;}
             if(pkg.equals(HelperCompatibility.PACKAGE)){
@@ -199,12 +210,15 @@ public final class MainActivity extends Activity {
         for(UiCatalog.Section section:spec.sections){
             LinearLayout options=information(box,"section_"+spec.id+"_"+section.id,section.title);
             if(section.id.equals("core")){coreSettings(options);continue;}
+            if(section.id.equals("keys")){keySettings(options);continue;}
             if(section.detail!=null)label(options,section.detail,12,ACCENT,false);
+            if (section.id.equals("reports")) telemetryPackageSettings(options);
             for(String key:section.keys){
+                if (TelemetryPackages.managesHook(key)) continue;
                 AppState state=appState(UiCatalog.target(key));String note=UiCatalog.note(key);boolean available=state.supported;
-                if(ExtraFeatures.get(key)!=null){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&(key.equals("guard_environment")||(Compatibility.supports(ExtraTargets.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY))||Compatibility.supports(Profiles.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY))));}
+                if(ExtraFeatures.get(key)!=null&&!key.equals(HdmiCompatibility.KEY)){String hookKey=key.equals("clipboard_close_once")?"clipboard_toast":key;available=available&&(key.equals("guard_environment")||(Compatibility.supports(ExtraTargets.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY))||Compatibility.supports(Profiles.ALL,hookKey,UiCatalog.target(key),state.version,selected(Compatibility.KEY))));}
                 if(available&&state.text.contains("实验兼容"))note=(note==null?"":note+"\n")+"实验兼容：可尝试开启，是否生效以加载与命中日志为准。";
-                if(!available)note=(note==null?"":note+"\n")+"对应入口尚未适配或组件未安装，原有设置已保留。";
+                if(!available)note=(note==null?"":note+"\n")+(key.equals(HdmiCompatibility.KEY)?state.text+"。":"对应入口尚未适配或组件未安装，原有设置已保留。");
                 toggle(options,UiCatalog.label(key),key,note,available);
             }
             if(section.id.equals("privacy_tools")){
@@ -214,6 +228,360 @@ public final class MainActivity extends Activity {
             }
         }
     }
+
+    private void telemetryPackageSettings(LinearLayout parent) {
+        TextView hint = label(parent, "备份并卸载只保存 APK，恢复或卸载需 Root 授权。",
+                12, MUTED, false);
+        List<View> rows = new ArrayList<>();
+        for (TelemetryPackages.Component component : TelemetryPackages.Component.values()) {
+            LinearLayout row = vertical();
+            row.setPadding(0, gap(9), 0, gap(9));
+            parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
+            rows.add(row);
+            label(row, component.title, 14, INK, true);
+            TextView status = label(row, "", 12, MUTED, false);
+            LinearLayout segments = new LinearLayout(this);
+            row.addView(segments, new LinearLayout.LayoutParams(-1, -2));
+            java.util.EnumMap<TelemetryPackages.Mode, TextView> controls =
+                    new java.util.EnumMap<>(TelemetryPackages.Mode.class);
+            for (TelemetryPackages.Mode mode : TelemetryPackages.Mode.values()) {
+                if (mode == TelemetryPackages.Mode.HOOK && !component.hasHook()) continue;
+                controls.put(mode, segmentButton(segments, mode.label, () -> {
+                    if (mode == TelemetryPackages.Mode.UNINSTALL) {
+                        new android.app.AlertDialog.Builder(this)
+                                .setTitle("备份并卸载 " + component.title)
+                                .setMessage(component.uninstallImpact
+                                        + "\n\n将备份 APK 及分包，卸载当前 Android 用户下的组件，并清除该组件的应用数据。可从备份重新安装。")
+                                .setPositiveButton("备份并卸载", (dialog, button) -> {
+                                    TelemetryPackages.change(this, component, mode);
+                                    refresh();
+                                })
+                                .setNegativeButton("取消", null).show();
+                    } else {
+                        TelemetryPackages.change(this, component, mode);
+                        refresh();
+                    }
+                }));
+            }
+            refreshers.add(() -> {
+                TelemetryPackages.State state = TelemetryPackages.state(getPackageManager(), component);
+                boolean hasBackup = TelemetryBackups.exists(this, component.packageName);
+                boolean visible = TelemetryPackages.visible(state, hasBackup);
+                row.setVisibility(visible ? View.VISIBLE : View.GONE);
+                if (!visible) return;
+                boolean compatibility = selected(Compatibility.KEY);
+                TelemetryPackages.HookSupport support =
+                        TelemetryPackages.hookSupport(this, component, state, compatibility);
+                boolean hookSupported = support != TelemetryPackages.HookSupport.UNAVAILABLE;
+                boolean hookConfigured = component.hasHook() && selected(component.hookKey);
+                boolean canRestore = state == TelemetryPackages.State.NOT_INSTALLED && hasBackup;
+                TelemetryPackages.Mode current = TelemetryPackages.selectedMode(state, hookConfigured, hasBackup);
+                for (java.util.Map.Entry<TelemetryPackages.Mode, TextView> entry : controls.entrySet()) {
+                    TelemetryPackages.Mode mode = entry.getKey();
+                    TextView button = entry.getValue();
+                    boolean show = mode != TelemetryPackages.Mode.HOOK || hookSupported;
+                    button.setVisibility(show ? View.VISIBLE : View.GONE);
+                    styleSegment(button, mode == current);
+                    button.setEnabled((state.canChange || canRestore) && !TelemetryPackages.busy()
+                            && mode != current && show);
+                    button.setContentDescription(component.title + "，" + mode.label
+                            + (mode == current ? "，当前选择" : ""));
+                }
+                String message = canRestore ? "已卸载 · 有 APK 备份" : state.label;
+                if (TelemetryPackages.changing(component)) message = "正在修改…";
+                else if (state == TelemetryPackages.State.ENABLED && hookConfigured) {
+                    if (!hookSupported) message = compatibility ? "未匹配到拦截入口" : "此版本的拦截未适配";
+                    else if (Settings.remote == null) message = "拦截待 LSPosed 连接";
+                    else if (!selected("master")) message = "拦截待开启总开关";
+                    else if (Settings.scopes != null && !Settings.scopes.contains(component.packageName))
+                        message = "拦截待勾选 LSPosed 作用域";
+                    else message = "已配置 Hook 拦截";
+                } else if (state.canChange && component.hasHook() && !hookSupported) {
+                    message += compatibility ? " · 未匹配到拦截入口" : " · 此版本的拦截未适配";
+                }
+                if (support == TelemetryPackages.HookSupport.EXPERIMENTAL) {
+                    message += " · 实验兼容，已匹配拦截入口";
+                }
+                status.setText(message);
+            });
+        }
+        refreshers.add(() -> hint.setVisibility(rows.stream().anyMatch(row -> row.getVisibility() == View.VISIBLE)
+                ? View.VISIBLE : View.GONE));
+    }
+
+    private void keySettings(LinearLayout parent) {
+        boolean matched=KeyCompatibility.matched();
+        boolean allowed=matched&&(RuntimeProfile.knownSystem()||selected(Compatibility.KEY));
+        label(parent,matched
+                ? "系统按键入口已匹配，首次加载需重启手机。"
+                : "当前系统按键入口未匹配。",12,ACCENT,false);
+        toggle(parent,"启用自定义按键","key_actions",
+                "需要系统框架作用域。音量多击判定会增加等待时间。",allowed);
+        LinearLayout controls=vertical();
+        parent.addView(controls);
+        keyControls(controls,allowed);
+    }
+
+    private void keyControls(LinearLayout parent,boolean allowed) {
+        parent.removeAllViews();
+        int savedCode=ui.getInt("key_action_code",26);
+        final int code=savedCode==24||savedCode==25?savedCode:26;
+        String savedState=ui.getString("key_action_state","unlocked");
+        final String state=java.util.Arrays.asList(KeyBindings.STATES).contains(savedState)?savedState:"unlocked";
+        LinearLayout keys=new LinearLayout(this);
+        parent.addView(keys,new LinearLayout.LayoutParams(-1,-2));
+        for(int i=0;i<KeyBindings.CODES.length;i++) {
+            int value=KeyBindings.CODES[i];
+            keySegment(keys,KeyBindings.KEYS[i],code==value,()->{
+                ui.edit().putInt("key_action_code",value).apply();
+                keyControls(parent,allowed);
+            });
+        }
+        LinearLayout states=new LinearLayout(this);
+        LinearLayout.LayoutParams stateParams=new LinearLayout.LayoutParams(-1,-2);
+        stateParams.topMargin=gap(8);stateParams.bottomMargin=gap(10);
+        parent.addView(states,stateParams);
+        String[] labels={"亮屏解锁","亮屏锁屏","息屏"};
+        for(int i=0;i<KeyBindings.STATES.length;i++) {
+            String value=KeyBindings.STATES[i];
+            keySegment(states,labels[i],state.equals(value),()->{
+                ui.edit().putString("key_action_state",value).apply();
+                keyControls(parent,allowed);
+            });
+        }
+        KeyBindings bindings=KeyBindings.read(Settings.local(this));
+        for(int i=0;i<KeyBindings.GESTURES.length;i++) {
+            String gesture=KeyBindings.GESTURES[i];
+            org.json.JSONObject action=bindings.action(code,state,gesture);
+            LinearLayout row=vertical();
+            row.setPadding(0,gap(10),0,gap(10));
+            LinearLayout heading=new LinearLayout(this);
+            heading.setGravity(Gravity.CENTER_VERTICAL);
+            TextView name=new TextView(this);
+            name.setText(KeyBindings.GESTURE_LABELS[i]);name.setTextSize(15);name.setTextColor(INK);
+            heading.addView(name,new LinearLayout.LayoutParams(0,-2,1));
+            TextView current=new TextView(this);
+            current.setText((action==null?"跟随系统":action.optString("title","未命名动作"))+"  ›");
+            current.setTextSize(13);current.setTextColor(allowed?ACCENT:MUTED);
+            current.setMaxWidth(dp(210));current.setMaxLines(2);
+            heading.addView(current,new LinearLayout.LayoutParams(-2,-2));
+            row.addView(heading);
+            label(row,"系统绑定 · "+KeyBindings.original(this,code,state,gesture),12,MUTED,false);
+            row.setMinimumHeight(dp(58));row.setFocusable(true);row.setEnabled(allowed);
+            row.setContentDescription(KeyBindings.GESTURE_LABELS[i]+"，"+current.getText());
+            row.setOnClickListener(v->chooseKeyAction(code,state,gesture));
+            parent.addView(row,new LinearLayout.LayoutParams(-1,-2));
+        }
+    }
+
+    private void keySegment(LinearLayout parent,String title,boolean selected,Runnable action) {
+        TextView option = segmentButton(parent, title, action);
+        styleSegment(option, selected);
+        option.setContentDescription(title + (selected ? "，当前选择" : "，点击切换"));
+    }
+
+    private TextView segmentButton(LinearLayout parent, String title, Runnable action) {
+        TextView option = new TextView(this);
+        option.setText(title);
+        option.setTextSize(13);
+        option.setGravity(Gravity.CENTER);
+        option.setMinHeight(dp(44));
+        option.setFocusable(true);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, -2, 1);
+        params.setMargins(dp(2), gap(3), dp(2), gap(3));
+        parent.addView(option, params);
+        option.setOnClickListener(v -> action.run());
+        return option;
+    }
+
+    private void styleSegment(TextView option, boolean selected) {
+        option.setTextColor(selected ? Color.WHITE : INK);
+        option.setBackground(background(selected ? ACCENT : 0xfff1f2ec, 10));
+        option.setSelected(selected);
+    }
+
+    private void chooseKeyAction(int code,String state,String gesture) {
+        chooseKeyApp(code,state,gesture);
+    }
+
+    private void saveKeyAction(int code,String state,String gesture,org.json.JSONObject action) {
+        KeyBindings bindings=KeyBindings.read(Settings.local(this));
+        bindings.put(code,state,gesture,action);
+        Settings.setText(this,"key_bindings",bindings.encode());
+        restoredScroll=scroll.getScrollY();
+        render();
+        Toast.makeText(this,selected("key_actions")?"动作已保存":"动作已保存，开启自定义按键后生效",Toast.LENGTH_SHORT).show();
+    }
+
+    private void chooseKeyApp(int code,String state,String gesture) {
+        PackageManager pm=getPackageManager();
+        Intent query=new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+        List<android.content.pm.ResolveInfo> available=pm.queryIntentActivities(query,PackageManager.GET_META_DATA);
+        available.sort(new android.content.pm.ResolveInfo.DisplayNameComparator(pm));
+        java.util.LinkedHashMap<String,android.content.pm.ResolveInfo> apps=new java.util.LinkedHashMap<>();
+        java.util.HashSet<String> seen=new java.util.HashSet<>();
+        for(android.content.pm.ResolveInfo app:available) {
+            if(!app.activityInfo.exported||!seen.add(app.activityInfo.packageName))continue;
+            String title=app.loadLabel(pm)+"\n"+app.activityInfo.packageName;
+            apps.put(title,app);
+        }
+        LinearLayout panel=vertical();
+        panel.setPadding(dp(20),dp(4),dp(20),0);
+        EditText search=new EditText(this);
+        search.setSingleLine(true);search.setHint("搜索应用名称或包名");
+        search.setContentDescription("搜索应用");
+        panel.addView(search);
+        LinearLayout defaults=new LinearLayout(this);
+        panel.addView(defaults,new LinearLayout.LayoutParams(-1,-2));
+        TextView system=new TextView(this);
+        system.setText("跟随系统");system.setTextSize(14);system.setTextColor(ACCENT);
+        clickable(system);
+        defaults.addView(system,new LinearLayout.LayoutParams(0,-2,1));
+        TextView none=new TextView(this);
+        none.setText("不执行动作");none.setTextSize(14);none.setTextColor(ACCENT);
+        clickable(none);
+        defaults.addView(none,new LinearLayout.LayoutParams(0,-2,1));
+        android.widget.ListView list=new android.widget.ListView(this);
+        android.widget.ArrayAdapter<String> adapter=new android.widget.ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1,new ArrayList<>(apps.keySet()));
+        list.setAdapter(adapter);
+        panel.addView(list,new LinearLayout.LayoutParams(-1,dp(330)));
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("选择应用或动作")
+                .setView(panel).setNegativeButton("取消",null).create();
+        system.setOnClickListener(v->{dialog.dismiss();saveKeyAction(code,state,gesture,null);});
+        none.setOnClickListener(v->{dialog.dismiss();saveKeyAction(code,state,gesture,KeyBindings.make("none","不执行动作",null));});
+        search.addTextChangedListener(new android.text.TextWatcher(){
+            public void beforeTextChanged(CharSequence value,int start,int count,int after){}
+            public void onTextChanged(CharSequence value,int start,int before,int count){adapter.getFilter().filter(value);}
+            public void afterTextChanged(android.text.Editable value){}
+        });
+        list.setOnItemClickListener((view,row,position,id)->{
+            android.content.pm.ResolveInfo app=apps.get(adapter.getItem(position));
+            dialog.dismiss();
+            if(app!=null)chooseAppFunction(code,state,gesture,app);
+        });
+        dialog.show();
+    }
+
+    private void chooseAppFunction(int code,String state,String gesture,android.content.pm.ResolveInfo app) {
+        String pkg=app.activityInfo.packageName;
+        String appName=app.loadLabel(getPackageManager()).toString();
+        List<String> titles=new ArrayList<>();
+        List<org.json.JSONObject> actions=new ArrayList<>();
+        Intent launch=getPackageManager().getLaunchIntentForPackage(pkg);
+        try {
+            if(launch!=null) {
+                launch=KeyBindings.checkedIntent(this,launch,pkg);
+                titles.add("打开应用");
+                actions.add(KeyBindings.make("intent",appName+" · 打开应用",launch));
+            }
+            readStaticShortcuts(app,appName,titles,actions);
+            if(pkg.equals("com.android.soundrecorder")) {
+                titles.add("直接开始录音（系统快捷入口）");
+                actions.add(KeyBindings.make("recorder",appName+" · 直接开始录音",null));
+            }
+        }catch(RuntimeException error) {
+            Toast.makeText(this,error.getMessage(),Toast.LENGTH_SHORT).show();
+        }
+        List<android.content.pm.ResolveInfo> creators=getPackageManager().queryIntentActivities(
+                new Intent(Intent.ACTION_CREATE_SHORTCUT).setPackage(pkg),0);
+        creators.removeIf(item->!item.activityInfo.exported);
+        if(!creators.isEmpty()) {
+            titles.add("创建应用快捷方式…");
+            actions.add(null);
+        }
+        if(titles.isEmpty()) {
+            Toast.makeText(this,"未找到可用的应用入口或快捷方式",Toast.LENGTH_LONG).show();
+            return;
+        }
+        new android.app.AlertDialog.Builder(this).setTitle(appName)
+                .setItems(titles.toArray(new String[0]),(dialog,index)->{
+                    org.json.JSONObject action=actions.get(index);
+                    if(action!=null)saveKeyAction(code,state,gesture,action);
+                    else chooseShortcutCreator(code,state,gesture,pkg,creators);
+                }).setNegativeButton("取消",null).show();
+    }
+
+    private void readStaticShortcuts(android.content.pm.ResolveInfo app,String appName,
+                                     List<String> titles,List<org.json.JSONObject> actions) {
+        android.content.res.XmlResourceParser parser=null;
+        try {
+            PackageManager pm=getPackageManager();
+            android.content.pm.ActivityInfo activity=pm.getActivityInfo(
+                    new ComponentName(app.activityInfo.packageName,app.activityInfo.name),PackageManager.GET_META_DATA);
+            parser=activity.loadXmlMetaData(pm,"android.app.shortcuts");
+            if(parser==null)return;
+            android.content.res.Resources resources=pm.getResourcesForApplication(activity.applicationInfo);
+            String ns="http://schemas.android.com/apk/res/android";
+            String title=null;
+            Intent shortcut=null;
+            boolean enabled=false;
+            int intents=0;
+            while(parser.next()!=org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+                if(parser.getEventType()==org.xmlpull.v1.XmlPullParser.START_TAG) {
+                    if(parser.getName().equals("shortcut")) {
+                        int label=parser.getAttributeResourceValue(ns,"shortcutShortLabel",0);
+                        title=label==0?parser.getAttributeValue(ns,"shortcutId"):resources.getString(label);
+                        enabled=parser.getAttributeBooleanValue(ns,"enabled",true);
+                        shortcut=null;intents=0;
+                    }else if(parser.getName().equals("intent")) {
+                        shortcut=Intent.parseIntent(resources,parser,android.util.Xml.asAttributeSet(parser));
+                        intents++;
+                    }
+                }else if(parser.getEventType()==org.xmlpull.v1.XmlPullParser.END_TAG
+                        &&parser.getName().equals("shortcut")&&enabled&&intents==1&&shortcut!=null) {
+                    try {
+                        Intent checked=KeyBindings.checkedIntent(this,shortcut,activity.packageName);
+                        titles.add(title==null?"应用快捷方式":title);
+                        actions.add(KeyBindings.make("intent",appName+" · "+title,checked));
+                    }catch(IllegalArgumentException ignored) {
+                        // A shortcut with no exported destination cannot be launched by this app.
+                    }
+                }
+            }
+        }catch(Exception error) {
+            android.util.Log.i("HyperPriv","App shortcut metadata unavailable: "+error.getClass().getSimpleName());
+        }finally {
+            if(parser!=null)parser.close();
+        }
+    }
+
+    private void chooseShortcutCreator(int code,String state,String gesture,String pkg,
+                                       List<android.content.pm.ResolveInfo> creators) {
+        String[] names=new String[creators.size()];
+        for(int i=0;i<names.length;i++)names[i]=creators.get(i).loadLabel(getPackageManager()).toString();
+        new android.app.AlertDialog.Builder(this).setTitle("选择快捷方式提供方")
+                .setItems(names,(dialog,index)->{
+                    android.content.pm.ActivityInfo provider=creators.get(index).activityInfo;
+                    pendingKeyShortcut=new String[]{String.valueOf(code),state,gesture,pkg};
+                    Intent intent=new Intent(Intent.ACTION_CREATE_SHORTCUT)
+                            .setComponent(new ComponentName(provider.packageName,provider.name));
+                    try{startActivityForResult(intent,KEY_SHORTCUT_REQUEST);}
+                    catch(ActivityNotFoundException|SecurityException error){
+                        pendingKeyShortcut=null;
+                        Toast.makeText(this,"此应用无法创建快捷方式",Toast.LENGTH_LONG).show();
+                    }
+                }).setNegativeButton("取消",null).show();
+    }
+
+    @Override protected void onActivityResult(int request,int result,Intent data) {
+        super.onActivityResult(request,result,data);
+        if(request!=KEY_SHORTCUT_REQUEST)return;
+        String[] target=pendingKeyShortcut;
+        pendingKeyShortcut=null;
+        if(result!=RESULT_OK||data==null||target==null)return;
+        try {
+            Intent shortcut=data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
+            if(shortcut==null)throw new IllegalArgumentException("应用未返回可调用的快捷方式");
+            shortcut=KeyBindings.checkedIntent(this,shortcut,target[3]);
+            String title=data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME);
+            if(title==null||title.trim().isEmpty())title="应用快捷方式";
+            saveKeyAction(Integer.parseInt(target[0]),target[1],target[2],KeyBindings.make("intent",title,shortcut));
+        }catch(RuntimeException error) {
+            Toast.makeText(this,"快捷方式无法保存："+error.getMessage(),Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void toggle(LinearLayout parent,String title,String key,String note,boolean available){
         if(RuntimeProfile.state().hidden(key))return;
         LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);

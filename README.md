@@ -1,5 +1,9 @@
 # HyperPriv
 
+当前预发布为 **0.4.5 / versionCode 38**。新增可配置的电源键与音量键快捷动作、HDMI 确认开关，以及统计组件 APK 备份、按用户卸载和恢复。实测范围与已知问题见 [v0.4.5 发布说明](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.5)。
+
+## 0.4.4 正式版记录
+
 普通 / xiaomi.eu 统一版：**0.4.4 / versionCode 28**，基于 GitHub [v0.4.4-preview2](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.4-preview2)。同一个 APK 自动识别 EU，并隐藏已确认由 ROM 处理、组件缺失或没有对应业务的选项。未知 EU 构建保留尝试入口。
 
 这 12 项标准版均已有实现；按本机实际 APK 方法定义自动识别入口，确认没有的隐藏。组件缺失时，普通版和 EU 均隐藏对应选项。读取失败则保留，隐藏不清除设置。

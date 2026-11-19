@@ -12,9 +12,16 @@ final class DexEntrances {
     }
     private static final Map<String,Result> CACHE=new HashMap<>();
     static String signature(Rule r){StringBuilder s=new StringBuilder("L"+r.cls.replace('.','/')+";#"+r.method+"(");for(String p:r.params)s.append(p);return s.append(')').append(r.returns).toString();}
-    static synchronized Result inspect(String[] paths,List<Rule> rules){
+    static String fieldSignature(String owner,String name,String type){
+        return "L"+owner.replace('.','/')+";#"+name+":"+type;
+    }
+    static Result inspect(String[] paths,List<Rule> rules){
+        return inspect(paths,rules,Collections.emptyList());
+    }
+    static synchronized Result inspect(String[] paths,List<Rule> rules,List<String> fields){
         Set<String> wanted=new TreeSet<>(),classes=new HashSet<>();
         for(Rule r:rules){wanted.add(signature(r));classes.add("L"+r.cls.replace('.','/')+";");}
+        for(String field:fields){wanted.add(field);classes.add(field.substring(0,field.indexOf('#')));}
         StringBuilder key=new StringBuilder(wanted.toString());
         for(String path:paths){File f=new File(path);key.append('|').append(path).append(':').append(f.length()).append(':').append(f.lastModified());}
         Result cached=CACHE.get(key.toString());if(cached!=null)return cached;
@@ -34,12 +41,12 @@ final class DexEntrances {
         Result result=new Result(complete&&anyDex,found);CACHE.put(key.toString(),result);return result;
     }
     private static final class Dex {
-        final byte[] data;final int strings,stringOffset,types,typeOffset,protos,protoOffset,methods,methodOffset,classes,classOffset;
+        final byte[] data;final int strings,stringOffset,types,typeOffset,protos,protoOffset,fields,fieldOffset,methods,methodOffset,classes,classOffset;
         final Map<Integer,String> textCache=new HashMap<>();
         Dex(byte[] data)throws IOException{
             this.data=data;if(data.length<112||data[0]!='d'||data[1]!='e'||data[2]!='x'||data[3]!='\n'||u32(40)!=0x12345678)throw new IOException("Not standard DEX");
-            strings=u32(56);stringOffset=u32(60);types=u32(64);typeOffset=u32(68);protos=u32(72);protoOffset=u32(76);methods=u32(88);methodOffset=u32(92);classes=u32(96);classOffset=u32(100);
-            table(strings,stringOffset,4);table(types,typeOffset,4);table(protos,protoOffset,12);table(methods,methodOffset,8);table(classes,classOffset,32);
+            strings=u32(56);stringOffset=u32(60);types=u32(64);typeOffset=u32(68);protos=u32(72);protoOffset=u32(76);fields=u32(80);fieldOffset=u32(84);methods=u32(88);methodOffset=u32(92);classes=u32(96);classOffset=u32(100);
+            table(strings,stringOffset,4);table(types,typeOffset,4);table(protos,protoOffset,12);table(fields,fieldOffset,8);table(methods,methodOffset,8);table(classes,classOffset,32);
         }
         void range(long at,long size)throws IOException{if(at<0||size<0||at+size>data.length)throw new IOException("Truncated DEX");}
         void table(int count,int offset,int size)throws IOException{range(offset,(long)count*size);}
@@ -58,12 +65,23 @@ final class DexEntrances {
             if(list!=0){int n=u32(list);table(n,list+4,2);for(int i=0;i<n;i++)s.append(type(u16(list+4+2*i)));}
             return s.append(')').append(type(u32(p+4))).toString();
         }
+        String field(int id)throws IOException{
+            if(id<0||id>=fields)throw new IOException("Bad field ID");
+            int at=fieldOffset+8*id;
+            return type(u16(at))+"#"+string(u32(at+4))+":"+type(u16(at+2));
+        }
         void find(Set<String> wantedClasses,Set<String> wanted,Set<String> found)throws IOException{
             for(int i=0;i<classes;i++){
                 int c=classOffset+32*i;if(!wantedClasses.contains(type(u32(c))))continue;
                 int offset=u32(c+24);if(offset==0)continue;int[] at={offset};int sf=leb(at),inf=leb(at),direct=leb(at),virtual=leb(at);
                 if((long)sf+inf+direct+virtual>data.length)throw new IOException("Bad class data counts");
-                for(int j=0;j<sf+inf;j++){leb(at);leb(at);}
+                for(int count:new int[]{sf,inf}){
+                    int field=0;
+                    for(int j=0;j<count;j++){
+                        field=Math.addExact(field,leb(at));leb(at);
+                        String signature=field(field);if(wanted.contains(signature))found.add(signature);
+                    }
+                }
                 for(int count:new int[]{direct,virtual}){int method=0;for(int j=0;j<count;j++){method=Math.addExact(method,leb(at));leb(at);leb(at);String signature=method(method);if(wanted.contains(signature))found.add(signature);}}
             }
         }

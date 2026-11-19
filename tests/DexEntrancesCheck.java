@@ -10,6 +10,11 @@ public final class DexEntrancesCheck {
   List<Rule> rules=Arrays.asList(present,ctor,wrongReturn,wrongParam,reference);
   DexEntrances.Result scan=DexEntrances.inspect(new String[]{args[0]},rules);
   require(scan.complete&&scan.found.size()==2&&scan.found.contains(DexEntrances.signature(present))&&scan.found.contains(DexEntrances.signature(ctor)),"declared method matching failed, references/overloads must not count");
+  String field=DexEntrances.fieldSignature(present.cls,"marker","I");
+  String wrongField=DexEntrances.fieldSignature(present.cls,"marker","Z");
+  String foreignField=DexEntrances.fieldSignature("java.lang.Integer","MAX_VALUE","I");
+  scan=DexEntrances.inspect(new String[]{args[0]},rules,Arrays.asList(field,wrongField,foreignField));
+  require(scan.complete&&scan.found.size()==3&&scan.found.contains(field),"declared field or field type matching failed");
   Path corrupt=Paths.get(args[1]);try(ZipOutputStream zip=new ZipOutputStream(Files.newOutputStream(corrupt))){zip.putNextEntry(new ZipEntry("classes.dex"));zip.write(new byte[]{100,101,120,10});zip.closeEntry();}
   require(!DexEntrances.inspect(new String[]{corrupt.toString()},rules).complete,"corrupt DEX treated as proof of absence");
   require(!DexEntrances.inspect(new String[]{args[0]+".missing"},rules).complete,"read failure treated as absence");

@@ -8,6 +8,8 @@ import java.util.*;
 final class RuntimeProfile {
     private static volatile RomPolicy.State current=RomPolicy.normal();
     private static volatile HelperCompatibility.Match helper;
+    private static HdmiCompatibility.Match hdmiMatch=HdmiCompatibility.Match.NONE;
+    static HdmiCompatibility.Match hdmiMatch(){return hdmiMatch;}
     static void helper(HelperCompatibility.Match match){helper=match;}
     static RomPolicy.State state(){return current;}
     static void apply(RomPolicy.State state){helper=null;current=state;}
@@ -24,9 +26,15 @@ final class RuntimeProfile {
     static void initializeUi(Context context){
         boolean eu=EuEnvironment.isEuRom();Map<String,String> hashes=new HashMap<>();Set<String> missing=new HashSet<>();
         helper=null;
+        hdmiMatch=HdmiCompatibility.Match.NONE;
         Map<String,List<Rule>> candidates=new HashMap<>();Map<String,DexEntrances.Result> scans=new HashMap<>();
         for(String pkg:Options.TARGETS)try{
             PackageInfo info=context.getPackageManager().getPackageInfo(pkg,0);
+            if(pkg.equals(HdmiCompatibility.PACKAGE)){
+                hdmiMatch=HdmiCompatibility.resolve(Build.VERSION.SDK_INT,info.getLongVersionCode(),
+                        EuEnvironment.hash(info.applicationInfo.sourceDir),info.applicationInfo.sourceDir,
+                        info.applicationInfo.splitSourceDirs,true);
+            }
             if(pkg.equals(HelperCompatibility.PACKAGE))helper=HelperCompatibility.resolve(info.getLongVersionCode(),EuEnvironment.hash(info.applicationInfo.sourceDir),info.applicationInfo.sourceDir,Settings.local(context).getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY)));
             if(eu&&(pkg.equals("com.miui.packageinstaller")||pkg.equals("com.miui.securitycenter")||pkg.equals("com.android.settings")||pkg.equals("com.miui.guardprovider")))hashes.put(pkg,EuEnvironment.hash(info.applicationInfo.sourceDir));
             List<Rule> rules=presenceRules(pkg,info.getLongVersionCode());

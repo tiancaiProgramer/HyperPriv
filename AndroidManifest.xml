@@ -1,7 +1,13 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="28" android:versionName="0.4.4">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="38" android:versionName="0.4.5">
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
     <queries>
+        <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent>
+        <intent><action android:name="android.intent.action.CREATE_SHORTCUT"/></intent>
+        <package android:name="com.android.systemui"/>
         <package android:name="com.mobiletools.systemhelper"/>
+        <package android:name="com.xiaomi.registration"/>
+        <package android:name="com.miui.misightservice"/>
+        <package android:name="com.xiaomi.security.onetrack"/>
         <package android:name="com.miui.packageinstaller"/><package android:name="com.miui.securitycenter"/>
         <package android:name="com.miui.guardprovider"/><package android:name="com.miui.analytics"/>
         <package android:name="com.android.settings"/><package android:name="com.miui.powerkeeper"/><package android:name="com.lbe.security.miui"/>

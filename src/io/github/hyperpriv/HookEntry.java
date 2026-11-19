@@ -32,6 +32,8 @@ public final class HookEntry extends XposedModule {
 
     @Override public void onSystemServerStarting(SystemServerStartingParam param){
         new CoreHooks(this,param.getClassLoader()).install();
+        try{KeyHooks.install(this,param.getClassLoader(),getRemotePreferences(Options.PREFS));}
+        catch(Throwable error){report("key actions setup failed: "+error.getClass().getSimpleName());}
         try{new ExtraHooks(this,param.getClassLoader(),getRemotePreferences(Options.PREFS)).install("android",android.os.Build.VERSION.SDK_INT);}
         catch(Throwable e){report("extra system setup failed: "+e.getClass().getSimpleName());}
     }
@@ -60,6 +62,20 @@ public final class HookEntry extends XposedModule {
             RuntimeProfile.initializePackage(pkg,actualHash);
             prefs=getRemotePreferences(Options.PREFS);
             boolean compatibility=prefs.getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY));
+            if(pkg.equals(HdmiCompatibility.PACKAGE)){
+                android.content.pm.ApplicationInfo info=context.getApplicationInfo();
+                HdmiCompatibility.Match match=HdmiCompatibility.resolve(android.os.Build.VERSION.SDK_INT,
+                        version,actualHash,info.sourceDir,info.splitSourceDirs,compatibility);
+                if(match.allowed(compatibility)){
+                    try{
+                        HdmiConfirmHook.install(this,loader,prefs,match);
+                        report("ready SystemUI HDMI confirmation profile="+match);
+                    }catch(ReflectiveOperationException|ClassCastException error){
+                        report("SystemUI HDMI confirmation entry not matched: "+error.getClass().getSimpleName());
+                    }
+                }else report("SystemUI HDMI confirmation entry not matched version="+version);
+                return;
+            }
             HelperCompatibility.Match helper=null;
             if(pkg.equals(HelperCompatibility.PACKAGE)){
                 helper=HelperCompatibility.resolve(version,actualHash,context.getApplicationInfo().sourceDir,compatibility);
