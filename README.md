@@ -1,6 +1,6 @@
 # HyperPriv
 
-当前预发布为 **0.4.5 / versionCode 38**。新增可配置的电源键与音量键快捷动作、HDMI 确认开关，以及统计组件 APK 备份、按用户卸载和恢复。实测范围与已知问题见 [v0.4.5 发布说明](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.5)。
+当前正式版为 **0.4.5 / versionCode 38**。新增可配置的电源键与音量键快捷动作、HDMI 确认开关，以及统计组件 APK 备份、按用户卸载和恢复。实测范围与已知问题见 [v0.4.5 发布说明](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.5)。
 
 ## 0.4.4 正式版记录
 
