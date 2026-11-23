@@ -9,7 +9,11 @@ final class RuntimeProfile {
     private static volatile RomPolicy.State current=RomPolicy.normal();
     private static volatile HelperCompatibility.Match helper;
     private static HdmiCompatibility.Match hdmiMatch=HdmiCompatibility.Match.NONE;
+    private static Map<String,AppearanceSupport.Match> appearanceMatches=Collections.emptyMap();
     static HdmiCompatibility.Match hdmiMatch(){return hdmiMatch;}
+    static AppearanceSupport.Match appearanceMatch(String key){
+        return appearanceMatches.getOrDefault(key,AppearanceSupport.Match.NONE);
+    }
     static void helper(HelperCompatibility.Match match){helper=match;}
     static RomPolicy.State state(){return current;}
     static void apply(RomPolicy.State state){helper=null;current=state;}
@@ -27,12 +31,19 @@ final class RuntimeProfile {
         boolean eu=EuEnvironment.isEuRom();Map<String,String> hashes=new HashMap<>();Set<String> missing=new HashSet<>();
         helper=null;
         hdmiMatch=HdmiCompatibility.Match.NONE;
+        Map<String,AppearanceSupport.Match> appearance=new HashMap<>();
         Map<String,List<Rule>> candidates=new HashMap<>();Map<String,DexEntrances.Result> scans=new HashMap<>();
         for(String pkg:Options.TARGETS)try{
             PackageInfo info=context.getPackageManager().getPackageInfo(pkg,0);
+            String appearanceHash=null;
+            for(String key:Appearance.KEYS)if(pkg.equals(Appearance.target(key))){
+                if(appearanceHash==null)appearanceHash=EuEnvironment.hash(info.applicationInfo.sourceDir);
+                appearance.put(key,AppearanceSupport.match(key,Build.VERSION.SDK_INT,info.getLongVersionCode(),
+                        appearanceHash,info.applicationInfo.sourceDir,info.applicationInfo.splitSourceDirs,true));
+            }
             if(pkg.equals(HdmiCompatibility.PACKAGE)){
                 hdmiMatch=HdmiCompatibility.resolve(Build.VERSION.SDK_INT,info.getLongVersionCode(),
-                        EuEnvironment.hash(info.applicationInfo.sourceDir),info.applicationInfo.sourceDir,
+                        appearanceHash,info.applicationInfo.sourceDir,
                         info.applicationInfo.splitSourceDirs,true);
             }
             if(pkg.equals(HelperCompatibility.PACKAGE))helper=HelperCompatibility.resolve(info.getLongVersionCode(),EuEnvironment.hash(info.applicationInfo.sourceDir),info.applicationInfo.sourceDir,Settings.local(context).getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY)));
@@ -47,6 +58,7 @@ final class RuntimeProfile {
         }catch(PackageManager.NameNotFoundException error){missing.add(pkg);}catch(Exception error){/* Unknown, not proof of absence. */}
         List<Rule> system=presenceRules("android",Build.VERSION.SDK_INT);candidates.put("android",system);
         scans.put("android",DexEntrances.inspect(new String[]{"/system/framework/services.jar","/system_ext/framework/miui-services.jar","/system/framework/framework.jar"},system));
+        appearanceMatches=appearance;
         current=new RomPolicy.State(eu,EuEnvironment.international(),hashes,missing,FeaturePresence.absent(candidates,scans));
     }
     static List<Rule> presenceRules(String pkg,long version){

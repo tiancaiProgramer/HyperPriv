@@ -30,6 +30,8 @@ public final class PreferenceCleanupCheck {
         local.values.put("clipboard_packages","fixture.allowed");local.values.put("clipboard_close_text","");
         local.values.put("key_actions",false);local.values.put("key_bindings","saved-key-actions");
         local.values.put("clipboard_opacity",42);local.values.put("initialized",true);
+        local.values.put(Appearance.STATUS,true);local.values.put(Appearance.Value.NOTIFICATIONS.key,9);
+        local.values.put(Appearance.Value.PILL_OPACITY.key,45);
         Map<String,Object> expected=new HashMap<>(local.values);local.values.put("obsolete_fixture_flag",true);
         require(Settings.cleanStoredKeys(local.prefs(),true),"local cleanup failed");
         require(local.values.equals(expected),"supported configuration changed during cleanup");

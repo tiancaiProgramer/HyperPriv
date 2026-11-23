@@ -25,18 +25,24 @@ public final class CorePolicyCheck {
         require(!CorePolicy.splitVerification(new StackTraceElement[]{frame("android.content.pm.SigningInfo","signersMatchExactly"),split}),"public signing queries must stay original");
         java.util.Set<String> keys=new java.util.HashSet<>();
         for(String key:Options.KEYS)require(keys.add(key),"duplicate preference "+key);
-        require(keys.size()==65,"preference migration count");
+        require(keys.size()==65+Appearance.KEYS.length,"preference migration count");
+        for(String key:Appearance.KEYS)require(keys.contains(key)&&!Options.defaultValue(key),"new appearance option defaults off");
+        java.util.Set<String> allPreferences=new java.util.HashSet<>(keys);
+        for(Appearance.Value value:Appearance.Value.ALL)require(allPreferences.add(value.key),"duplicate appearance parameter "+value.key);
+        require(Appearance.Value.NOTIFICATIONS.normalize(3)==0&&Appearance.Value.NOTIFICATIONS.normalize(4)==4
+                &&Appearance.Value.NOTIFICATIONS.normalize(15)==15&&Appearance.Value.NOTIFICATIONS.normalize(16)==0,
+                "notification custom range");
         require(Options.defaultValue(Compatibility.KEY),"compatibility is not enabled by default");
         for(ExtraFeatures.Feature f:ExtraFeatures.ALL)require(!Options.defaultValue(f.key),"new option enabled by default: "+f.key);
         for(String key:Options.CORE_KEYS)require(!Options.defaultValue(key),"new core option enabled by default: "+key);
         require(!Options.defaultValue("key_actions"),"key remapping must default off");
         require(Options.defaultValue("master")&&Options.defaultValue("ads"),"old defaults changed");
         java.util.Set<String> displayed=new java.util.HashSet<>();int sections=0;
-        require(UiCatalog.GROUPS.length==3,"main card count changed");
+        require(UiCatalog.GROUPS.length==4,"main card count changed");
         for(UiCatalog.Group group:UiCatalog.GROUPS)for(UiCatalog.Section section:group.sections){
             sections++;for(String key:section.keys){require(Options.accepts(key),"unknown UI preference "+key);require(displayed.add(key),"duplicate UI preference "+key);}
         }
-        require(sections==12,"submenu grouping changed");
+        require(sections==12+Appearance.KEYS.length,"submenu grouping changed");
         keys.remove("master");keys.remove(Compatibility.KEY);require(displayed.equals(keys),"missing or orphaned UI preferences");
         for(Rule rule:ExtraTargets.ALL)require(Options.accepts(rule.group),"unreachable hook preference "+rule.group);
         System.out.println("Core policy: install-only context, capability boundaries and default-off migration passed");

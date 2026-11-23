@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -146,6 +147,15 @@ public final class MainActivity extends Activity {
         }
         try{
             PackageInfo info=getPackageManager().getPackageInfo(pkg,TelemetryBackups.PACKAGE_FLAGS);long version=info.getLongVersionCode();boolean supported=false;
+            if(pkg.equals(Appearance.CAMERA)||pkg.equals(Appearance.HOME)){
+                String key=pkg.equals(Appearance.CAMERA)?Appearance.WATERMARK:Appearance.ICONS;
+                AppearanceSupport.Match match=RuntimeProfile.appearanceMatch(key);
+                String status=match==AppearanceSupport.Match.EXACT?"已核对入口":
+                        match==AppearanceSupport.Match.COMPATIBLE?(compatibility?"实验兼容 · 已匹配入口":"需开启实验兼容模式"):
+                        "当前构建未匹配";
+                return new AppState(match==AppearanceSupport.Match.EXACT
+                        ||(match==AppearanceSupport.Match.COMPATIBLE&&compatibility),"已安装 "+info.versionName+" · "+status,version);
+            }
             if(pkg.equals(HdmiCompatibility.PACKAGE)){
                 HdmiCompatibility.Match match=RuntimeProfile.hdmiMatch();
                 String status=match==HdmiCompatibility.Match.EXACT?"HDMI 确认入口已核对":
@@ -209,6 +219,7 @@ public final class MainActivity extends Activity {
         LinearLayout box=appGroup(spec.id,spec.title);label(box,spec.detail,12,MUTED,false);
         for(UiCatalog.Section section:spec.sections){
             LinearLayout options=information(box,"section_"+spec.id+"_"+section.id,section.title);
+            if(spec.id.equals("appearance")){appearanceSettings(options,section.keys[0]);continue;}
             if(section.id.equals("core")){coreSettings(options);continue;}
             if(section.id.equals("keys")){keySettings(options);continue;}
             if(section.detail!=null)label(options,section.detail,12,ACCENT,false);
@@ -226,6 +237,169 @@ public final class MainActivity extends Activity {
                 opacityOption(options);
                 textOption(options,"剪贴板提示关闭按钮文字","clipboard_close_text","留空沿用原文字，最多 20 个字。",false);
             }
+        }
+    }
+
+    private void appearanceSettings(LinearLayout box,String key){
+        if(RuntimeProfile.state().hidden(key)){
+            label(box,"本机未安装对应应用。",12,MUTED,false);
+            return;
+        }
+        AppearanceSupport.Match match=RuntimeProfile.appearanceMatch(key);
+        boolean available=match==AppearanceSupport.Match.EXACT
+                ||(match==AppearanceSupport.Match.COMPATIBLE&&selected(Compatibility.KEY));
+        String note=match==AppearanceSupport.Match.COMPATIBLE
+                ?(available?"实验兼容 · 已匹配入口":"开启实验兼容模式后可用")
+                :selected(Compatibility.KEY)?"实验兼容 · 未匹配当前应用入口":"当前应用构建未匹配，可开启实验兼容模式尝试";
+        if(key.equals(Appearance.WATERMARK)&&match==AppearanceSupport.Match.COMPATIBLE&&available)
+            note="实验兼容 · 已匹配水印入口。保存后强行停止相机并重新打开。";
+        if(match==AppearanceSupport.Match.EXACT){
+            switch(key){
+                case Appearance.WATERMARK: note="已下载且素材完整的水印可保留。保存后强行停止相机并重新打开。";break;
+                case Appearance.ICONS: note="以桌面当前图标大小为基准。保存后重启系统桌面。";break;
+                case Appearance.GESTURE: note="需在系统设置中显示手势提示线。保存后重启系统界面。";break;
+                default: note="勾选系统界面作用域，保存后重启系统界面。";
+            }
+        }
+        toggle(box,UiCatalog.label(key),key,note,available);
+        if(!available)return;
+        LinearLayout values=vertical();box.addView(values);
+        refreshers.add(()->values.setVisibility(selected(key)?View.VISIBLE:View.GONE));
+        switch(key){
+            case Appearance.STATUS:
+                LinearLayout notifications=information(values,"appearance_notification_options","通知图标");
+                label(notifications,"调整状态栏里应用通知图标的最多显示个数，实际仍受可用宽度限制。",12,MUTED,false);
+                appearanceOptions(notifications,Appearance.Value.NOTIFICATIONS);
+                LinearLayout network=information(values,"appearance_network_options","移动信号与 Wi-Fi");
+                appearanceOptions(network,Appearance.Value.SIGNAL);
+                LinearLayout signalStyle=vertical();
+                network.addView(signalStyle);
+                label(signalStyle,"双卡同时可见时生效。上下微调的负数表示上移，正数表示下移。",12,MUTED,false);
+                appearanceOptions(signalStyle,Appearance.Value.SIGNAL_SIZE,Appearance.Value.SIGNAL_GAP,Appearance.Value.SIGNAL_Y);
+                refreshers.add(()->signalStyle.setVisibility(appearanceValue(Appearance.Value.SIGNAL)==0?View.GONE:View.VISIBLE));
+                appearanceOptions(network,Appearance.Value.MOBILE_TYPE,Appearance.Value.MOBILE_HD,
+                        Appearance.Value.MOBILE_ACTIVITY,Appearance.Value.NETWORK_ORDER);
+                appearanceOptions(information(values,"appearance_battery_options","电量"),
+                        Appearance.Value.BATTERY,Appearance.Value.BATTERY_MARK,Appearance.Value.CHARGE_MARK);
+                appearanceOptions(information(values,"appearance_clock_options","时钟"),
+                        Appearance.Value.CLOCK_POSITION,Appearance.Value.CLOCK_TIME,Appearance.Value.CLOCK_SECONDS,Appearance.Value.CLOCK_DATE,
+                        Appearance.Value.CLOCK_SIZE,Appearance.Value.CLOCK_ALIGN);
+                LinearLayout speed=information(values,"appearance_speed_options","实时网速");
+                label(speed,"需先在系统的状态栏设置中开启实时网速。",12,MUTED,false);
+                appearanceOptions(speed,
+                        Appearance.Value.SUCCESSION,Appearance.Value.SPEED_UNIT,Appearance.Value.SPEED_THRESHOLD,
+                        Appearance.Value.SPEED_SIZE,Appearance.Value.SPEED_GAP);
+                LinearLayout spacing=information(values,"appearance_layout_options","边距与间距");
+                label(spacing,"在系统布局基础上微调。上下微调的负数表示上移，正数表示下移。",12,MUTED,false);
+                appearanceOptions(spacing,
+                        Appearance.Value.START_MARGIN,Appearance.Value.END_MARGIN,Appearance.Value.ICON_GAP,Appearance.Value.STATUS_Y);
+                break;
+            case Appearance.ICONS: appearanceOptions(values,Appearance.Value.HOME_SCALE);break;
+            case Appearance.GESTURE:
+                appearanceOptions(values,Appearance.Value.PILL_WIDTH,Appearance.Value.PILL_HEIGHT,
+                        Appearance.Value.PILL_RADIUS,Appearance.Value.PILL_Y,Appearance.Value.PILL_COLOR);
+                label(values,"不透明度 100% 保留系统原有透明效果，0% 隐藏提示线。",12,MUTED,false);
+                appearanceOptions(values,Appearance.Value.PILL_OPACITY);
+                break;
+        }
+    }
+    private void appearanceOptions(LinearLayout box,Appearance.Value... fields){
+        for(Appearance.Value value:fields){
+            if(value.choices==null){
+                appearanceSlider(box,value);
+            }else if(value==Appearance.Value.MOBILE_HD){
+                appearanceSwitch(box,value,"隐藏 VoLTE 标记",1);
+                appearanceSwitch(box,value,"隐藏 VoWiFi 标记",2);
+            }else if(value.choices.length==2){
+                appearanceSwitch(box,value,value.label,1);
+            }else{
+                appearanceChoice(box,value);
+            }
+        }
+    }
+    private int appearanceValue(Appearance.Value value){
+        return Settings.appearance(Settings.local(this),value);
+    }
+    private void appearanceChoice(LinearLayout parent,Appearance.Value value){
+        LinearLayout row=vertical();
+        row.setMinimumHeight(dp(56));row.setFocusable(true);row.setPadding(0,gap(6),0,gap(6));
+        parent.addView(row,new LinearLayout.LayoutParams(-1,-2));
+        label(row,value.label,14,INK,false);
+        TextView current=label(row,"",12,MUTED,false);
+        refreshers.add(()->current.setText(value.display(appearanceValue(value))+"  ›"));
+        row.setOnClickListener(v->new android.app.AlertDialog.Builder(this)
+                .setTitle(value.label)
+                .setSingleChoiceItems(value.choices,appearanceValue(value),(dialog,index)->{
+                    saveAppearance(value,index);
+                    dialog.dismiss();
+                })
+                .setNegativeButton("取消",null).show());
+    }
+    private void appearanceSwitch(LinearLayout parent,Appearance.Value value,String title,int mask){
+        LinearLayout row=new LinearLayout(this);
+        row.setGravity(Gravity.CENTER_VERTICAL);row.setMinimumHeight(dp(48));
+        parent.addView(row,new LinearLayout.LayoutParams(-1,-2));
+        TextView name=new TextView(this);name.setText(title);name.setTextColor(INK);name.setTextSize(14);
+        row.addView(name,new LinearLayout.LayoutParams(0,-2,1));
+        Switch control=new Switch(this);control.setShowText(false);
+        control.setContentDescription(title);control.setMinHeight(dp(48));control.setMinWidth(dp(48));
+        row.addView(control,new LinearLayout.LayoutParams(-2,-2));
+        row.setOnClickListener(v->control.toggle());
+        control.setOnCheckedChangeListener((v,checked)->{
+            if(!updating){
+                int current=appearanceValue(value);
+                saveAppearance(value,checked?current|mask:current&~mask);
+            }
+        });
+        refreshers.add(()->control.setChecked((appearanceValue(value)&mask)!=0));
+    }
+    private void appearanceSlider(LinearLayout parent,Appearance.Value value){
+        LinearLayout row=vertical();row.setPadding(0,gap(10),0,gap(6));
+        parent.addView(row,new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout heading=new LinearLayout(this);heading.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(heading,new LinearLayout.LayoutParams(-1,-2));
+        TextView name=new TextView(this);name.setText(value.label);name.setTextSize(14);name.setTextColor(INK);
+        heading.addView(name,new LinearLayout.LayoutParams(0,-2,1));
+        TextView current=new TextView(this);current.setTextSize(13);current.setTextColor(ACCENT);
+        heading.addView(current,new LinearLayout.LayoutParams(-2,-2));
+        List<Integer> allowed=new ArrayList<>();
+        for(int n=value.min;n<=value.max;n++)if(value.normalize(n)==n)allowed.add(n);
+        SeekBar slider=new SeekBar(this);
+        slider.setMax(allowed.size()-1);slider.setContentDescription(value.label);
+        slider.setProgressTintList(ColorStateList.valueOf(ACCENT));
+        slider.setThumbTintList(ColorStateList.valueOf(ACCENT));
+        row.addView(slider,new LinearLayout.LayoutParams(-1,dp(48)));
+        TextView reset=label(row,"恢复默认",12,ACCENT,false);
+        reset.setGravity(Gravity.END|Gravity.CENTER_VERTICAL);reset.setMinHeight(dp(32));
+        reset.setFocusable(true);
+        reset.setContentDescription("恢复"+value.label+"默认值");
+        reset.setOnClickListener(v->saveAppearance(value,value.initial));
+        slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            private boolean dragging;
+            public void onProgressChanged(SeekBar bar,int index,boolean fromUser){
+                current.setText(value.display(allowed.get(index)));
+                if(fromUser&&!dragging)saveAppearance(value,allowed.get(index));
+            }
+            public void onStartTrackingTouch(SeekBar bar){dragging=true;}
+            public void onStopTrackingTouch(SeekBar bar){dragging=false;saveAppearance(value,allowed.get(bar.getProgress()));}
+        });
+        refreshers.add(()->{
+            int stored=appearanceValue(value);
+            if(!slider.isPressed()){
+                slider.setProgress(allowed.indexOf(stored));
+                current.setText(value.display(stored));
+            }
+            reset.setVisibility(stored==value.initial?View.GONE:View.VISIBLE);
+        });
+    }
+    private void saveAppearance(Appearance.Value value,int selected){
+        if(appearanceValue(value)==selected)return;
+        Settings.setAppearance(this,value,selected);
+        refresh();
+        long now=SystemClock.elapsedRealtime();
+        if(now-lastSaveNotice>=2500){
+            lastSaveNotice=now;
+            Toast.makeText(this,Settings.remote==null?"已保存在本机，连接框架后同步":"已保存，重启对应进程后生效",Toast.LENGTH_SHORT).show();
         }
     }
 

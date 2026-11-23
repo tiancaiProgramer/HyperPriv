@@ -1,9 +1,11 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="39" android:versionName="0.4.6">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.hyperpriv" android:versionCode="43" android:versionName="0.4.7-preview">
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
     <queries>
         <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent>
         <intent><action android:name="android.intent.action.CREATE_SHORTCUT"/></intent>
         <package android:name="com.android.systemui"/>
+        <package android:name="com.miui.home"/>
+        <package android:name="com.android.camera"/>
         <package android:name="com.mobiletools.systemhelper"/>
         <package android:name="com.xiaomi.registration"/>
         <package android:name="com.miui.misightservice"/>
@@ -13,7 +15,7 @@
         <package android:name="com.android.settings"/><package android:name="com.miui.powerkeeper"/><package android:name="com.lbe.security.miui"/>
         <package android:name="com.xiaomi.joyose"/><package android:name="com.miui.systemAdSolution"/>
     </queries>
-    <application android:name=".ModuleApp" android:label="HyperPriv" android:icon="@drawable/ic_launcher" android:description="@string/module_description" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+    <application android:name=".ModuleApp" android:label="HyperPriv" android:icon="@drawable/ic_launcher" android:description="@string/module_description" android:allowBackup="false" android:theme="@style/Theme.HyperPriv">
         <provider android:name="io.github.libxposed.service.XposedProvider" android:authorities="io.github.hyperpriv.XposedService" android:exported="true"/>
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.DEFAULT"/><category android:name="io.github.libxposed.manager.category.MODULE_SETTINGS"/></intent-filter>

@@ -14,7 +14,7 @@ def run(*args):subprocess.run(list(map(str,args)),check=True)
 build=root/'local-build';build.mkdir(exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='hyperpriv-checks-',dir=build) as directory:
     classes=pathlib.Path(directory)/'pure';classes.mkdir()
-    names=['Policy','CorePolicy','ExtraPolicy','Options','ExtraFeatures','UiCatalog','ExtraTargets','Rule','Compatibility','CoreTargets','RomPolicy','EuBuild','Profiles','DexEntrances','FeaturePresence','HelperCompatibility']
+    names=['Policy','CorePolicy','ExtraPolicy','Options','ExtraFeatures','UiCatalog','ExtraTargets','Rule','Compatibility','CoreTargets','RomPolicy','EuBuild','Profiles','DexEntrances','FeaturePresence','HelperCompatibility','Appearance']
     checks=['PolicyCheck','CorePolicyCheck','ExtraPolicyCheck','CompatibilityCheck','RomPolicyCheck','FeaturePresenceCheck','HelperCompatibilityCheck']
     sources=[root/'src/io/github/hyperpriv'/(n+'.java') for n in names]+[root/'tests'/(n+'.java') for n in checks]
     run(exe('javac'),'-encoding','UTF-8','-d',classes,*sources)

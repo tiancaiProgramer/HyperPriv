@@ -1,0 +1,13 @@
+<resources>
+    <style name="Theme.HyperPriv" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:alertDialogTheme">@style/Theme.HyperPriv.Dialog</item>
+    </style>
+
+    <style name="Theme.HyperPriv.Dialog" parent="android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">#CA581B</item>
+        <item name="android:textColorPrimary">#242C28</item>
+        <item name="android:textColorSecondary">#66706A</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:backgroundDimAmount">0.32</item>
+    </style>
+</resources>

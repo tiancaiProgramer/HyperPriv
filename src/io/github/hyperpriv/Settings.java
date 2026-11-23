@@ -13,7 +13,7 @@ final class Settings {
     static SharedPreferences local(Context c){return c.getSharedPreferences("options",0);}
     static boolean storedKey(String key,boolean local){
         return Options.accepts(key)||java.util.Arrays.asList(ExtraFeatures.STRING_KEYS).contains(key)
-            ||key.equals("clipboard_opacity")||(local&&key.equals("initialized"));
+            ||key.equals("clipboard_opacity")||Appearance.isParameter(key)||(local&&key.equals("initialized"));
     }
     static int removeObsolete(SharedPreferences prefs,SharedPreferences.Editor editor,boolean local){
         int removed=0;
@@ -34,6 +34,7 @@ final class Settings {
                 for(String k:Options.KEYS)init.putBoolean(k,received.getBoolean(k,RuntimeProfile.defaultValue(k)));
                 for(String k:ExtraFeatures.STRING_KEYS)init.putString(k,received.getString(k,""));
                 init.putInt("clipboard_opacity",received.getInt("clipboard_opacity",100));
+                for(Appearance.Value value:Appearance.Value.ALL)init.putInt(value.key,appearance(received,value));
                 init.putBoolean("initialized",true).commit();
             }
             service=s;remote=received;sync(c);
@@ -50,6 +51,7 @@ final class Settings {
             for(String k:Options.KEYS)e.putBoolean(k,RuntimeProfile.allowed(k)&&local(c).getBoolean(k,RuntimeProfile.defaultValue(k)));
             for(String k:ExtraFeatures.STRING_KEYS)e.putString(k,local(c).getString(k,""));
             e.putInt("clipboard_opacity",Math.max(0,Math.min(100,local(c).getInt("clipboard_opacity",100))));
+            for(Appearance.Value value:Appearance.Value.ALL)e.putInt(value.key,appearance(local(c),value));
             return e.commit();
         }catch(Throwable e){status="设置已本地保存，等待框架重连";return false;}
     }
@@ -66,6 +68,13 @@ final class Settings {
     static void setOpacity(Context c,int opacity){
         local(c).edit().putInt("clipboard_opacity",Math.max(0,Math.min(100,opacity))).commit();sync(c);
     }
+    static int appearance(SharedPreferences preferences,Appearance.Value value){
+        try{return value.normalize(preferences.getInt(value.key,value.initial));}
+        catch(ClassCastException error){return value.initial;}
+    }
+    static void setAppearance(Context context,Appearance.Value value,int selected){
+        local(context).edit().putInt(value.key,value.normalize(selected)).commit();sync(context);
+    }
     static void refreshScopes(){
         XposedService current=service;if(current!=null)try{scopes=current.getScope();}catch(Throwable ignored){scopes=null;}
     }
@@ -73,6 +82,8 @@ final class Settings {
         java.util.List<String> current=scopes;if(current==null)return "作用域状态待框架确认";
         java.util.ArrayList<String> missing=new java.util.ArrayList<>();
         for(UiCatalog.Component component:UiCatalog.COMPONENTS){
+            if((component.pkg.equals(Appearance.HOME)||component.pkg.equals(Appearance.CAMERA))
+                    &&(remote==null||!remote.getBoolean(component.pkg.equals(Appearance.HOME)?Appearance.ICONS:Appearance.WATERMARK,false)))continue;
             if(!RuntimeProfile.state().needsScope(component.pkg))continue;
             boolean present=current.contains(component.pkg)||(component.pkg.equals("android")&&current.contains("system"));
             if(!present)missing.add(component.title);

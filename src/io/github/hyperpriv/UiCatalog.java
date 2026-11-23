@@ -26,6 +26,8 @@ final class UiCatalog {
         new Component("安全中心","com.miui.securitycenter"),
         new Component("设置","com.android.settings"),
         new Component("系统界面（SystemUI）","com.android.systemui"),
+        new Component("系统桌面",Appearance.HOME),
+        new Component("小米相机",Appearance.CAMERA),
         new Component("系统安全组件","com.miui.guardprovider"),
         new Component("电量与性能","com.miui.powerkeeper"),
         new Component("Joyose","com.xiaomi.joyose"),
@@ -49,9 +51,15 @@ final class UiCatalog {
         new Group("display","系统与交互","性能云控、屏幕、锁屏与按键操作。",
             new Section("performance","性能云控",null,"power_cloud","joyose_cloud"),
             new Section("screen","屏幕与锁屏",null,"thermal_fps","never_sleep","framework_capture","framework_password_timeout","hdmi_auto_confirm"),
-            new Section("keys","按键与快捷动作",null,"key_actions"))
+            new Section("keys","按键与快捷动作",null,"key_actions")),
+        new Group("appearance","外观与个性化","状态栏、桌面图标、手势小白条和相机水印。",
+            new Section("status_bar","状态栏自定义",null,Appearance.STATUS),
+            new Section("home_icons","桌面图标缩放",null,Appearance.ICONS),
+            new Section("gesture_handle","小白条自定义",null,Appearance.GESTURE),
+            new Section("camera_watermarks","相机水印",null,Appearance.WATERMARK))
     };
     static String target(String key){
+        String appearance=Appearance.target(key);if(appearance!=null)return appearance;
         ExtraFeatures.Feature extra=ExtraFeatures.get(key);if(extra!=null)return extra.pkg;
         switch(key){
             case "key_actions":return "android";
@@ -69,6 +77,10 @@ final class UiCatalog {
     static String label(String key){
         ExtraFeatures.Feature extra=ExtraFeatures.get(key);if(extra!=null)return extra.title;
         switch(key){
+            case Appearance.STATUS:return "启用状态栏自定义";
+            case Appearance.GESTURE:return "启用小白条自定义";
+            case Appearance.ICONS:return "启用桌面图标微调";
+            case Appearance.WATERMARK:return "保留节日和限定水印";
             case "key_actions":return "启用自定义按键";
             case "core_enabled":return "启用核心签名";
             case "core_downgrade":return "允许降级安装";
@@ -129,6 +141,8 @@ final class UiCatalog {
             case "com.miui.guardprovider":return "2.5.6-20251106.0 / 3.0.7-20260708.0";
             case "com.android.settings":return "16 · 仅已适配的安装包构建";
             case "com.android.systemui":return "16.03.251211.r · MIX Fold 3 国行已核对构建";
+            case Appearance.HOME:return "6.01.05.2258 · MIX Fold 3 国行";
+            case Appearance.CAMERA:return "6.4.000310.1（MIX Fold 3）／6.4.000530.0（小米 15 EU，需实验兼容）";
             case "com.miui.powerkeeper":return "4.2.00";
             case "com.xiaomi.joyose":return "2.4.92 / 2.5.14";
             case "com.miui.analytics":return "6.31.0";

@@ -2,6 +2,8 @@
 
 当前正式版为 **0.4.6 / versionCode 39**。快捷按键按 HyperOS 大版本和 Android API 选择回调。MIX Fold 3 已完成本轮 HyperOS 3 实机验收，小米 15 国行 HyperOS 4 已验证电源键双击。详见 [v0.4.6 发布说明](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.6)。
 
+外观预览版为 **0.4.7-preview / versionCode 43**，新增状态栏、桌面图标、小白条和相机限定水印设置。适配机型与实测范围见 [v0.4.7-preview 发布说明](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.7-preview)。
+
 0.4.5 新增可配置的电源键与音量键快捷动作、HDMI 确认开关，以及统计组件 APK 备份、按用户卸载和恢复。详见 [v0.4.5 发布说明](https://github.com/tiancaiProgramer/HyperPriv/releases/tag/v0.4.5)。
 
 ## 0.4.4 正式版记录
