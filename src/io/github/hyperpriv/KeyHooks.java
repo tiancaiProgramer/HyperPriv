@@ -3,6 +3,7 @@ package io.github.hyperpriv;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.input.InputManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -30,7 +31,6 @@ final class KeyHooks {
     private final Method launchApp;
     private final Method record;
     private Object input;
-    private final Method inputInstance;
     private final Method inject;
     private volatile boolean ready;
     private Context context;
@@ -70,20 +70,18 @@ final class KeyHooks {
         getActions.setAccessible(true);
         launchApp.setAccessible(true);
         record.setAccessible(true);
-        Class<?> manager = Class.forName("android.hardware.input.InputManager", false, loader);
-        inputInstance = manager.getDeclaredMethod("getInstance");
-        inputInstance.setAccessible(true);
-        inject = manager.getDeclaredMethod("injectInputEvent", InputEvent.class, int.class);
-        inject.setAccessible(true);
+        inject = exact(InputManager.class, "injectInputEvent", boolean.class, InputEvent.class, int.class);
     }
 
     private void install(ClassLoader loader) throws Exception {
+        KeyCompatibility.Callbacks callbacks = KeyCompatibility.callbacks();
+        if (callbacks == null) throw new NoSuchMethodException("unsupported HyperOS key callbacks");
         Class<?> rule = Class.forName(KeyCompatibility.RULE, false, loader);
         Reflect.field(rule, "mKeyCode");
         Reflect.field(rule, "mContext");
-        Method single = exact(rule, "onPress", void.class, long.class, int.class);
-        Method multi = exact(rule, "onMultiPress", void.class, long.class, int.class, int.class);
-        Method longer = exact(rule, "onLongPress", void.class, long.class);
+        Method single = (Method) Reflect.executable(callbacks.single, loader);
+        Method multi = (Method) Reflect.executable(callbacks.multi, loader);
+        Method longer = (Method) Reflect.executable(callbacks.longPress, loader);
         Method max = exact(rule, "getMaxMultiPressCount", int.class);
         Method supportLong = exact(rule, "supportLongPress", boolean.class);
         Class<?> inputService = Class.forName(KeyCompatibility.INPUT, false, loader);
@@ -96,18 +94,21 @@ final class KeyHooks {
             return chain.proceed();
         });
         api.hook(multi).intercept(chain -> {
-            int count = (Integer) chain.getArg(1);
+            int count = (Integer) chain.getArg(callbacks.pressCount);
             if (count >= 2 && count <= 3 && powerRule(chain.getThisObject())
                     && runPower(count == 2 ? "double" : "triple")) return null;
             return chain.proceed();
         });
         api.hook(longer).intercept(chain -> {
             if (powerRule(chain.getThisObject()) && runPower("long")) {
-                try {
-                    Object helper = Reflect.get(chain.getThisObject(), "mMiuiShortcutTriggerHelper");
-                    if (helper != null) Reflect.call(helper, "notifyLongPressed", 26);
-                } catch (Exception error) {
-                    failure("long-press completion", error);
+                // Android 17's gesture dispatcher notifies the helper before calling onMiuiLongPress.
+                if (!callbacks.dispatcherNotifiesLongPress) {
+                    try {
+                        Object helper = Reflect.get(chain.getThisObject(), "mMiuiShortcutTriggerHelper");
+                        if (helper != null) Reflect.call(helper, "notifyLongPressed", 26);
+                    } catch (Exception error) {
+                        failure("long-press completion", error);
+                    }
                 }
                 return null;
             }
@@ -166,7 +167,7 @@ final class KeyHooks {
 
     private boolean enabled() {
         return ready && prefs.getBoolean("master", true) && prefs.getBoolean("key_actions", false)
-                && (RuntimeProfile.knownSystem()
+                && (KeyCompatibility.verifiedSystem()
                     || prefs.getBoolean(Compatibility.KEY, Options.defaultValue(Compatibility.KEY)));
     }
 
@@ -331,7 +332,7 @@ final class KeyHooks {
     private void replayEvent(KeyEvent source) {
         try {
             KeyEvent copy = KeyEvent.changeFlags(source, source.getFlags() | KeyEvent.FLAG_FALLBACK);
-            if (input == null) input = inputInstance.invoke(null);
+            if (input == null) input = context.getSystemService(InputManager.class);
             if (!Boolean.TRUE.equals(inject.invoke(input, copy, 0))) {
                 ready = false;
                 api.log(Log.WARN, TAG, "key original replay rejected; key overrides suspended code=" + source.getKeyCode());

@@ -311,7 +311,7 @@ public final class MainActivity extends Activity {
 
     private void keySettings(LinearLayout parent) {
         boolean matched=KeyCompatibility.matched();
-        boolean allowed=matched&&(RuntimeProfile.knownSystem()||selected(Compatibility.KEY));
+        boolean allowed=matched&&(KeyCompatibility.verifiedSystem()||selected(Compatibility.KEY));
         label(parent,matched
                 ? "系统按键入口已匹配，首次加载需重启手机。"
                 : "当前系统按键入口未匹配。",12,ACCENT,false);

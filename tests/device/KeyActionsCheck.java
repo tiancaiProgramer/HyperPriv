@@ -1,7 +1,9 @@
 package io.github.hyperpriv;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.view.InputEvent;
@@ -117,6 +119,15 @@ public final class KeyActionsCheck {
         Method install=KeyHooks.class.getDeclaredMethod("install",ClassLoader.class);
         install.setAccessible(true);
         install.invoke(engine,KeyActionsCheck.class.getClassLoader());
+        if (Build.VERSION.SDK_INT == 37) {
+            Class<?> power = Class.forName("com.android.server.input.shortcut.singlekeyrule.PowerKeyRule");
+            require(hooks.containsKey(power.getDeclaredMethod("onMiuiPress",
+                    Object.class, long.class, int.class)), "Android 17 power single press was not hooked");
+            require(hooks.containsKey(power.getDeclaredMethod("onMiuiMultiPress",
+                    Object.class, long.class, int.class, int.class)), "Android 17 power multi press was not hooked");
+            require(hooks.containsKey(power.getDeclaredMethod("onMiuiLongPress",
+                    Object.class, long.class)), "Android 17 power long press was not hooked");
+        }
         Class<?> service=Class.forName("com.android.server.input.InputManagerService");
         Method queue=service.getDeclaredMethod("interceptKeyBeforeQueueing",KeyEvent.class,int.class);
         XposedInterface.Hooker callback=hooks.get(queue);
@@ -152,10 +163,26 @@ public final class KeyActionsCheck {
     }
 
     public static void main(String[] args) throws Throwable {
+        require(HyperOsVersion.major("OS3.0.304.0.WMVCNXM")==3,"OS3 build was misidentified");
+        require(HyperOsVersion.major("OS4.0.4.0.XOCCNXM")==4,"OS4 build was misidentified");
+        require(HyperOsVersion.major("OS40.0")==40,"a later OS was matched to OS4");
+        require(HyperOsVersion.major("CP2A.260605.016")==0,"a non-HyperOS build was matched");
+        require(KeyCompatibility.callbacks(3,36)==KeyCompatibility.Callbacks.LEGACY,"OS3 callbacks");
+        require(KeyCompatibility.callbacks(4,37)==KeyCompatibility.Callbacks.OS4,"OS4 callbacks");
+        require(KeyCompatibility.callbacks(3,37)==null,"SDK alone selected OS4 callbacks");
+        require(KeyCompatibility.callbacks(4,36)==null,"unverified OS4 SDK selected a callback");
+        require(KeyCompatibility.callbacks(5,37)==null,"future OS reused OS4 callbacks");
         if (Looper.getMainLooper()==null) Looper.prepareMainLooper();
         Class<?> thread=Class.forName("android.app.ActivityThread");
         Object instance=thread.getMethod("systemMain").invoke(null);
-        context=(Context)thread.getMethod("getSystemContext").invoke(instance);
+        Context systemContext=(Context)thread.getMethod("getSystemContext").invoke(instance);
+        context=new ContextWrapper(systemContext) {
+            @Override public Object getSystemService(String name) {
+                // Use a deterministic unlocked state in this standalone app_process test.
+                if (Context.POWER_SERVICE.equals(name) || Context.KEYGUARD_SERVICE.equals(name)) return null;
+                return super.getSystemService(name);
+            }
+        };
         RuntimeProfile.initializeSystem();
         clock=SystemClock.uptimeMillis();
         handle=KeyHooks.class.getDeclaredMethod("handle",Context.class,KeyEvent.class);
