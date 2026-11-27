@@ -11,17 +11,22 @@ final class DexEntrances {
         Result(boolean complete,Set<String> found){this.complete=complete;this.found=Collections.unmodifiableSet(new HashSet<>(found));}
     }
     private static final Map<String,Result> CACHE=new HashMap<>();
-    static String signature(Rule r){StringBuilder s=new StringBuilder("L"+r.cls.replace('.','/')+";#"+r.method+"(");for(String p:r.params)s.append(p);return s.append(')').append(r.returns).toString();}
+    static String classSignature(String owner){return "L"+owner.replace('.','/')+";";}
+    static String signature(Rule r){StringBuilder s=new StringBuilder(classSignature(r.cls)+"#"+r.method+"(");for(String p:r.params)s.append(p);return s.append(')').append(r.returns).toString();}
     static String fieldSignature(String owner,String name,String type){
-        return "L"+owner.replace('.','/')+";#"+name+":"+type;
+        return classSignature(owner)+"#"+name+":"+type;
     }
     static Result inspect(String[] paths,List<Rule> rules){
         return inspect(paths,rules,Collections.emptyList());
     }
-    static synchronized Result inspect(String[] paths,List<Rule> rules,List<String> fields){
+    static synchronized Result inspect(String[] paths,List<Rule> rules,List<String> declarations){
         Set<String> wanted=new TreeSet<>(),classes=new HashSet<>();
-        for(Rule r:rules){wanted.add(signature(r));classes.add("L"+r.cls.replace('.','/')+";");}
-        for(String field:fields){wanted.add(field);classes.add(field.substring(0,field.indexOf('#')));}
+        for(Rule r:rules){wanted.add(signature(r));classes.add(classSignature(r.cls));}
+        for(String declaration:declarations){
+            wanted.add(declaration);
+            int member=declaration.indexOf('#');
+            classes.add(member<0?declaration:declaration.substring(0,member));
+        }
         StringBuilder key=new StringBuilder(wanted.toString());
         for(String path:paths){File f=new File(path);key.append('|').append(path).append(':').append(f.length()).append(':').append(f.lastModified());}
         Result cached=CACHE.get(key.toString());if(cached!=null)return cached;
@@ -72,7 +77,9 @@ final class DexEntrances {
         }
         void find(Set<String> wantedClasses,Set<String> wanted,Set<String> found)throws IOException{
             for(int i=0;i<classes;i++){
-                int c=classOffset+32*i;if(!wantedClasses.contains(type(u32(c))))continue;
+                int c=classOffset+32*i;
+                String owner=type(u32(c));if(!wantedClasses.contains(owner))continue;
+                if(wanted.contains(owner))found.add(owner);
                 int offset=u32(c+24);if(offset==0)continue;int[] at={offset};int sf=leb(at),inf=leb(at),direct=leb(at),virtual=leb(at);
                 if((long)sf+inf+direct+virtual>data.length)throw new IOException("Bad class data counts");
                 for(int count:new int[]{sf,inf}){

@@ -217,9 +217,13 @@ public final class MainActivity extends Activity {
     }
     private void featureCard(UiCatalog.Group spec){
         LinearLayout box=appGroup(spec.id,spec.title);label(box,spec.detail,12,MUTED,false);
+        if(spec.id.equals("appearance"))appearanceReloadButton(box,AppearanceReload.Target.SYSTEM_UI);
         for(UiCatalog.Section section:spec.sections){
             LinearLayout options=information(box,"section_"+spec.id+"_"+section.id,section.title);
-            if(spec.id.equals("appearance")){appearanceSettings(options,section.keys[0]);continue;}
+            if(spec.id.equals("appearance")){
+                for(String key:section.keys)appearanceSettings(options,key);
+                continue;
+            }
             if(section.id.equals("core")){coreSettings(options);continue;}
             if(section.id.equals("keys")){keySettings(options);continue;}
             if(section.detail!=null)label(options,section.detail,12,ACCENT,false);
@@ -252,17 +256,20 @@ public final class MainActivity extends Activity {
                 ?(available?"实验兼容 · 已匹配入口":"开启实验兼容模式后可用")
                 :selected(Compatibility.KEY)?"实验兼容 · 未匹配当前应用入口":"当前应用构建未匹配，可开启实验兼容模式尝试";
         if(key.equals(Appearance.WATERMARK)&&match==AppearanceSupport.Match.COMPATIBLE&&available)
-            note="实验兼容 · 已匹配水印入口。保存后强行停止相机并重新打开。";
+            note="实验兼容 · 在相机中正常下载，HyperPriv 自动保留已下载完整的限定水印。设置后重新打开相机。";
+        if(key.equals(Appearance.STATUS)&&match==AppearanceSupport.Match.COMPATIBLE&&available)
+            note="实验兼容 · 按选项匹配入口。保存后点「重载系统界面」。";
         if(match==AppearanceSupport.Match.EXACT){
             switch(key){
-                case Appearance.WATERMARK: note="已下载且素材完整的水印可保留。保存后强行停止相机并重新打开。";break;
-                case Appearance.ICONS: note="以桌面当前图标大小为基准。保存后重启系统桌面。";break;
-                case Appearance.GESTURE: note="需在系统设置中显示手势提示线。保存后重启系统界面。";break;
-                default: note="勾选系统界面作用域，保存后重启系统界面。";
+                case Appearance.WATERMARK: note="在相机中正常下载，HyperPriv 自动保留已下载完整的限定水印。设置后重新打开相机。";break;
+                case Appearance.ICONS: note="上限按当前屏幕的桌面网格计算。首次使用先回到桌面，保存后重启系统桌面。";break;
+                case Appearance.GESTURE: note="需在系统设置中显示手势提示线。保存后点「重载系统界面」。";break;
+                default: note="勾选系统界面作用域，保存后点「重载系统界面」。";
             }
         }
         toggle(box,UiCatalog.label(key),key,note,available);
         if(!available)return;
+        if(key.equals(Appearance.ICONS))appearanceReloadButton(box,AppearanceReload.Target.HOME);
         LinearLayout values=vertical();box.addView(values);
         refreshers.add(()->values.setVisibility(selected(key)?View.VISIBLE:View.GONE));
         switch(key){
@@ -270,29 +277,19 @@ public final class MainActivity extends Activity {
                 LinearLayout notifications=information(values,"appearance_notification_options","通知图标");
                 label(notifications,"调整状态栏里应用通知图标的最多显示个数，实际仍受可用宽度限制。",12,MUTED,false);
                 appearanceOptions(notifications,Appearance.Value.NOTIFICATIONS);
-                LinearLayout network=information(values,"appearance_network_options","移动信号与 Wi-Fi");
-                appearanceOptions(network,Appearance.Value.SIGNAL);
-                LinearLayout signalStyle=vertical();
-                network.addView(signalStyle);
-                label(signalStyle,"双卡同时可见时生效。上下微调的负数表示上移，正数表示下移。",12,MUTED,false);
-                appearanceOptions(signalStyle,Appearance.Value.SIGNAL_SIZE,Appearance.Value.SIGNAL_GAP,Appearance.Value.SIGNAL_Y);
-                refreshers.add(()->signalStyle.setVisibility(appearanceValue(Appearance.Value.SIGNAL)==0?View.GONE:View.VISIBLE));
-                appearanceOptions(network,Appearance.Value.MOBILE_TYPE,Appearance.Value.MOBILE_HD,
-                        Appearance.Value.MOBILE_ACTIVITY,Appearance.Value.NETWORK_ORDER);
-                appearanceOptions(information(values,"appearance_battery_options","电量"),
-                        Appearance.Value.BATTERY,Appearance.Value.BATTERY_MARK,Appearance.Value.CHARGE_MARK);
-                appearanceOptions(information(values,"appearance_clock_options","时钟"),
-                        Appearance.Value.CLOCK_POSITION,Appearance.Value.CLOCK_TIME,Appearance.Value.CLOCK_SECONDS,Appearance.Value.CLOCK_DATE,
-                        Appearance.Value.CLOCK_SIZE,Appearance.Value.CLOCK_ALIGN);
+                statusNetworkAndBattery(values);
+                LinearLayout clock=information(values,"appearance_clock_options","时钟");
+                label(clock,"12／24 小时制跟随系统设置。",12,MUTED,false);
+                appearanceOptions(clock,Appearance.Value.CLOCK_POSITION,Appearance.Value.CLOCK_SECONDS,
+                        Appearance.Value.CLOCK_DATE,Appearance.Value.CLOCK_SIZE);
                 LinearLayout speed=information(values,"appearance_speed_options","实时网速");
                 label(speed,"需先在系统的状态栏设置中开启实时网速。",12,MUTED,false);
                 appearanceOptions(speed,
                         Appearance.Value.SUCCESSION,Appearance.Value.SPEED_UNIT,Appearance.Value.SPEED_THRESHOLD,
                         Appearance.Value.SPEED_SIZE,Appearance.Value.SPEED_GAP);
-                LinearLayout spacing=information(values,"appearance_layout_options","边距与间距");
-                label(spacing,"在系统布局基础上微调。上下微调的负数表示上移，正数表示下移。",12,MUTED,false);
+                LinearLayout spacing=information(values,"appearance_layout_options","布局微调");
                 appearanceOptions(spacing,
-                        Appearance.Value.START_MARGIN,Appearance.Value.END_MARGIN,Appearance.Value.ICON_GAP,Appearance.Value.STATUS_Y);
+                        Appearance.Value.START_MARGIN,Appearance.Value.END_MARGIN,Appearance.Value.ICON_GAP);
                 break;
             case Appearance.ICONS: appearanceOptions(values,Appearance.Value.HOME_SCALE);break;
             case Appearance.GESTURE:
@@ -303,13 +300,87 @@ public final class MainActivity extends Activity {
                 break;
         }
     }
+    private void statusNetworkAndBattery(LinearLayout parent){
+        LinearLayout group=information(parent,"appearance_network_options","信号与电量");
+        appearanceOptions(group,Appearance.Value.SIGNAL);
+        LinearLayout signalTuning=vertical();
+        group.addView(signalTuning);
+        appearanceOptions(signalTuning,Appearance.Value.SIGNAL_SIZE,Appearance.Value.SIGNAL_Y);
+        LinearLayout signalGap=vertical();
+        signalTuning.addView(signalGap);
+        appearanceOptions(signalGap,Appearance.Value.SIGNAL_GAP);
+
+        LinearLayout separate=vertical();
+        group.addView(separate);
+        appearanceOptions(separate,Appearance.Value.BATTERY);
+        LinearLayout topBar=vertical();
+        separate.addView(topBar);
+        if(RuntimeProfile.appearanceOptionAvailable(Appearance.Value.TOP_BAR_PERCENT))
+            appearanceOptions(topBar,Appearance.Value.TOP_BAR_PERCENT);
+        LinearLayout charging=vertical();
+        separate.addView(charging);
+        appearanceOptions(charging,Appearance.Value.CHARGE_MARK);
+        LinearLayout ring=vertical();
+        separate.addView(ring);
+        if(RuntimeProfile.appearanceOptionAvailable(Appearance.Value.RING_HIDE_PERCENT))
+            appearanceSwitch(ring,Appearance.Value.RING_HIDE_PERCENT,Appearance.Value.RING_HIDE_PERCENT.label,1,true);
+        LinearLayout cutout=vertical();
+        separate.addView(cutout);
+        label(cutout,"竖屏且系统能识别挖孔时显示。百分比显示在右上角原电池位。",12,MUTED,false);
+        appearanceOptions(cutout,Appearance.Value.CUTOUT_RING_PERCENT,
+                Appearance.Value.CUTOUT_RING_GAP,Appearance.Value.CUTOUT_RING_STROKE);
+
+        LinearLayout indicators=information(separate,"appearance_network_indicators","信号标记与排序");
+        appearanceOptions(indicators,Appearance.Value.NETWORK_ORDER,Appearance.Value.MOBILE_TYPE,
+                Appearance.Value.MOBILE_HD,Appearance.Value.MOBILE_ACTIVITY);
+        refreshers.add(()->{
+            boolean duo=isDuoSelected();
+            int signal=appearanceValue(Appearance.Value.SIGNAL);
+            signalTuning.setVisibility(RuntimeProfile.appearanceOptionAvailable(Appearance.Value.SIGNAL)
+                    &&signal!=0?View.VISIBLE:View.GONE);
+            signalGap.setVisibility(duo?View.GONE:View.VISIBLE);
+            separate.setVisibility(duo?View.GONE:View.VISIBLE);
+
+            int battery=appearanceValue(Appearance.Value.BATTERY);
+            if(!RuntimeProfile.batteryStyleAvailable(battery))battery=Appearance.Value.BATTERY.initial;
+            boolean topBarSelected=battery==Appearance.BATTERY_TOP_STYLE||(battery==0&&NativeBatteryStyle.available()
+                    &&NativeBatteryStyle.current(this)==NativeBatteryStyle.TOP_BAR.systemValue);
+            topBar.setVisibility(topBarSelected&&RuntimeProfile.appearanceOptionAvailable(Appearance.Value.TOP_BAR_PERCENT)
+                    ?View.VISIBLE:View.GONE);
+            charging.setVisibility(battery==0&&!topBarSelected&&RuntimeProfile.appearanceOptionAvailable(Appearance.Value.CHARGE_MARK)
+                    ?View.VISIBLE:View.GONE);
+            ring.setVisibility(battery==Appearance.BATTERY_RING_STYLE?View.VISIBLE:View.GONE);
+            cutout.setVisibility(battery==Appearance.BATTERY_CUTOUT_STYLE?View.VISIBLE:View.GONE);
+        });
+    }
+
+    private void appearanceReloadButton(LinearLayout box,AppearanceReload.Target target){
+        TextView action=label(box,target.title,14,ACCENT,true);
+        clickable(action);
+        action.setOnClickListener(v->new android.app.AlertDialog.Builder(this)
+                .setTitle(target.title)
+                .setMessage(target.description)
+                .setNegativeButton("取消",null)
+                .setPositiveButton(target==AppearanceReload.Target.SYSTEM_UI?"应用":"重启",(dialog,which)->{
+                    action.setEnabled(false);
+                    new Thread(()->{
+                        String result=AppearanceReload.run(getApplicationContext(),target);
+                        runOnUiThread(()->{
+                            if(isFinishing()||isDestroyed())return;
+                            action.setEnabled(true);
+                            Toast.makeText(this,result,Toast.LENGTH_LONG).show();
+                        });
+                    },"HyperPriv-appearance-reload").start();
+                }).show());
+    }
     private void appearanceOptions(LinearLayout box,Appearance.Value... fields){
         for(Appearance.Value value:fields){
-            if(value.choices==null){
+            if(value==Appearance.Value.NETWORK_ORDER){
+                appearanceChoice(box,value);
+            }else if(!RuntimeProfile.appearanceOptionAvailable(value)){
+                label(box,value.label+" · 未匹配当前系统入口",14,MUTED,false);
+            }else if(value.choices==null){
                 appearanceSlider(box,value);
-            }else if(value==Appearance.Value.MOBILE_HD){
-                appearanceSwitch(box,value,"隐藏 VoLTE 标记",1);
-                appearanceSwitch(box,value,"隐藏 VoWiFi 标记",2);
             }else if(value.choices.length==2){
                 appearanceSwitch(box,value,value.label,1);
             }else{
@@ -318,24 +389,145 @@ public final class MainActivity extends Activity {
         }
     }
     private int appearanceValue(Appearance.Value value){
-        return Settings.appearance(Settings.local(this),value);
+        return Settings.appearance(Settings.local(this),value,this);
+    }
+    private boolean isDuoSelected(){
+        return RuntimeProfile.appearanceOptionAvailable(Appearance.Value.SIGNAL)
+                &&appearanceValue(Appearance.Value.SIGNAL)==Appearance.DUO_SIGNAL_STYLE;
     }
     private void appearanceChoice(LinearLayout parent,Appearance.Value value){
+        String[] choices=appearanceChoices(value);
+        List<String> titles=new ArrayList<>();
+        List<Integer> indices=new ArrayList<>();
+        boolean nativeBattery=value==Appearance.Value.BATTERY&&NativeBatteryStyle.available();
+        NativeBatteryStyle[] systemStyles=nativeBattery?NativeBatteryStyle.values():null;
+        for(int i=0;i<choices.length;i++)if(choices[i]!=null){
+            titles.add(choices[i]);
+            indices.add(i);
+        }
+        if(nativeBattery)for(NativeBatteryStyle style:systemStyles){
+            titles.add(style.title);
+            indices.add(-1-style.ordinal());
+        }
         LinearLayout row=vertical();
         row.setMinimumHeight(dp(56));row.setFocusable(true);row.setPadding(0,gap(6),0,gap(6));
         parent.addView(row,new LinearLayout.LayoutParams(-1,-2));
         label(row,value.label,14,INK,false);
         TextView current=label(row,"",12,MUTED,false);
-        refreshers.add(()->current.setText(value.display(appearanceValue(value))+"  ›"));
-        row.setOnClickListener(v->new android.app.AlertDialog.Builder(this)
+        boolean available=RuntimeProfile.appearanceOptionAvailable(value);
+        refreshers.add(()->{
+            row.setEnabled(available);
+            row.setClickable(available);
+            row.setFocusable(available);
+            if(!available){
+                current.setText("未匹配当前系统入口");
+                return;
+            }
+            int stored=appearanceValue(value);
+            String title=choices[stored];
+            if(nativeBattery){
+                if(stored==Appearance.BATTERY_TOP_STYLE)title=NativeBatteryStyle.TOP_BAR.title;
+                if(stored==0){
+                    int systemValue=NativeBatteryStyle.current(this);
+                    for(NativeBatteryStyle style:systemStyles)
+                        if(style.systemValue==systemValue){title=style.title;break;}
+                }
+            }
+            if(value==Appearance.Value.BATTERY&&title==null){
+                current.setText((stored==0?"当前系统样式":"跟随系统（所选样式未匹配）")+"  ›");
+                return;
+            }
+            current.setText((title==null?value.display(stored)+"（与系统当前相同）":title)+"  ›");
+        });
+        row.setOnClickListener(v->{
+            if(!available)return;
+            int selected=appearanceValue(value);
+            if(nativeBattery&&selected==Appearance.BATTERY_TOP_STYLE)
+                selected=-1-NativeBatteryStyle.TOP_BAR.ordinal();
+            if(nativeBattery&&selected==0){
+                int systemValue=NativeBatteryStyle.current(this);
+                for(NativeBatteryStyle style:systemStyles)
+                    if(style.systemValue==systemValue){selected=-1-style.ordinal();break;}
+            }
+            new android.app.AlertDialog.Builder(this)
                 .setTitle(value.label)
-                .setSingleChoiceItems(value.choices,appearanceValue(value),(dialog,index)->{
-                    saveAppearance(value,index);
+                .setSingleChoiceItems(titles.toArray(new String[0]),indices.indexOf(selected),(dialog,index)->{
+                    int choice=indices.get(index);
+                    if(nativeBattery&&choice<0)
+                        applyNativeBatteryStyle(systemStyles[-1-choice]);
+                    else
+                        saveAppearance(value,choice);
                     dialog.dismiss();
                 })
-                .setNegativeButton("取消",null).show());
+                .setNegativeButton("取消",null).show();
+        });
     }
+    private String[] appearanceChoices(Appearance.Value value){
+        String[] options=value.choices.clone();
+        if(value==Appearance.Value.BATTERY){
+            for(int mode=1;mode<options.length;mode++)
+                if(!RuntimeProfile.batteryStyleAvailable(mode))options[mode]=null;
+            if(NativeBatteryStyle.available()){
+                options[0]=null;
+                options[Appearance.BATTERY_TOP_STYLE]=null;
+            }
+        }
+        if(value==Appearance.Value.NETWORK_ORDER){
+            try{
+                android.content.res.Resources resources=getPackageManager().getResourcesForApplication(Appearance.SYSTEM_UI);
+                int id=resources.getIdentifier("config_statusBarIcons","array",Appearance.SYSTEM_UI);
+                List<String> slots=java.util.Arrays.asList(resources.getStringArray(id));
+                int wifi=slots.indexOf("wifi"),mobile=slots.indexOf("mobile");
+                if(wifi>=0&&mobile>=0){
+                    int original=wifi<mobile?1:2;
+                    options[0]="跟随系统（"+options[original]+"）";
+                    options[original]=null;
+                }
+            }catch(PackageManager.NameNotFoundException|android.content.res.Resources.NotFoundException ignored){}
+        }
+        if(RuntimeProfile.appearanceMatch(Appearance.STATUS)==AppearanceSupport.Match.EXACT){
+            if(value==Appearance.Value.CLOCK_POSITION){
+                options[0]="跟随系统（在通知图标左侧）";
+                options[1]=null;
+            }else if(value==Appearance.Value.SPEED_UNIT){
+                options[0]="跟随系统（字节/秒）";
+                options[1]=null;
+            }
+        }
+        return options;
+    }
+    private void applyNativeBatteryStyle(NativeBatteryStyle style){
+        new Thread(()->{
+            boolean applied=style.apply(getApplicationContext());
+            runOnUiThread(()->{
+                if(isFinishing()||isDestroyed())return;
+                if(!applied){
+                    openNativeBatteryStyle();
+                    return;
+                }
+                boolean hadOverride=appearanceValue(Appearance.Value.BATTERY)!=0;
+                Settings.setAppearance(this,Appearance.Value.BATTERY,0);
+                refresh();
+                Toast.makeText(this,hadOverride?"已写入系统设置，重启后清除旧样式":"已应用系统电池样式",
+                        Toast.LENGTH_SHORT).show();
+            });
+        },"HyperPriv-system-battery").start();
+    }
+
+    private void openNativeBatteryStyle(){
+        try{
+            startActivity(NativeBatteryStyle.picker());
+            if(appearanceValue(Appearance.Value.BATTERY)!=0)saveAppearance(Appearance.Value.BATTERY,0);
+        }catch(ActivityNotFoundException|SecurityException error){
+            Toast.makeText(this,"当前系统无法打开电量样式",Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void appearanceSwitch(LinearLayout parent,Appearance.Value value,String title,int mask){
+        appearanceSwitch(parent,value,title,mask,false);
+    }
+
+    private void appearanceSwitch(LinearLayout parent,Appearance.Value value,String title,int mask,boolean inverted){
         LinearLayout row=new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);row.setMinimumHeight(dp(48));
         parent.addView(row,new LinearLayout.LayoutParams(-1,-2));
@@ -348,10 +540,10 @@ public final class MainActivity extends Activity {
         control.setOnCheckedChangeListener((v,checked)->{
             if(!updating){
                 int current=appearanceValue(value);
-                saveAppearance(value,checked?current|mask:current&~mask);
+                saveAppearance(value,checked!=inverted?current|mask:current&~mask);
             }
         });
-        refreshers.add(()->control.setChecked((appearanceValue(value)&mask)!=0));
+        refreshers.add(()->control.setChecked(((appearanceValue(value)&mask)!=0)!=inverted));
     }
     private void appearanceSlider(LinearLayout parent,Appearance.Value value){
         LinearLayout row=vertical();row.setPadding(0,gap(10),0,gap(6));
@@ -386,8 +578,14 @@ public final class MainActivity extends Activity {
         refreshers.add(()->{
             int stored=appearanceValue(value);
             if(!slider.isPressed()){
-                slider.setProgress(allowed.indexOf(stored));
-                current.setText(value.display(stored));
+                int displayed=stored;
+                if(value==Appearance.Value.HOME_SCALE){
+                    int cap=HomeScaleProvider.current(this);
+                    slider.setMax(cap-value.min);
+                    displayed=Math.min(stored,cap);
+                }
+                slider.setProgress(allowed.indexOf(displayed));
+                current.setText(value.display(displayed));
             }
             reset.setVisibility(stored==value.initial?View.GONE:View.VISIBLE);
         });
@@ -395,11 +593,16 @@ public final class MainActivity extends Activity {
     private void saveAppearance(Appearance.Value value,int selected){
         if(appearanceValue(value)==selected)return;
         Settings.setAppearance(this,value,selected);
+        boolean topBarPercent=value==Appearance.Value.TOP_BAR_PERCENT;
+        boolean requested=topBarPercent&&Settings.requestAppearanceRefresh(this);
         refresh();
         long now=SystemClock.elapsedRealtime();
         if(now-lastSaveNotice>=2500){
             lastSaveNotice=now;
-            Toast.makeText(this,Settings.remote==null?"已保存在本机，连接框架后同步":"已保存，重启对应进程后生效",Toast.LENGTH_SHORT).show();
+            String applied=value==Appearance.Value.HOME_SCALE?"已保存，重启系统桌面后生效"
+                    :topBarPercent?(requested?"已发送外观刷新请求":"已保存，点「重载系统界面」应用")
+                    :Appearance.requiresUiRestart(value)?"已保存，重启手机后生效":"已保存，点「重载系统界面」应用";
+            Toast.makeText(this,Settings.remote==null?"已保存在本机，连接框架后同步":applied,Toast.LENGTH_SHORT).show();
         }
     }
 

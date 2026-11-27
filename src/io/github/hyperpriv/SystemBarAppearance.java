@@ -5,13 +5,10 @@ import static io.github.hyperpriv.AppearanceHooks.dp;
 import static io.github.hyperpriv.AppearanceSupport.*;
 
 import android.content.Context;
-import android.graphics.Rect;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.text.format.DateFormat;
 import android.util.TypedValue;
-import android.view.DisplayCutout;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -28,6 +25,7 @@ final class SystemBarAppearance {
     private static final String NOTIFICATION_CONTAINER = "notificationIcons";
     private final AppearanceHooks hooks;
     private final WeakHashMap<TextView, Runnable> clockTicks = new WeakHashMap<>();
+    private final WeakHashMap<TextView, Float> originalClockSizes = new WeakHashMap<>();
     private Locale clockLocale;
     private boolean clock24;
     private SimpleDateFormat clockFormat;
@@ -40,20 +38,29 @@ final class SystemBarAppearance {
     }
 
     void install() {
-        if (hooks.custom(Appearance.Value.NOTIFICATIONS)) hooks.register("notification_limit", this::notifications);
-        if (hooks.custom(Appearance.Value.BATTERY) || hooks.custom(BATTERY_MARK) || hooks.custom(CHARGE_MARK))
-            hooks.register("status_battery", this::battery);
-        if (hooks.custom(CLOCK_POSITION) || hooks.custom(CLOCK_TIME) || hooks.custom(CLOCK_SECONDS)
-                || hooks.custom(CLOCK_DATE) || hooks.custom(CLOCK_SIZE) || hooks.custom(CLOCK_ALIGN))
-            hooks.register("status_clock", this::clock);
-        if (hooks.custom(START_MARGIN) || hooks.custom(END_MARGIN) || hooks.custom(STATUS_Y))
-            hooks.register("status_padding", this::padding);
-        if (hooks.custom(SUCCESSION) || hooks.custom(SPEED_UNIT) || hooks.custom(SPEED_THRESHOLD)
-                || hooks.custom(SPEED_SIZE) || hooks.custom(SPEED_GAP))
+        if (hooks.supports(Appearance.Value.NOTIFICATIONS)) hooks.register("notification_limit", this::notifications);
+        installBattery();
+        if (hooks.supports(CLOCK_POSITION)) hooks.register("status_clock", this::clock);
+        if (hooks.supports(START_MARGIN)) hooks.register("status_padding", this::padding);
+        if (hooks.supports(SUCCESSION))
             hooks.register("status_speed", () -> new NetworkSpeedAppearance(hooks, this).install());
-        if (hooks.custom(SIGNAL) || hooks.custom(MOBILE_TYPE) || hooks.custom(MOBILE_HD)
-                || hooks.custom(MOBILE_ACTIVITY) || hooks.custom(NETWORK_ORDER) || hooks.custom(ICON_GAP))
+        if (hooks.supports(SIGNAL) || hooks.custom(NETWORK_ORDER) || hooks.supports(ICON_GAP))
             hooks.register("status_signals", () -> new SignalAppearance(hooks, this).install());
+    }
+
+    private void installBattery() {
+        int style = hooks.value(Appearance.Value.BATTERY);
+        boolean standalone = hooks.value(SIGNAL) != Appearance.DUO_SIGNAL_STYLE;
+        if (standalone && style < Appearance.BATTERY_RING_STYLE
+                && (style != 0 || hooks.custom(CHARGE_MARK)))
+            hooks.register("status_battery", this::battery);
+        if (standalone && style == Appearance.BATTERY_TOP_STYLE)
+            hooks.register("top_battery_bar", this::topBatteryBar);
+        boolean ring = standalone && (style == Appearance.BATTERY_RING_STYLE || style == Appearance.BATTERY_CUTOUT_STYLE);
+        boolean topBar = hooks.supports(TOP_BAR_PERCENT)
+                && (style == Appearance.BATTERY_TOP_STYLE || (style == 0 && hooks.hasNativeBatteryStyles()));
+        if (ring || topBar)
+            hooks.register("battery_rings", () -> new BatteryRings(hooks, this).install());
     }
 
     int id(View view, String name) {
@@ -69,9 +76,29 @@ final class SystemBarAppearance {
         return id == 0 ? null : view.findViewById(id);
     }
     static View phoneBar(View view) {
-        for (View node = view; node != null; node = node.getParent() instanceof View ? (View) node.getParent() : null)
-            if (PHONE_BAR.equals(node.getClass().getName())) return node;
+        return findBar(view, false);
+    }
+
+    static View statusBar(View view) {
+        return findBar(view, true);
+    }
+
+    private static View findBar(View view, boolean includeKeyguard) {
+        for (View node = view; node != null; node = node.getParent() instanceof View ? (View) node.getParent() : null) {
+            String type = node.getClass().getName();
+            if (PHONE_BAR.equals(type) || (includeKeyguard && KEYGUARD_BAR.equals(type))) return node;
+        }
         return null;
+    }
+
+    static boolean keyguardBar(View bar) { return KEYGUARD_BAR.equals(bar.getClass().getName()); }
+
+    boolean islandShown(View bar) {
+        for (String name : new String[]{"focused_notif_view", "focus_status"}) {
+            View view = child(bar, name);
+            if (view != null && view.isShown() && view.getAlpha() > 0 && view.getWidth() > 0) return true;
+        }
+        return false;
     }
 
     private void notifications() throws Exception {
@@ -81,8 +108,10 @@ final class SystemBarAppearance {
         Runnable hit = hooks.firstHit("notification_limit");
         io.github.libxposed.api.XposedInterface.Hooker override = chain -> {
             View view = (View) chain.getThisObject();
-            if (!hooks.active() || view.getId() != id(view, NOTIFICATION_CONTAINER) || phoneBar(view) == null)
+            if (view.getId() != id(view, NOTIFICATION_CONTAINER) || phoneBar(view) == null)
                 return chain.proceed();
+            hooks.watch(view);
+            if (!hooks.active() || !hooks.custom(Appearance.Value.NOTIFICATIONS)) return chain.proceed();
             int original = limit.getInt(view);
             if (original == 0) return chain.proceed();
             limit.setInt(view, hooks.value(Appearance.Value.NOTIFICATIONS));
@@ -106,25 +135,23 @@ final class SystemBarAppearance {
         io.github.libxposed.api.XposedInterface.Hooker adjust = chain -> {
             Object result = chain.proceed();
             View battery = (View) chain.getThisObject();
-            if (!hooks.active() || phoneBar(battery) == null) return result;
-            if (mode == 3) battery.setVisibility(View.GONE);
-            if (mode == 1 || mode == 2) {
+            if (!hooks.active() || statusBar(battery) == null) return result;
+            if (mode == Appearance.BATTERY_HIDDEN_STYLE) battery.setVisibility(View.GONE);
+            if (mode == Appearance.BATTERY_PERCENT_STYLE) {
                 hide(battery, "battery_icon_container", "battery_image", "hollow_battery_image");
-                if (shouldShowBatteryPercent(mode, style.getInt(battery))) showBatteryPercent(battery);
+                showBatteryPercent(battery);
             }
-            if (hooks.custom(BATTERY_MARK)) hide(battery, "battery_percentage_mark_view");
-            if (hooks.custom(CHARGE_MARK) || mode == 2) hide(battery, "battery_charge_out_image");
+            if (hooks.custom(CHARGE_MARK) || mode == Appearance.BATTERY_PERCENT_STYLE) hide(battery, "battery_charge_out_image");
             hit.run();
             return result;
         };
         hooks.hook(update, adjust);
         hooks.hook(visibility, adjust);
         hooks.hook(attach, adjust);
-        if (mode == 1 || mode == 2) hooks.hook(measure, chain -> {
+        if (mode == Appearance.BATTERY_PERCENT_STYLE) hooks.hook(measure, chain -> {
             View battery = (View) chain.getThisObject();
-            if (!hooks.active() || phoneBar(battery) == null) return chain.proceed();
+            if (!hooks.active() || statusBar(battery) == null) return chain.proceed();
             int original = style.getInt(battery);
-            if (!shouldShowBatteryPercent(mode, original)) return chain.proceed();
             showBatteryPercent(battery);
             // Xiaomi only measures the separate percentage container in style 3.
             style.setInt(battery, 3);
@@ -133,8 +160,17 @@ final class SystemBarAppearance {
         });
     }
 
-    private static boolean shouldShowBatteryPercent(int mode, int style) {
-        return mode == 2 || (mode == 1 && (style == 1 || style == 3));
+    private void topBatteryBar() throws Exception {
+        Executable update = hooks.method(BATTERY_INDICATOR, "onBatteryStyleChanged", "V", "I");
+        Runnable hit = hooks.firstHit("top_battery_bar");
+        hooks.hook(update, chain -> {
+            View indicator = (View) chain.getThisObject();
+            if (!hooks.active() || indicator.getId() != id(indicator, "battery_indicator")
+                    || phoneBar(indicator) == null) return chain.proceed();
+            hit.run();
+            // Apply the native bar style only to the bar view. The normal battery view keeps its own style.
+            return chain.proceed(new Object[]{2});
+        });
     }
 
     private void showBatteryPercent(View battery) {
@@ -144,6 +180,8 @@ final class SystemBarAppearance {
             percent.setAlpha(1f);
             percent.setVisibility(View.VISIBLE);
         }
+        View mark = child(battery, "battery_percentage_mark_view");
+        if (mark != null) mark.setVisibility(View.VISIBLE);
     }
 
     private void hide(View root, String... names) {
@@ -157,10 +195,23 @@ final class SystemBarAppearance {
         Executable update = hooks.method(CLOCK, "updateTime", "V");
         Executable detach = hooks.method(CLOCK, "onDetachedFromWindow", "V");
         Executable inflate = hooks.method(PHONE_BAR, "onFinishInflate", "V");
+        WeakHashMap<TextView, Boolean> clocks = new WeakHashMap<>();
+        hooks.onRefresh(() -> {
+            clockFormat = null;
+            for (TextView clock : new java.util.ArrayList<>(clocks.keySet())) {
+                hooks.refreshView(clock, () -> {
+                    try { ((java.lang.reflect.Method) update).invoke(clock); }
+                    catch (ReflectiveOperationException ignored) {}
+                });
+            }
+        });
         hooks.hook(update, chain -> {
             Object result = chain.proceed();
             TextView clock = (TextView) chain.getThisObject();
-            if (hooks.active() && isClock(clock)) refreshClock(clock);
+            if (isClock(clock)) {
+                clocks.put(clock, true);
+                refreshClock(clock);
+            }
             return result;
         });
         hooks.hook(detach, chain -> {
@@ -176,7 +227,7 @@ final class SystemBarAppearance {
             View view = child(bar, "clock");
             if (view instanceof TextView && view.getClass().getName().equals(CLOCK)) {
                 TextView clock = (TextView) view;
-                positionClock(bar, clock);
+                positionClock(clock);
                 refreshClock(clock);
             }
             return result;
@@ -188,21 +239,28 @@ final class SystemBarAppearance {
     }
 
     private void refreshClock(TextView clock) {
-        if (hooks.custom(CLOCK_TIME) || hooks.custom(CLOCK_SECONDS) || hooks.custom(CLOCK_DATE)) renderTime(clock);
-        if (hooks.custom(CLOCK_SIZE)) clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, hooks.value(CLOCK_SIZE));
-        if (hooks.custom(CLOCK_ALIGN)) {
-            int[] align = {Gravity.NO_GRAVITY, Gravity.START, Gravity.CENTER_HORIZONTAL, Gravity.END};
-            clock.setMinWidth(Math.round(dp(clock, 52)));
-            clock.setGravity(Gravity.CENTER_VERTICAL | align[hooks.value(CLOCK_ALIGN)]);
+        boolean active = hooks.active();
+        if (active && (hooks.custom(CLOCK_SECONDS) || hooks.custom(CLOCK_DATE))) renderTime(clock);
+        if (active && hooks.custom(CLOCK_SIZE)) {
+            originalClockSizes.putIfAbsent(clock, clock.getTextSize());
+            clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, hooks.value(CLOCK_SIZE));
+        } else {
+            Float original = originalClockSizes.remove(clock);
+            if (original != null) clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, original);
         }
-        if (hooks.custom(CLOCK_SECONDS) && !clockTicks.containsKey(clock) && canTick(clock)) tick(clock);
-        clockHit.run();
+        if (active && hooks.custom(CLOCK_SECONDS)) {
+            if (!clockTicks.containsKey(clock) && canTick(clock)) tick(clock);
+        } else {
+            Runnable tick = clockTicks.remove(clock);
+            if (tick != null) clock.removeCallbacks(tick);
+        }
+        if (active && (hooks.custom(CLOCK_SIZE) || hooks.custom(CLOCK_SECONDS) || hooks.custom(CLOCK_DATE)
+                || hooks.custom(CLOCK_POSITION))) clockHit.run();
     }
 
     private void renderTime(TextView clock) {
         Locale locale = clock.getResources().getConfiguration().getLocales().get(0);
-        boolean use24 = hooks.value(CLOCK_TIME) == 1
-                || (hooks.value(CLOCK_TIME) == 0 && DateFormat.is24HourFormat(clock.getContext()));
+        boolean use24 = DateFormat.is24HourFormat(clock.getContext());
         if (clockFormat == null || !locale.equals(clockLocale) || clock24 != use24) {
             clockLocale = locale;
             clock24 = use24;
@@ -225,7 +283,7 @@ final class SystemBarAppearance {
     private void tick(TextView clock) {
         Runnable run = () -> {
             clockTicks.remove(clock);
-            if (!hooks.active() || !canTick(clock)) return;
+            if (!hooks.active() || !hooks.custom(CLOCK_SECONDS) || !canTick(clock)) return;
             renderTime(clock);
             tick(clock);
         };
@@ -233,58 +291,45 @@ final class SystemBarAppearance {
         clock.postDelayed(run, 1000 - SystemClock.uptimeMillis() % 1000);
     }
 
-    private void positionClock(View bar, TextView clock) {
+    private void positionClock(TextView clock) {
         int where = hooks.value(CLOCK_POSITION);
         if (where == 0 || !(clock.getParent() instanceof ViewGroup)) return;
         ViewGroup parent = (ViewGroup) clock.getParent();
-        if (where == 1 || where == 2) {
-            View notifications = child(parent, "notification_icon_area");
-            if (notifications == null || notifications.getParent() != parent) return;
-            ViewGroup.LayoutParams params = clock.getLayoutParams();
-            parent.removeView(clock);
-            parent.addView(clock, parent.indexOfChild(notifications) + where - 1, params);
-            return;
-        }
-        // Keep the real clock in its container and fall back if the center is occupied.
-        int[] anchor = new int[2], point = new int[2];
-        Rect desired = new Rect();
-        bar.getViewTreeObserver().addOnPreDrawListener(() -> {
-            if (!hooks.active() || clock.getWidth() == 0) { clock.setTranslationX(0); return true; }
-            bar.getLocationInWindow(anchor);
-            clock.getLocationInWindow(point);
-            int center = anchor[0] + bar.getWidth() / 2;
-            int nextLeft = center - clock.getWidth() / 2;
-            float originalOffset = clock.getTranslationX();
-            float translation = nextLeft - point[0] + originalOffset;
-            desired.set(nextLeft, point[1], nextLeft + clock.getWidth(), point[1] + clock.getHeight());
-            DisplayCutout cutout = bar.getRootWindowInsets() == null ? null : bar.getRootWindowInsets().getDisplayCutout();
-            if (cutout != null) for (Rect bound : cutout.getBoundingRects()) {
-                if (Rect.intersects(desired, bound)) { translation = 0; break; }
-            }
-            for (String id : new String[]{"statusIcons", "battery_meter_view", "privacy_container"}) {
-                View occupied = child(bar, id);
-                if (occupied == null || !occupied.isShown() || occupied.getWidth() == 0) continue;
-                occupied.getLocationInWindow(point);
-                if (point[0] < desired.right && point[0] + occupied.getWidth() > desired.left) { translation = 0; break; }
-            }
-            clock.setTranslationX(translation);
-            return true;
-        });
+        View notifications = child(parent, "notification_icon_area");
+        if (notifications == null || notifications.getParent() != parent) return;
+        ViewGroup.LayoutParams params = clock.getLayoutParams();
+        parent.removeView(clock);
+        parent.addView(clock, parent.indexOfChild(notifications) + where - 1, params);
     }
 
     private void padding() throws Exception {
         Executable method = hooks.method(PHONE_BAR, "updatePaddings", "V");
         Runnable hit = hooks.firstHit("status_padding");
+        WeakHashMap<View, int[]> original = new WeakHashMap<>();
+        WeakHashMap<View, Boolean> bars = new WeakHashMap<>();
+        hooks.onRefresh(() -> {
+            for (View bar : new java.util.ArrayList<>(bars.keySet())) {
+                hooks.refreshView(bar, () -> {
+                    try { ((java.lang.reflect.Method) method).invoke(bar); }
+                    catch (ReflectiveOperationException ignored) {}
+                });
+            }
+        });
         hooks.hook(method, chain -> {
-            Object result = chain.proceed();
-            if (!hooks.active()) return result;
             View bar = (View) chain.getThisObject();
+            bars.put(bar, true);
             View contents = child(bar, "status_bar_contents");
-            if (contents == null) return result;
+            int[] padding = original.remove(contents);
+            if (padding != null) {
+                contents.setPaddingRelative(padding[0], contents.getPaddingTop(), padding[1], contents.getPaddingBottom());
+            }
+            Object result = chain.proceed();
+            if (contents == null || !hooks.active()
+                    || !(hooks.custom(START_MARGIN) || hooks.custom(END_MARGIN))) return result;
+            original.put(contents, new int[]{contents.getPaddingStart(), contents.getPaddingEnd()});
             contents.setPaddingRelative(contents.getPaddingStart() + Math.round(dp(contents, hooks.value(START_MARGIN))),
                     contents.getPaddingTop(), contents.getPaddingEnd() + Math.round(dp(contents, hooks.value(END_MARGIN))),
                     contents.getPaddingBottom());
-            contents.setTranslationY(dp(contents, hooks.value(STATUS_Y)));
             hit.run();
             return result;
         });

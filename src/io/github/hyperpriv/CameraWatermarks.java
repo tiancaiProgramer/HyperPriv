@@ -1,7 +1,6 @@
 package io.github.hyperpriv;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
@@ -27,12 +26,10 @@ final class CameraWatermarks {
             Pattern.CASE_INSENSITIVE);
     private final AppearanceHooks hooks;
     private final File root;
-    private final SharedPreferences approvedTemplates;
 
     CameraWatermarks(AppearanceHooks hooks, Context context) {
         this.hooks = hooks;
         root = new File(context.getFilesDir(), "watermarks");
-        approvedTemplates = context.getSharedPreferences("hyperpriv_watermark_catalog", Context.MODE_PRIVATE);
     }
 
     void install(CameraCompatibility.Profile profile) {
@@ -58,28 +55,21 @@ final class CameraWatermarks {
             Runnable hit = hooks.firstHit("camera_watermarks");
             hookDate(dateFilter, config, metadata, limits, validity, folder, dateVariant, now, itemType, hit);
             hooks.hook(idFilter, chain -> {
+                Object result = chain.proceed();
                 Object predicate = chain.getThisObject();
                 Object candidate = chain.getArg(0);
-                if (hooks.active() && itemType.isInstance(candidate)
+                if (Boolean.TRUE.equals(result) && hooks.active() && itemType.isInstance(candidate)
                         && (catalogVariant == null || catalogVariant.getInt(predicate) == 0)
                         && publishedIds.get(predicate) instanceof List<?>) {
                     String window = readWindow(candidate, config, metadata, limits, validity);
                     LocalDateTime until = endOfWindow(window);
-                    if (until != null) {
-                        Template template = completeTemplate((Path) folder.get(candidate), window);
-                        if (template != null) {
-                            List<?> ids = (List<?>) publishedIds.get(predicate);
-                            String knownWindow = approvedTemplates.getString(template.relativePath, "");
-                            if (ids.contains(template.id)) {
-                                if (!window.equals(knownWindow)) approvedTemplates.edit().putString(template.relativePath, window).apply();
-                            } else if (window.equals(knownWindow) && LocalDateTime.now().isAfter(until)) {
-                                hit.run();
-                                return Boolean.FALSE;
-                            }
-                        }
+                    if (until != null && LocalDateTime.now().isAfter(until)
+                            && completeTemplate((Path) folder.get(candidate), window)) {
+                        hit.run();
+                        return Boolean.FALSE;
                     }
                 }
-                return chain.proceed();
+                return result;
             });
         });
     }
@@ -95,7 +85,7 @@ final class CameraWatermarks {
             String window = readWindow(candidate, config, metadata, limits, validity);
             LocalDateTime until = endOfWindow(window);
             if (until != null && ((LocalDateTime) now.get(predicate)).isAfter(until)
-                    && completeTemplate((Path) folder.get(candidate), window) != null) {
+                    && completeTemplate((Path) folder.get(candidate), window)) {
                 hit.run();
                 return Boolean.FALSE;
             }
@@ -122,24 +112,23 @@ final class CameraWatermarks {
         } catch (DateTimeParseException error) { return null; }
     }
 
-    private Template completeTemplate(Path folder, String window) {
+    private boolean completeTemplate(Path folder, String window) {
         try {
             Path base = root.toPath().toRealPath();
             Path directory = folder.toRealPath();
-            if (!directory.startsWith(base) || base.relativize(directory).getNameCount() != 2) return null;
+            if (!directory.startsWith(base) || base.relativize(directory).getNameCount() != 2) return false;
             Path config = directory.resolve("config.json").toRealPath();
-            if (!config.startsWith(directory) || !Files.isRegularFile(config) || Files.size(config) > 2 * 1024 * 1024) return null;
+            if (!config.startsWith(directory) || !Files.isRegularFile(config) || Files.size(config) > 2 * 1024 * 1024) return false;
             JSONObject body = new JSONObject(new String(Files.readAllBytes(config), StandardCharsets.UTF_8));
             JSONObject metadata = body.optJSONObject("metadata");
-            if (metadata == null || body.optJSONArray("layout_group") == null
-                    || body.optJSONArray("layout_group").length() == 0 || body.optJSONObject("wmRes") == null)
-                return null;
+            JSONArray layouts = body.optJSONArray("layout_group");
+            JSONObject resources = body.optJSONObject("wmRes");
+            if (metadata == null || metadata.optString("id").isEmpty()
+                    || layouts == null || layouts.length() == 0 || resources == null) return false;
             JSONObject limits = metadata.optJSONObject("limitation");
-            if (limits == null || !window.equals(limits.optString("validity")) || !checkImages(directory, body, 0))
-                return null;
-            String id = metadata.optString("id");
-            return id.isEmpty() ? null : new Template(id, base.relativize(directory).toString());
-        } catch (IOException | org.json.JSONException | RuntimeException error) { return null; }
+            return limits != null && window.equals(limits.optString("validity"))
+                    && checkImages(directory, resources, 0) && checkImages(directory, layouts, 0);
+        } catch (IOException | org.json.JSONException | RuntimeException error) { return false; }
     }
 
     private static boolean checkImages(Path directory, Object value, int depth) throws IOException {
@@ -153,7 +142,9 @@ final class CameraWatermarks {
             for (int i = 0; i < array.length(); i++)
                 if (!checkImages(directory, array.opt(i), depth + 1)) return false;
         } else if (value instanceof String) {
-            Matcher matches = IMAGE.matcher((String) value);
+            String reference = (String) value;
+            if (reference.contains("://") || reference.startsWith("//")) return true;
+            Matcher matches = IMAGE.matcher(reference);
             while (matches.find()) {
                 Path path = directory.resolve(matches.group()).toRealPath();
                 if (!path.startsWith(directory) || !Files.isRegularFile(path) || Files.size(path) == 0) return false;
@@ -162,8 +153,4 @@ final class CameraWatermarks {
         return true;
     }
 
-    private static final class Template {
-        final String id, relativePath;
-        Template(String id, String relativePath) { this.id = id; this.relativePath = relativePath; }
-    }
 }

@@ -54,9 +54,8 @@ final class UiCatalog {
             new Section("keys","按键与快捷动作",null,"key_actions")),
         new Group("appearance","外观与个性化","状态栏、桌面图标、手势小白条和相机水印。",
             new Section("status_bar","状态栏自定义",null,Appearance.STATUS),
-            new Section("home_icons","桌面图标缩放",null,Appearance.ICONS),
             new Section("gesture_handle","小白条自定义",null,Appearance.GESTURE),
-            new Section("camera_watermarks","相机水印",null,Appearance.WATERMARK))
+            new Section("other_appearance","其他外观",null,Appearance.ICONS,Appearance.WATERMARK))
     };
     static String target(String key){
         String appearance=Appearance.target(key);if(appearance!=null)return appearance;
@@ -79,8 +78,8 @@ final class UiCatalog {
         switch(key){
             case Appearance.STATUS:return "启用状态栏自定义";
             case Appearance.GESTURE:return "启用小白条自定义";
-            case Appearance.ICONS:return "启用桌面图标微调";
-            case Appearance.WATERMARK:return "保留节日和限定水印";
+            case Appearance.ICONS:return "桌面图标缩放";
+            case Appearance.WATERMARK:return "保留相机节日和限定水印";
             case "key_actions":return "启用自定义按键";
             case "core_enabled":return "启用核心签名";
             case "core_downgrade":return "允许降级安装";

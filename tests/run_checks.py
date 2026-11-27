@@ -14,7 +14,7 @@ def run(*args):subprocess.run(list(map(str,args)),check=True)
 build=root/'local-build';build.mkdir(exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='hyperpriv-checks-',dir=build) as directory:
     classes=pathlib.Path(directory)/'pure';classes.mkdir()
-    names=['Policy','CorePolicy','ExtraPolicy','Options','ExtraFeatures','UiCatalog','ExtraTargets','Rule','Compatibility','CoreTargets','RomPolicy','EuBuild','Profiles','DexEntrances','FeaturePresence','HelperCompatibility','Appearance']
+    names=['Policy','CorePolicy','ExtraPolicy','Options','ExtraFeatures','UiCatalog','ExtraTargets','Rule','Compatibility','CoreTargets','RomPolicy','EuBuild','Profiles','DexEntrances','FeaturePresence','HelperCompatibility','Appearance','AppearanceSupport','CameraCompatibility']
     checks=['PolicyCheck','CorePolicyCheck','ExtraPolicyCheck','CompatibilityCheck','RomPolicyCheck','FeaturePresenceCheck','HelperCompatibilityCheck']
     sources=[root/'src/io/github/hyperpriv'/(n+'.java') for n in names]+[root/'tests'/(n+'.java') for n in checks]
     run(exe('javac'),'-encoding','UTF-8','-d',classes,*sources)
@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix='hyperpriv-checks-',dir=build) as direct
     if a.android_jar:
         fixture=pathlib.Path(directory)/'fixture';fixture.mkdir()
         fixture_jar=pathlib.Path(directory)/'fixture.jar'
-        run(exe('javac'),'-encoding','UTF-8','-source','8','-target','8','-d',fixture,root/'tests/dex/PresenceFixture.java')
+        run(exe('javac'),'-encoding','UTF-8','-source','8','-target','8','-d',fixture,*sorted((root/'tests/dex').rglob('*.java')))
         run(exe('java'),'-cp',a.android_jar.parents[2]/'build-tools/36.0.0/lib/d8.jar','com.android.tools.r8.D8','--lib',a.android_jar,'--output',fixture_jar,*fixture.rglob('*.class'))
         run(exe('javac'),'-encoding','UTF-8','-cp',classes,'-d',classes,root/'tests/DexEntrancesCheck.java')
         run(exe('java'),'-cp',classes,'io.github.hyperpriv.DexEntrancesCheck',fixture_jar,pathlib.Path(directory)/'corrupt.jar')

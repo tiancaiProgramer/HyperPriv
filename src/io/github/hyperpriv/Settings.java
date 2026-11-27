@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 import io.github.libxposed.service.XposedService;
 
 final class Settings {
+    private static final String LEGACY_DUO = "appearance_duo_network";
+    private static final String LEGACY_TOP_BATTERY = "appearance_top_battery_bar";
+    private static final String LEGACY_CUTOUT_BATTERY = "appearance_cutout_ring";
     static volatile XposedService service;
     static volatile SharedPreferences remote;
     static volatile String status="等待 LSPosed 连接";
@@ -13,7 +16,7 @@ final class Settings {
     static SharedPreferences local(Context c){return c.getSharedPreferences("options",0);}
     static boolean storedKey(String key,boolean local){
         return Options.accepts(key)||java.util.Arrays.asList(ExtraFeatures.STRING_KEYS).contains(key)
-            ||key.equals("clipboard_opacity")||Appearance.isParameter(key)||(local&&key.equals("initialized"));
+            ||key.equals("clipboard_opacity")||(!local&&key.equals(Appearance.REFRESH_REQUEST))||Appearance.isParameter(key)||(local&&key.equals("initialized"));
     }
     static int removeObsolete(SharedPreferences prefs,SharedPreferences.Editor editor,boolean local){
         int removed=0;
@@ -24,7 +27,17 @@ final class Settings {
     }
     static boolean cleanStoredKeys(SharedPreferences prefs,boolean local){
         SharedPreferences.Editor editor=prefs.edit();
-        return removeObsolete(prefs,editor,local)==0||editor.commit();
+        int removed=removeObsolete(prefs,editor,local);
+        String clockPosition=Appearance.Value.CLOCK_POSITION.key;
+        if(Integer.valueOf(3).equals(prefs.getAll().get(clockPosition))){
+            editor.remove(clockPosition);
+            removed++;
+        }
+        if(legacyDuoEnabled(prefs))editor.putInt(Appearance.Value.SIGNAL.key,Appearance.DUO_SIGNAL_STYLE);
+        int battery=appearance(prefs,Appearance.Value.BATTERY);
+        if(battery!=readAppearance(prefs,Appearance.Value.BATTERY))
+            editor.putInt(Appearance.Value.BATTERY.key,battery);
+        return removed==0||editor.commit();
     }
     static synchronized void bind(Context c,XposedService s){
         try {
@@ -34,7 +47,7 @@ final class Settings {
                 for(String k:Options.KEYS)init.putBoolean(k,received.getBoolean(k,RuntimeProfile.defaultValue(k)));
                 for(String k:ExtraFeatures.STRING_KEYS)init.putString(k,received.getString(k,""));
                 init.putInt("clipboard_opacity",received.getInt("clipboard_opacity",100));
-                for(Appearance.Value value:Appearance.Value.ALL)init.putInt(value.key,appearance(received,value));
+                for(Appearance.Value value:Appearance.Value.ALL)init.putInt(value.key,appearance(received,value,c));
                 init.putBoolean("initialized",true).commit();
             }
             service=s;remote=received;sync(c);
@@ -51,9 +64,22 @@ final class Settings {
             for(String k:Options.KEYS)e.putBoolean(k,RuntimeProfile.allowed(k)&&local(c).getBoolean(k,RuntimeProfile.defaultValue(k)));
             for(String k:ExtraFeatures.STRING_KEYS)e.putString(k,local(c).getString(k,""));
             e.putInt("clipboard_opacity",Math.max(0,Math.min(100,local(c).getInt("clipboard_opacity",100))));
-            for(Appearance.Value value:Appearance.Value.ALL)e.putInt(value.key,appearance(local(c),value));
+            SharedPreferences own=local(c);
+            for(Appearance.Value value:Appearance.Value.ALL){
+                int selected=appearance(own,value,c);
+                if(value==Appearance.Value.BATTERY&&usesLegacyBatteryFrame(own))
+                    own.edit().putInt(value.key,selected).commit();
+                e.putInt(value.key,selected);
+            }
             return e.commit();
         }catch(Throwable e){status="设置已本地保存，等待框架重连";return false;}
+    }
+    static synchronized boolean requestAppearanceRefresh(Context context){
+        if(!sync(context))return false;
+        try{
+            int request=remote.getInt(Appearance.REFRESH_REQUEST,0);
+            return remote.edit().putInt(Appearance.REFRESH_REQUEST,request+1).commit();
+        }catch(RuntimeException error){return false;}
     }
     static void set(Context c,String k,boolean v){
         if(!Options.accepts(k)||!RuntimeProfile.allowed(k))throw new IllegalArgumentException(k);
@@ -69,11 +95,39 @@ final class Settings {
         local(c).edit().putInt("clipboard_opacity",Math.max(0,Math.min(100,opacity))).commit();sync(c);
     }
     static int appearance(SharedPreferences preferences,Appearance.Value value){
-        try{return value.normalize(preferences.getInt(value.key,value.initial));}
+        return appearance(preferences,value,null);
+    }
+    static int appearance(SharedPreferences preferences,Appearance.Value value,Context context){
+        if(value==Appearance.Value.SIGNAL&&legacyDuoEnabled(preferences))return Appearance.DUO_SIGNAL_STYLE;
+        int selected=readAppearance(preferences,value);
+        if(value==Appearance.Value.BATTERY&&selected<Appearance.BATTERY_TOP_STYLE){
+            if(legacyEnabled(preferences,LEGACY_CUTOUT_BATTERY))return Appearance.BATTERY_CUTOUT_STYLE;
+            if(legacyEnabled(preferences,LEGACY_TOP_BATTERY))return Appearance.BATTERY_TOP_STYLE;
+            if(context!=null&&usesLegacyBatteryFrame(preferences)){
+                try{return Appearance.migrateBatteryFrameStyle(NativeBatteryStyle.current(context));}
+                catch(SecurityException ignored){return selected;}
+            }
+        }
+        return selected;
+    }
+    private static boolean usesLegacyBatteryFrame(SharedPreferences prefs){
+        try{return prefs.getInt(Appearance.Value.BATTERY.key,0)==Appearance.LEGACY_BATTERY_FRAME_STYLE;}
+        catch(ClassCastException error){return false;}
+    }
+    private static int readAppearance(SharedPreferences prefs,Appearance.Value value){
+        try{return value.normalize(prefs.getInt(value.key,value.initial));}
         catch(ClassCastException error){return value.initial;}
     }
-    static void setAppearance(Context context,Appearance.Value value,int selected){
-        local(context).edit().putInt(value.key,value.normalize(selected)).commit();sync(context);
+    private static boolean legacyDuoEnabled(SharedPreferences prefs){return legacyEnabled(prefs,LEGACY_DUO);}
+    private static boolean legacyEnabled(SharedPreferences prefs,String key){
+        try{return prefs.getInt(key,0)==1;}
+        catch(ClassCastException error){return false;}
+    }
+    static synchronized void setAppearance(Context context,Appearance.Value value,int selected){
+        SharedPreferences.Editor editor=local(context).edit().putInt(value.key,value.normalize(selected));
+        if(value==Appearance.Value.SIGNAL)editor.remove(LEGACY_DUO);
+        if(value==Appearance.Value.BATTERY)editor.remove(LEGACY_TOP_BATTERY).remove(LEGACY_CUTOUT_BATTERY);
+        editor.commit();sync(context);
     }
     static void refreshScopes(){
         XposedService current=service;if(current!=null)try{scopes=current.getScope();}catch(Throwable ignored){scopes=null;}

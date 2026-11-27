@@ -63,14 +63,21 @@ public final class HookEntry extends XposedModule {
             prefs=getRemotePreferences(Options.PREFS);
             boolean compatibility=prefs.getBoolean(Compatibility.KEY,Options.defaultValue(Compatibility.KEY));
             for(String key:Appearance.KEYS){
-                if(!pkg.equals(Appearance.target(key))||!prefs.getBoolean(key,false))continue;
+                if(!pkg.equals(Appearance.target(key)))continue;
+                if(!Appearance.SYSTEM_UI.equals(pkg)&&!prefs.getBoolean(key,false))continue;
                 android.content.pm.ApplicationInfo info=context.getApplicationInfo();
                 CameraCompatibility.Selection camera=key.equals(Appearance.WATERMARK)
                         ?CameraCompatibility.match(version,actualHash,info.sourceDir,info.splitSourceDirs,compatibility):null;
-                AppearanceSupport.Match match=camera==null?AppearanceSupport.match(key,android.os.Build.VERSION.SDK_INT,
-                        version,actualHash,info.sourceDir,info.splitSourceDirs,compatibility):camera.match;
+                AppearanceSupport.StatusMatch status=key.equals(Appearance.STATUS)
+                        ?AppearanceSupport.matchStatus(android.os.Build.VERSION.SDK_INT,version,actualHash,
+                                info.sourceDir,info.splitSourceDirs,compatibility):null;
+                AppearanceSupport.Match match;
+                if(camera!=null)match=camera.match;
+                else if(status!=null)match=status.match;
+                else match=AppearanceSupport.match(key,android.os.Build.VERSION.SDK_INT,version,actualHash,
+                        info.sourceDir,info.splitSourceDirs,compatibility);
                 if(match!=AppearanceSupport.Match.NONE)
-                    new AppearanceHooks(this,loader,prefs,context,key,match).install(camera==null?null:camera.profile);
+                    new AppearanceHooks(this,loader,prefs,context,key,match,status).install(camera==null?null:camera.profile);
                 else report("appearance entry not matched "+key+" version="+version);
             }
             if(pkg.equals(Appearance.HOME)||pkg.equals(Appearance.CAMERA))return;

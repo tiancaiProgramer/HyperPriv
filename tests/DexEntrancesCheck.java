@@ -20,5 +20,28 @@ public final class DexEntrancesCheck {
   require(!DexEntrances.inspect(new String[]{args[0]+".missing"},rules).complete,"read failure treated as absence");
   scan=DexEntrances.inspect(new String[]{args[0],corrupt.toString()},rules);require(!scan.complete&&scan.found.contains(DexEntrances.signature(present)),"partial read lost known match or asserted complete");
   System.out.println("DEX entrance scan: declared methods only, exact parameters/returns, constructors, corrupt/missing and partial inputs passed");
+
+  AppearanceSupport.StatusMatch status=AppearanceSupport.matchStatus(37,1,"",args[0],null,true);
+  require(status.match==AppearanceSupport.Match.COMPATIBLE
+      &&status.parts.equals(EnumSet.of(AppearanceSupport.StatusPart.NOTIFICATION_LIMIT)),
+      "notification limit must match without a battery or phone-bar inflation callback");
+  require(status.supports(Appearance.Value.NOTIFICATIONS)&&!status.supports(Appearance.Value.BATTERY)
+      &&!status.supports(Appearance.Value.TOP_BAR_PERCENT)
+      &&status.supports(Appearance.Value.PILL_OPACITY),"unsupported status settings must be excluded independently");
+  require(status.supportsBatteryStyle(0)&&!status.supportsBatteryStyle(Appearance.BATTERY_CUTOUT_STYLE)
+      &&!status.supportsBatteryStyle(Appearance.BATTERY_TOP_STYLE),"unmatched battery styles must fall back to system");
+  require(AppearanceSupport.matchStatus(37,1,"",args[0],null,false).match==AppearanceSupport.Match.NONE,
+      "structural match requires experimental compatibility");
+  require(AppearanceSupport.matchStatus(37,1,"",corrupt.toString(),null,true).match==AppearanceSupport.Match.NONE,
+      "unreadable APK must not enable experimental status hooks");
+  status=AppearanceSupport.matchStatus(36,202501210L,
+      "0ac0c967145dd5cda61b682525ed78d6d25c8abc31e8e32789138bfb2813ebac",args[0],null,false);
+  require(status.match==AppearanceSupport.Match.EXACT
+      &&status.parts.equals(EnumSet.allOf(AppearanceSupport.StatusPart.class)),
+      "verified SystemUI must keep all status options when experimental compatibility is off");
+  require(status.supportsBatteryStyle(Appearance.BATTERY_TOP_STYLE)
+      &&status.supports(Appearance.Value.TOP_BAR_PERCENT)
+      &&status.supportsBatteryStyle(Appearance.BATTERY_CUTOUT_STYLE),"verified battery styles must appear in the selector");
+  System.out.println("Status bar compatibility: independent options, experimental switch, unreadable APK and exact profile passed");
  }
 }

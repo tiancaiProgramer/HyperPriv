@@ -10,10 +10,14 @@ final class RuntimeProfile {
     private static volatile HelperCompatibility.Match helper;
     private static HdmiCompatibility.Match hdmiMatch=HdmiCompatibility.Match.NONE;
     private static Map<String,AppearanceSupport.Match> appearanceMatches=Collections.emptyMap();
+    private static AppearanceSupport.StatusMatch statusMatch=AppearanceSupport.StatusMatch.NONE;
     static HdmiCompatibility.Match hdmiMatch(){return hdmiMatch;}
     static AppearanceSupport.Match appearanceMatch(String key){
+        if(Appearance.STATUS.equals(key))return statusMatch.match;
         return appearanceMatches.getOrDefault(key,AppearanceSupport.Match.NONE);
     }
+    static boolean appearanceOptionAvailable(Appearance.Value value){return statusMatch.supports(value);}
+    static boolean batteryStyleAvailable(int mode){return statusMatch.supportsBatteryStyle(mode);}
     static void helper(HelperCompatibility.Match match){helper=match;}
     static RomPolicy.State state(){return current;}
     static void apply(RomPolicy.State state){helper=null;current=state;}
@@ -31,6 +35,7 @@ final class RuntimeProfile {
         boolean eu=EuEnvironment.isEuRom();Map<String,String> hashes=new HashMap<>();Set<String> missing=new HashSet<>();
         helper=null;
         hdmiMatch=HdmiCompatibility.Match.NONE;
+        statusMatch=AppearanceSupport.StatusMatch.NONE;
         Map<String,AppearanceSupport.Match> appearance=new HashMap<>();
         Map<String,List<Rule>> candidates=new HashMap<>();Map<String,DexEntrances.Result> scans=new HashMap<>();
         for(String pkg:Options.TARGETS)try{
@@ -38,8 +43,11 @@ final class RuntimeProfile {
             String appearanceHash=null;
             for(String key:Appearance.KEYS)if(pkg.equals(Appearance.target(key))){
                 if(appearanceHash==null)appearanceHash=EuEnvironment.hash(info.applicationInfo.sourceDir);
-                appearance.put(key,AppearanceSupport.match(key,Build.VERSION.SDK_INT,info.getLongVersionCode(),
-                        appearanceHash,info.applicationInfo.sourceDir,info.applicationInfo.splitSourceDirs,true));
+                if(Appearance.STATUS.equals(key))
+                    statusMatch=AppearanceSupport.matchStatus(Build.VERSION.SDK_INT,info.getLongVersionCode(),
+                            appearanceHash,info.applicationInfo.sourceDir,info.applicationInfo.splitSourceDirs,true);
+                else appearance.put(key,AppearanceSupport.match(key,Build.VERSION.SDK_INT,info.getLongVersionCode(),
+                            appearanceHash,info.applicationInfo.sourceDir,info.applicationInfo.splitSourceDirs,true));
             }
             if(pkg.equals(HdmiCompatibility.PACKAGE)){
                 hdmiMatch=HdmiCompatibility.resolve(Build.VERSION.SDK_INT,info.getLongVersionCode(),

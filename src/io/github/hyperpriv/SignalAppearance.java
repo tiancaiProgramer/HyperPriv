@@ -2,12 +2,20 @@ package io.github.hyperpriv;
 
 import static io.github.hyperpriv.Appearance.Value.*;
 import static io.github.hyperpriv.AppearanceHooks.dp;
+import static io.github.hyperpriv.AppearanceSupport.MOBILE;
+import static io.github.hyperpriv.AppearanceSupport.SLOTS;
 
-import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.PixelFormat;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
+import android.os.SystemClock;
 import android.telephony.SubscriptionManager;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,32 +25,47 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class SignalAppearance {
-    private static final String MOBILE = "com.android.systemui.statusbar.pipeline.mobile.ui.view.ModernStatusBarMobileView";
+    private static final String[] MOBILE_TYPE_IDS = {"mobile_type", "mobile_type_single", "mobile_special_5G"};
+    private static final String[] WIFI_ACTIVITY_IDS = {"wifi_activity", "wifi_in", "wifi_out"};
     private static final String WIFI = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView";
-    private static final String SLOTS = "com.android.systemui.statusbar.phone.ui.StatusBarIconList";
     private final AppearanceHooks hooks;
     private final SystemBarAppearance bar;
     private final WeakHashMap<ViewGroup, Icons> groups = new WeakHashMap<>();
-    private final Runnable dualHit, visibilityHit, spacingHit, orderHit;
+    private final Map<Integer, Sample> resourceSamples = new ConcurrentHashMap<>();
+    private final Map<ImageView, Sample> imageSamples = Collections.synchronizedMap(new WeakHashMap<>());
+    private final Runnable dualHit, duoHit, visibilityHit, spacingHit, orderHit;
+    private final Runnable keyguardGlyphHit;
+    private long wifiReadAt = -1;
+    private int measuredWifiLevel = -1;
+    private int batteryLevel = -1;
+    private boolean batteryCharging;
 
     SignalAppearance(AppearanceHooks hooks, SystemBarAppearance bar) {
         this.hooks = hooks;
         this.bar = bar;
         dualHit = hooks.firstHit("dual_signal");
+        duoHit = hooks.firstHit("duo_network");
         visibilityHit = hooks.firstHit("network_indicators");
         spacingHit = hooks.firstHit("status_icon_spacing");
         orderHit = hooks.firstHit("network_order");
+        keyguardGlyphHit = hooks.firstHit("keyguard_signal");
     }
 
     void install() {
-        if (hooks.custom(NETWORK_ORDER)) hooks.register("network_order", this::installOrder);
-        if (hooks.custom(ICON_GAP)) hooks.register("status_icon_spacing", this::installSpacing);
-        if (hooks.custom(SIGNAL) || hooks.custom(MOBILE_TYPE) || hooks.custom(MOBILE_HD) || hooks.custom(MOBILE_ACTIVITY))
-            hooks.register("network_indicators", this::installIndicators);
+        if (hooks.custom(NETWORK_ORDER) && !duoSelected()) hooks.register("network_order", this::installOrder);
+        if (hooks.supports(ICON_GAP)) hooks.register("status_icon_spacing", this::installSpacing);
+        if (hooks.supports(SIGNAL)) hooks.register("network_indicators", this::installIndicators);
     }
+
+    private boolean duoSelected() { return hooks.value(SIGNAL) == Appearance.DUO_SIGNAL_STYLE; }
 
     private void installOrder() throws Exception {
         Executable constructor = hooks.method(SLOTS, "<init>", "V", "[Ljava/lang/String;");
@@ -70,7 +93,9 @@ final class SignalAppearance {
         Executable layout = hooks.method(owner, "onLayout", "V", "Z", "I", "I", "I", "I");
         io.github.libxposed.api.XposedInterface.Hooker callback = chain -> {
             View view = (View) chain.getThisObject();
-            if (!hooks.active() || SystemBarAppearance.phoneBar(view) == null) return chain.proceed();
+            if (SystemBarAppearance.statusBar(view) == null) return chain.proceed();
+            hooks.watch(view);
+            if (!hooks.active() || !hooks.custom(ICON_GAP)) return chain.proceed();
             int original = spacing.getInt(view);
             spacing.setInt(view, Math.max(0, original + Math.round(dp(view, hooks.value(ICON_GAP)))));
             try {
@@ -87,9 +112,16 @@ final class SignalAppearance {
         Executable subId = hooks.method(MOBILE, "getSubId", "I");
         Method visible = subId.getDeclaringClass().getMethod("isIconVisible");
         if (visible.getReturnType() != boolean.class) throw new NoSuchMethodException("isIconVisible");
+        hooks.register("signal_resource_levels", this::captureSignalLevels);
+        hooks.register("duo_battery", this::observeBattery);
+        hooks.onRefresh(() -> {
+            for (Icons icons : new java.util.ArrayList<>(groups.values()))
+                hooks.refreshView(icons.group.get(), icons::restoreHidden);
+        });
         hooks.hook(measure, chain -> {
             ViewGroup group = (ViewGroup) chain.getThisObject();
-            if (hooks.active() && SystemBarAppearance.phoneBar(group) != null) {
+            if (SystemBarAppearance.statusBar(group) != null) {
+                hooks.watch(group);
                 Icons icons = groups.get(group);
                 if (icons == null) {
                     icons = new Icons(group, (Method) subId, visible);
@@ -97,22 +129,102 @@ final class SignalAppearance {
                     group.addOnAttachStateChangeListener(icons);
                     if (group.isAttachedToWindow()) icons.onViewAttachedToWindow(group);
                 }
-                icons.update(group);
             }
             return chain.proceed();
         });
+    }
+
+    private void observeBattery() {
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override public void onReceive(Context context, Intent intent) {
+                if (updateBattery(intent))
+                    for (ViewGroup group : groups.keySet()) group.postInvalidateOnAnimation();
+            }
+        };
+        updateBattery(hooks.context().registerReceiver(receiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)));
+    }
+
+    private boolean updateBattery(Intent intent) {
+        if (intent == null || !Intent.ACTION_BATTERY_CHANGED.equals(intent.getAction())) return false;
+        int rawLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int next = scale > 0 && rawLevel >= 0 && rawLevel <= scale ? Math.round(100f * rawLevel / scale) : -1;
+        boolean charging = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN)
+                == BatteryManager.BATTERY_STATUS_CHARGING;
+        if (next == batteryLevel && charging == batteryCharging) return false;
+        batteryLevel = next;
+        batteryCharging = charging;
+        return true;
+    }
+
+    private View batteryMeter(View iconGroup) {
+        View host = SystemBarAppearance.statusBar(iconGroup);
+        if (host == null) return null;
+        View battery = bar.child(host, "battery");
+        if (battery != null && AppearanceSupport.BATTERY.equals(battery.getClass().getName())) return battery;
+        battery = bar.child(host, "battery_meter_view");
+        return battery != null && AppearanceSupport.BATTERY.equals(battery.getClass().getName()) ? battery : null;
+    }
+
+    private void captureSignalLevels() throws Exception {
+        int mobileId = hooks.systemUiId("mobile_signal"), wifiId = hooks.systemUiId("wifi_signal");
+        if (mobileId == 0) throw new NoSuchFieldException("mobile_signal");
+        Method setImageResource = ImageView.class.getDeclaredMethod("setImageResource", int.class);
+        hooks.hook(setImageResource, chain -> {
+            ImageView image = (ImageView) chain.getThisObject();
+            int id = image.getId();
+            if (id != mobileId && (wifiId == 0 || id != wifiId)) return chain.proceed();
+            Object result = chain.proceed();
+            int resource = (Integer) chain.getArg(0);
+            boolean wifi = id == wifiId;
+            if (resource == 0) imageSamples.remove(image);
+            else imageSamples.put(image, resourceSamples.computeIfAbsent(resource, key -> Sample.read(image, key, wifi)));
+            return result;
+        });
+    }
+
+    private static final class Sample {
+        static final Sample UNKNOWN = new Sample(-1, 0);
+        static final Sample WIFI_UNAVAILABLE = new Sample(-2, 0);
+        final int level, color;
+
+        Sample(int level, int color) { this.level = level; this.color = color; }
+
+        static Sample read(ImageView image, int resource, boolean wifi) {
+            try {
+                String name = image.getResources().getResourceEntryName(resource);
+                if (wifi && (name.startsWith("stat_sys_wifi_signal_unavailable_")
+                        || name.startsWith("ic_no_internet_wifi_signal_"))) return WIFI_UNAVAILABLE;
+                int level = SignalGlyph.resourceLevel(name, wifi);
+                if (level < 0) return UNKNOWN;
+                return new Sample(level, name.contains("_darkmode") ? 0xbf000000 : 0xffffffff);
+            } catch (Resources.NotFoundException ignored) { return UNKNOWN; }
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private int connectedWifiLevel() {
+        long now = SystemClock.elapsedRealtime();
+        if (wifiReadAt >= 0 && now - wifiReadAt < 1_500) return measuredWifiLevel;
+        wifiReadAt = now;
+        measuredWifiLevel = -1;
+        try {
+            WifiManager manager = hooks.context().getSystemService(WifiManager.class);
+            WifiInfo info = manager == null ? null : manager.getConnectionInfo();
+            if (info != null && info.getNetworkId() >= 0 && info.getRssi() > -127)
+                measuredWifiLevel = WifiManager.calculateSignalLevel(info.getRssi(), 4);
+        } catch (RuntimeException ignored) { }
+        return measuredWifiLevel;
     }
 
     private final class Icons implements View.OnAttachStateChangeListener, ViewTreeObserver.OnPreDrawListener {
         private final WeakReference<ViewGroup> group;
         private final Method subId, visible;
         private final WeakHashMap<View, Integer> hiddenViews = new WeakHashMap<>();
-        private WeakReference<View> collapsed = new WeakReference<>(null);
-        private WeakReference<ImageView> leading = new WeakReference<>(null);
-        private WeakReference<ImageView> trailing = new WeakReference<>(null);
-        private Rect oldClip;
-        private int oldWidth, oldAlpha;
-        private final DualSignal overlay = new DualSignal();
+        private final Map<ImageView, SignalGlyph> glyphs = new WeakHashMap<>();
+        private final Map<View, Collapsed> collapsed = new WeakHashMap<>();
+        private final Set<ImageView> currentGlyphs = Collections.newSetFromMap(new IdentityHashMap<>());
+        private final Set<View> currentCollapsed = Collections.newSetFromMap(new IdentityHashMap<>());
 
         Icons(ViewGroup group, Method subId, Method visible) {
             this.group = new WeakReference<>(group);
@@ -124,7 +236,9 @@ final class SignalAppearance {
         }
         @Override public void onViewDetachedFromWindow(View view) {
             if (view.getViewTreeObserver().isAlive()) view.getViewTreeObserver().removeOnPreDrawListener(this);
-            restorePair();
+            currentGlyphs.clear();
+            currentCollapsed.clear();
+            restoreUnused();
             restoreHidden();
         }
         @Override public boolean onPreDraw() {
@@ -134,65 +248,217 @@ final class SignalAppearance {
         }
 
         void update(ViewGroup view) {
-            if (!hooks.active()) {
-                restorePair();
+            currentGlyphs.clear();
+            currentCollapsed.clear();
+            if (!hooks.active() || !(hooks.custom(SIGNAL) || hooks.custom(MOBILE_TYPE)
+                    || hooks.custom(MOBILE_HD) || hooks.custom(MOBILE_ACTIVITY))) {
+                restoreUnused();
                 restoreHidden();
                 return;
             }
-            View primary = null, secondary = null;
+            boolean duo = duoSelected();
+            View primary = null, secondary = null, wifi = null;
             int primaryId = -1, secondaryId = -1, count = 0;
             for (int index = 0; index < view.getChildCount(); index++) {
                 View icon = view.getChildAt(index);
                 String owner = icon.getClass().getName();
                 if (WIFI.equals(owner)) {
-                    if (hooks.custom(MOBILE_ACTIVITY)) hide(icon, "wifi_activity", "wifi_in", "wifi_out");
+                    if (!duo && hooks.custom(MOBILE_ACTIVITY)) hide(icon, WIFI_ACTIVITY_IDS);
+                    if (icon.isShown()) wifi = icon;
                     continue;
                 }
                 if (!MOBILE.equals(owner)) continue;
-                if (hooks.custom(MOBILE_TYPE)) hide(icon, "mobile_type", "mobile_type_single", "mobile_special_5G");
-                int hd = hooks.value(MOBILE_HD);
-                if (hd == 1 || hd == 3) hide(icon, "mobile_speech_hd", "mobile_volte", "mobile_volte_no_service");
-                if (hd == 2 || hd == 3) hide(icon, "mobile_vowifi");
-                if (hooks.custom(MOBILE_ACTIVITY)) hide(icon, "mobile_left_mobile_inout", "mobile_in", "mobile_out");
+                if (!duo) {
+                    if (hooks.custom(MOBILE_TYPE)) hide(icon, MOBILE_TYPE_IDS);
+                    int hd = hooks.value(MOBILE_HD);
+                    if (hd == 1 || hd == 3) hide(icon, "mobile_speech_hd", "mobile_volte", "mobile_volte_no_service");
+                    if (hd == 2 || hd == 3) hide(icon, "mobile_vowifi");
+                    if (hooks.custom(MOBILE_ACTIVITY)) hide(icon, "mobile_left_mobile_inout", "mobile_in", "mobile_out");
+                }
                 if (!hooks.custom(SIGNAL)) continue;
                 try {
                     if (!Boolean.TRUE.equals(visible.invoke(icon))) continue;
                     int id = (Integer) subId.invoke(icon);
                     if (!SubscriptionManager.isValidSubscriptionId(id)) continue;
-                    if (count++ == 0) { primary = icon; primaryId = id; }
-                    else { secondary = icon; secondaryId = id; }
+                    if (count == 0) { primary = icon; primaryId = id; }
+                    else if (id == primaryId || id == secondaryId) continue;
+                    else if (count == 1) { secondary = icon; secondaryId = id; }
+                    count++;
                 } catch (ReflectiveOperationException | RuntimeException ignored) { }
             }
-            if (count != 2 || primaryId == secondaryId) {
-                restorePair();
-                return;
-            }
-            if (secondaryId == SubscriptionManager.getDefaultDataSubscriptionId()) {
+            if (count == 2 && secondaryId == SubscriptionManager.getDefaultDataSubscriptionId()) {
                 View swap = primary; primary = secondary; secondary = swap;
             }
-            ImageView upper = bar.child(primary, "mobile_signal");
-            ImageView lower = bar.child(secondary, "mobile_signal");
-            if (upper == null || lower == null || upper.getVisibility() != View.VISIBLE || lower.getVisibility() != View.VISIBLE
-                    || secondary.getLayoutParams() == null) { restorePair(); return; }
-            if (leading.get() != upper || trailing.get() != lower || collapsed.get() != secondary) {
-                restorePair();
-                if (!overlay.update(upper, lower)) return;
-                leading = new WeakReference<>(upper);
-                trailing = new WeakReference<>(lower);
-                collapsed = new WeakReference<>(secondary);
-                oldAlpha = upper.getImageAlpha();
-                oldWidth = secondary.getLayoutParams().width;
-                oldClip = secondary.getClipBounds();
-                upper.getOverlay().add(overlay);
-                upper.setImageAlpha(0);
-                secondary.setClipBounds(new Rect());
-                ViewGroup.LayoutParams params = secondary.getLayoutParams();
-                params.width = 0;
-                secondary.setLayoutParams(params);
-                dualHit.run();
-            } else if (!overlay.update(upper, lower)) {
-                restorePair();
+            if (count > 0 && count <= 2) {
+                ImageView first = image(primary, "mobile_signal");
+                ImageView second = image(secondary, "mobile_signal");
+                int firstLevel = sample(first).level, secondLevel = sample(second).level;
+                if (duo) {
+                    applyDuo(view, primary, secondary, wifi, first, firstLevel, secondLevel);
+                } else {
+                    applyMobileStyle(primary, secondary, first, firstLevel, secondLevel);
+                }
             }
+            restoreUnused();
+            currentGlyphs.clear();
+            currentCollapsed.clear();
+        }
+
+        private void applyDuo(ViewGroup container, View primary, View secondary, View wifi,
+                              ImageView first, int firstLevel, int secondLevel) {
+            View battery = batteryMeter(container);
+            if (batteryLevel < 0 || !canCollapse(battery) || firstLevel < 0 || !canCollapse(primary)
+                    || (secondary != null && (secondLevel < 0 || !canCollapse(secondary)))) return;
+
+            ImageView wifiImage = image(wifi == null ? container : wifi, "wifi_signal");
+            int wifiLevel = 0;
+            if (wifiImage != null) {
+                int level = sample(wifiImage).level;
+                if (level == Sample.UNKNOWN.level) level = connectedWifiLevel();
+                wifiLevel = Math.max(0, level + 1);
+            }
+            ImageView target = wifiImage == null ? first : wifiImage;
+            if (!showGlyph(target, SignalGlyph.Style.DUO, firstLevel, secondLevel, wifiLevel,
+                    batteryLevel, batteryCharging, sample(first).color)) return;
+
+            if (wifiImage == null) {
+                // Keep the mobile signal ImageView as the anchor and suppress surrounding decorations.
+                for (View child = first; child != primary && child.getParent() instanceof ViewGroup;) {
+                    ViewGroup parent = (ViewGroup) child.getParent();
+                    for (int i = 0; i < parent.getChildCount(); i++) {
+                        View sibling = parent.getChildAt(i);
+                        if (sibling != child && canCollapse(sibling)) collapse(sibling);
+                    }
+                    child = parent;
+                }
+            } else {
+                collapse(primary);
+                View wifiRoot = wifi != null ? wifi : (View) wifiImage.getParent();
+                for (String id : WIFI_ACTIVITY_IDS) {
+                    View arrow = bar.child(wifiRoot, id);
+                    if (canCollapse(arrow)) collapse(arrow);
+                }
+            }
+            if (secondary != null) collapse(secondary);
+            collapse(battery);
+            duoHit.run();
+        }
+
+        private void applyMobileStyle(View primary, View secondary, ImageView first,
+                                      int firstLevel, int secondLevel) {
+            int mode = hooks.value(SIGNAL);
+            if (mode == 0) return;
+            if (primary == null || !canCollapse(secondary) || firstLevel < 0 || secondLevel < 0) return;
+            SignalGlyph.Style style = mode == 1 ? SignalGlyph.Style.SPLIT_THIN : SignalGlyph.Style.SPLIT_THICK;
+            if (showGlyph(first, style, firstLevel, secondLevel, -1, -1,
+                    false, sample(first).color)) {
+                collapse(secondary);
+                dualHit.run();
+            }
+        }
+
+        private ImageView image(View root, String id) {
+            if (root == null) return null;
+            View child = bar.child(root, id);
+            return child instanceof ImageView && child.isShown() ? (ImageView) child : null;
+        }
+
+        private Sample sample(ImageView image) {
+            if (image == null || image.getDrawable() == null) return Sample.UNKNOWN;
+            Sample sample = imageSamples.get(image);
+            return sample == null ? Sample.UNKNOWN : sample;
+        }
+
+        private boolean showGlyph(ImageView image, SignalGlyph.Style style, int first, int second,
+                                  int wifi, int battery, boolean charging, int fallbackColor) {
+            if (image == null || first < 0 || image.getWidth() < 8 || image.getHeight() < 8) return false;
+            SignalGlyph glyph = glyphs.get(image);
+            if (glyph == null) {
+                glyph = new SignalGlyph();
+                glyph.originalImageAlpha = image.getImageAlpha();
+                glyphs.put(image, glyph);
+                image.getOverlay().add(glyph);
+                View host = SystemBarAppearance.statusBar(image);
+                if (host != null && SystemBarAppearance.keyguardBar(host)) keyguardGlyphHit.run();
+            }
+            int alpha = image.getImageAlpha();
+            if (alpha != 0) {
+                glyph.originalImageAlpha = alpha;
+                image.setImageAlpha(0);
+            }
+            if (style == SignalGlyph.Style.DUO) setGlyphWidth(image, glyph, Math.round(dp(image, 24)));
+            ColorStateList tint = image.getImageTintList();
+            int nativeColor = sample(image).color;
+            if (nativeColor == 0) nativeColor = fallbackColor;
+            int color = tint == null ? nativeColor : tint.getColorForState(image.getDrawableState(), tint.getDefaultColor());
+            glyph.update(style, first, second, wifi, battery, charging, color, image.getColorFilter(), image.getWidth(),
+                    image.getHeight(), hooks.value(SIGNAL_SIZE), dp(image, hooks.value(SIGNAL_GAP)),
+                    dp(image, hooks.value(SIGNAL_Y)));
+            currentGlyphs.add(image);
+            return true;
+        }
+
+        private void setGlyphWidth(ImageView image, SignalGlyph glyph, int desired) {
+            ViewGroup.LayoutParams params = image.getLayoutParams();
+            if (params == null) return;
+            if (desired == 0) {
+                if (glyph.originalViewWidth != Integer.MIN_VALUE && params.width == glyph.appliedViewWidth) {
+                    params.width = glyph.originalViewWidth;
+                    image.setLayoutParams(params);
+                }
+                glyph.originalViewWidth = Integer.MIN_VALUE;
+                return;
+            }
+            int current = params.width > 0 ? params.width : image.getWidth();
+            if (glyph.originalViewWidth == Integer.MIN_VALUE || params.width != glyph.appliedViewWidth) {
+                if (current >= desired) return;
+                glyph.originalViewWidth = params.width;
+            } else {
+                desired = Math.max(desired, glyph.originalViewWidth);
+                if (current == desired) return;
+            }
+            glyph.appliedViewWidth = desired;
+            params.width = desired;
+            image.setLayoutParams(params);
+        }
+
+        private boolean canCollapse(View view) { return view != null && view.getLayoutParams() != null; }
+
+        private void collapse(View view) {
+            currentCollapsed.add(view);
+            if (collapsed.containsKey(view)) return;
+            ViewGroup.LayoutParams params = view.getLayoutParams();
+            collapsed.put(view, new Collapsed(params.width, view.getClipBounds()));
+            view.setClipBounds(new Rect());
+            params.width = 0;
+            view.setLayoutParams(params);
+        }
+
+        private void restoreUnused() {
+            glyphs.entrySet().removeIf(entry -> {
+                ImageView image = entry.getKey();
+                if (currentGlyphs.contains(image)) return false;
+                if (image != null) {
+                    setGlyphWidth(image, entry.getValue(), 0);
+                    image.getOverlay().remove(entry.getValue());
+                    if (image.getImageAlpha() == 0) image.setImageAlpha(entry.getValue().originalImageAlpha);
+                }
+                return true;
+            });
+            collapsed.entrySet().removeIf(entry -> {
+                View view = entry.getKey();
+                if (currentCollapsed.contains(view)) return false;
+                if (view != null) {
+                    Collapsed state = entry.getValue();
+                    view.setClipBounds(state.clip);
+                    ViewGroup.LayoutParams params = view.getLayoutParams();
+                    if (params != null && params.width == 0) {
+                        params.width = state.width;
+                        view.setLayoutParams(params);
+                    }
+                }
+                return true;
+            });
         }
         private void hide(View root, String... ids) {
             for (String id : ids) {
@@ -210,91 +476,11 @@ final class SignalAppearance {
             }
             hiddenViews.clear();
         }
-        private void restorePair() {
-            ImageView upper = leading.get();
-            if (upper != null) {
-                upper.getOverlay().remove(overlay);
-                upper.setImageAlpha(oldAlpha);
-            }
-            View secondary = collapsed.get();
-            if (secondary != null) {
-                secondary.setClipBounds(oldClip);
-                ViewGroup.LayoutParams params = secondary.getLayoutParams();
-                if (params != null && params.width == 0) {
-                    params.width = oldWidth;
-                    secondary.setLayoutParams(params);
-                }
-            }
-            leading.clear();
-            trailing.clear();
-            collapsed.clear();
-            overlay.clear();
-        }
     }
 
-    private final class DualSignal extends Drawable {
-        private final SignalRow top = new SignalRow(), bottom = new SignalRow();
-
-        boolean update(ImageView first, ImageView last) {
-            boolean changed = top.update(first) | bottom.update(last);
-            if (top.copy == null || bottom.copy == null) return false;
-            if (getBounds().width() != first.getWidth() || getBounds().height() != first.getHeight()) {
-                setBounds(0, 0, first.getWidth(), first.getHeight());
-                changed = true;
-            }
-            if (changed) invalidateSelf();
-            return true;
-        }
-        void clear() { top.clear(); bottom.clear(); }
-        @Override public void draw(Canvas canvas) {
-            int width = getBounds().width(), height = getBounds().height();
-            int gap = Math.round(dpFromBounds(SIGNAL_GAP)), dy = Math.round(dpFromBounds(SIGNAL_Y));
-            int weight = hooks.value(SIGNAL) == 2 ? 48 : 40;
-            int size = hooks.value(SIGNAL_SIZE);
-            int row = Math.min((height - gap) / 2, Math.max(1, height * weight * size / 10_000));
-            int sizeX = Math.min(width, width * size / 100);
-            if (row <= 0 || sizeX <= 0) return;
-            int x = (width - sizeX) / 2, y = Math.max(0, Math.min(height - row * 2 - gap, (height - row * 2 - gap) / 2 + dy));
-            top.draw(canvas, x, y, sizeX, row);
-            bottom.draw(canvas, x, y + row + gap, sizeX, row);
-        }
-        private float dpFromBounds(Appearance.Value value) { return top.density * hooks.value(value); }
-        @Override public void setAlpha(int alpha) {}
-        @Override public void setColorFilter(ColorFilter filter) {}
-        @Override public int getOpacity() { return PixelFormat.TRANSLUCENT; }
-    }
-
-    private static final class SignalRow {
-        Drawable original, copy;
-        android.content.res.ColorStateList tint;
-        ColorFilter filter;
-        int level;
-        float density;
-        boolean update(ImageView view) {
-            Drawable image = view.getDrawable();
-            if (image == null || image.getConstantState() == null) { clear(); return true; }
-            android.content.res.ColorStateList nextTint = view.getImageTintList();
-            ColorFilter nextFilter = view.getColorFilter();
-            int nextLevel = image.getLevel();
-            if (image == original && level == nextLevel && tint == nextTint && filter == nextFilter) return false;
-            original = image;
-            tint = nextTint;
-            filter = nextFilter;
-            level = nextLevel;
-            density = view.getResources().getDisplayMetrics().density;
-            copy = image.getConstantState().newDrawable(view.getResources()).mutate();
-            copy.setAlpha(255);
-            if (tint != null) copy.setTintList(tint);
-            if (filter != null) copy.setColorFilter(filter);
-            copy.setLevel(level);
-            copy.setState(view.getDrawableState());
-            return true;
-        }
-        void draw(Canvas canvas, int x, int y, int width, int height) {
-            if (copy == null) return;
-            copy.setBounds(x, y, x + width, y + height);
-            copy.draw(canvas);
-        }
-        void clear() { original = copy = null; tint = null; filter = null; }
+    private static final class Collapsed {
+        final int width;
+        final Rect clip;
+        Collapsed(int width, Rect clip) { this.width = width; this.clip = clip; }
     }
 }

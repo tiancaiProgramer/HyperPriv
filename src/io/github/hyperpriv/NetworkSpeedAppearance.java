@@ -4,20 +4,25 @@ import static io.github.hyperpriv.Appearance.Value.*;
 
 import android.net.TrafficStats;
 import android.os.SystemClock;
+import android.graphics.Paint;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.TextView;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.WeakHashMap;
 
 final class NetworkSpeedAppearance {
     private final AppearanceHooks hooks;
     private final SystemBarAppearance bar;
-    private final WeakHashMap<View, int[]> padding = new WeakHashMap<>();
+    private final WeakHashMap<View, Original> originals = new WeakHashMap<>();
+    private final WeakHashMap<View, Boolean> views = new WeakHashMap<>();
     private long time, tx, rx;
     private double up, down;
     private boolean sampled, hidden;
+    private final Paint.FontMetrics topMetrics = new Paint.FontMetrics(), bottomMetrics = new Paint.FontMetrics();
 
     NetworkSpeedAppearance(AppearanceHooks hooks, SystemBarAppearance bar) {
         this.hooks = hooks;
@@ -27,20 +32,41 @@ final class NetworkSpeedAppearance {
     void install() throws Exception {
         String owner = AppearanceSupport.SPEED;
         Executable update = hooks.method(owner, "updateNetworkSpeed", "V");
+        Executable set = hooks.method(owner, "setNetworkSpeed", "V", "Ljava/lang/String;", "Ljava/lang/String;");
         Executable visible = hooks.method(owner, "isIconVisible", "Z");
         Runnable hit = hooks.firstHit("status_speed");
-        hooks.hook(update, chain -> {
+        Runnable keyguardHit = hooks.firstHit("keyguard_speed");
+        io.github.libxposed.api.XposedInterface.Hooker renderSpeed = chain -> {
             Object result = chain.proceed();
             View view = (View) chain.getThisObject();
-            if (hooks.active() && SystemBarAppearance.phoneBar(view) != null) {
+            View host = SystemBarAppearance.statusBar(view);
+            if (host == null) return result;
+            views.put(view, true);
+            boolean custom = hooks.custom(SUCCESSION) || hooks.custom(SPEED_UNIT) || hooks.custom(SPEED_THRESHOLD)
+                    || hooks.custom(SPEED_SIZE) || hooks.custom(SPEED_GAP);
+            if (hooks.active() && custom && view.isShown()) {
                 apply(view);
-                hit.run();
+                if (SystemBarAppearance.keyguardBar(host)) keyguardHit.run(); else hit.run();
+            } else if (!hooks.active() || !custom) {
+                restore(view);
             }
             return result;
+        };
+        hooks.hook(update, renderSpeed);
+        hooks.hook(set, renderSpeed);
+        hooks.onRefresh(() -> {
+            hidden = false;
+            for (View view : new ArrayList<>(views.keySet())) {
+                hooks.refreshView(view, () -> {
+                    restore(view);
+                    try { ((Method) update).invoke(view); }
+                    catch (ReflectiveOperationException ignored) {}
+                });
+            }
         });
-        if (hooks.custom(SPEED_THRESHOLD)) hooks.hook(visible, chain -> {
+        hooks.hook(visible, chain -> {
             Object result = chain.proceed();
-            if (hidden && hooks.active() && SystemBarAppearance.phoneBar((View) chain.getThisObject()) != null)
+            if (hidden && hooks.active() && hooks.custom(SPEED_THRESHOLD) && SystemBarAppearance.statusBar((View) chain.getThisObject()) != null)
                 return false;
             return result;
         });
@@ -50,19 +76,19 @@ final class NetworkSpeedAppearance {
         TextView number = bar.child(view, "network_speed_number");
         TextView unit = bar.child(view, "network_speed_unit");
         if (number == null || unit == null) return;
+        Original original = originals.get(view);
+        if (original == null) {
+            original = new Original(view, number, unit);
+            originals.put(view, original);
+        }
         if (hooks.custom(SPEED_SIZE)) {
             number.setTextSize(TypedValue.COMPLEX_UNIT_SP, hooks.value(SPEED_SIZE));
             unit.setTextSize(TypedValue.COMPLEX_UNIT_SP, hooks.value(SPEED_SIZE));
         }
         if (hooks.custom(SPEED_GAP)) {
-            int[] original = padding.get(view);
-            if (original == null) {
-                original = new int[]{view.getPaddingStart(), view.getPaddingEnd()};
-                padding.put(view, original);
-            }
             int delta = Math.round(AppearanceHooks.dp(view, hooks.value(SPEED_GAP)));
-            view.setPaddingRelative(Math.max(0, original[0] + delta), view.getPaddingTop(),
-                    Math.max(0, original[1] + delta), view.getPaddingBottom());
+            view.setPaddingRelative(Math.max(0, original.start + delta), view.getPaddingTop(),
+                    Math.max(0, original.end + delta), view.getPaddingBottom());
         }
         if (!hooks.custom(SUCCESSION) && !hooks.custom(SPEED_UNIT) && !hooks.custom(SPEED_THRESHOLD)) return;
         sample();
@@ -93,15 +119,53 @@ final class NetworkSpeedAppearance {
             if (layout == 1) {
                 write(number, tx);
                 write(unit, rx);
-                float dy = Math.min(number.getTextSize() * .53f, AppearanceHooks.dp(view, 7));
-                number.setTranslationY(-dy);
-                unit.setTranslationY(dy);
+                number.getPaint().getFontMetrics(topMetrics);
+                unit.getPaint().getFontMetrics(bottomMetrics);
+                float topHeight = topMetrics.descent - topMetrics.ascent;
+                float bottomHeight = bottomMetrics.descent - bottomMetrics.ascent;
+                number.setTranslationY(-bottomHeight / 2);
+                unit.setTranslationY(topHeight / 2);
             } else {
                 write(number, tx + "  " + rx);
                 number.setTranslationY(0);
                 unit.setVisibility(View.GONE);
             }
             view.setContentDescription(tx + "  " + rx);
+        }
+    }
+
+    private void restore(View view) {
+        Original value = originals.remove(view);
+        if (value == null) return;
+        view.setPaddingRelative(value.start, view.getPaddingTop(), value.end, view.getPaddingBottom());
+        TextView number = bar.child(view, "network_speed_number");
+        TextView unit = bar.child(view, "network_speed_unit");
+        if (number != null) {
+            number.setTextSize(TypedValue.COMPLEX_UNIT_PX, value.numberSize);
+            number.setTranslationY(value.numberY);
+            number.setVisibility(value.numberVisibility);
+        }
+        if (unit != null) {
+            unit.setTextSize(TypedValue.COMPLEX_UNIT_PX, value.unitSize);
+            unit.setTranslationY(value.unitY);
+            unit.setVisibility(value.unitVisibility);
+        }
+        view.requestLayout();
+    }
+
+    private static final class Original {
+        final int start, end, numberVisibility, unitVisibility;
+        final float numberSize, unitSize, numberY, unitY;
+
+        Original(View view, TextView number, TextView unit) {
+            start = view.getPaddingStart();
+            end = view.getPaddingEnd();
+            numberSize = number.getTextSize();
+            unitSize = unit.getTextSize();
+            numberY = number.getTranslationY();
+            unitY = unit.getTranslationY();
+            numberVisibility = number.getVisibility();
+            unitVisibility = unit.getVisibility();
         }
     }
 
